@@ -1,7 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 
-import { trpc } from "../utils/trpc";
 import dynamic from "next/dynamic";
 
 const Editor = dynamic(() => import("../components/Editor/Editor"), {
@@ -9,8 +8,6 @@ const Editor = dynamic(() => import("../components/Editor/Editor"), {
 });
 
 const Home: NextPage = () => {
-	const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
-
 	return (
 		<>
 			<Head>

@@ -12,9 +12,11 @@ export const dictionaryRouter = router({
 					word: input.word,
 				},
 			});
-
-			console.debug(word);
+			return word;
 		}),
+	getWord: publicProcedure.input(z.string()).query(({ ctx, input }) => {
+		return ctx.prisma.word.findUnique({ where: { id: input } });
+	}),
 	getAll: publicProcedure.query(({ ctx }) => {
 		return ctx.prisma.word.findMany();
 	}),

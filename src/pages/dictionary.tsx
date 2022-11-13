@@ -1,9 +1,11 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import useBearStore from "../store/store";
 import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
 	const allWords = trpc.dictionary.getAll.useQuery();
+	const bears = useBearStore((state) => state.bears);
 
 	return (
 		<>
@@ -13,14 +15,14 @@ const Home: NextPage = () => {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 			<main className="f-full container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
-				<div className="overflow-x-auto">
+				<div className="min-w-full overflow-x-auto">
 					<table className="table w-full">
 						<thead>
 							<tr>
 								<th></th>
 								<th>Word</th>
 								<th>Translation</th>
-								<th>Created at</th>
+								<th className="w-1/6">Created at</th>
 							</tr>
 						</thead>
 						<tbody>

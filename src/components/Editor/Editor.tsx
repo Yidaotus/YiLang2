@@ -1,4 +1,10 @@
-import type { EditorState, Klass, LexicalNode, NodeKey } from "lexical";
+import {
+	$isNodeSelection,
+	EditorState,
+	Klass,
+	LexicalNode,
+	NodeKey,
+} from "lexical";
 import {
 	$createParagraphNode,
 	$getNodeByKey,
@@ -38,6 +44,9 @@ import YiLangTheme from "./themes/YiLangEditorTheme";
 import ErrorBoundary from "./ui/ErrorBoundary";
 import { $createWordNode, WordNode } from "../nodes/WordNode";
 import { trpc } from "../../utils/trpc";
+import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin";
+import useBearStore from "../../store/store";
+import { isBuffer } from "util";
 
 // When the editor changes, you can get notified via the
 // LexicalOnChangePlugin!
@@ -110,7 +119,9 @@ const blockTypeToBlockName = {
 const WordStore = new Map<NodeKey, string>();
 
 const ToolbarPlugin = () => {
-	const createWord = trpc.example.createWord.useMutation();
+	const createWord = trpc.dictionary.createWord.useMutation();
+
+	const increasePopulation = useBearStore((state) => state.increase);
 
 	const [editor] = useLexicalComposerContext();
 	const [blockType, setBlockType] =
@@ -120,6 +131,35 @@ const ToolbarPlugin = () => {
 		const selection = $getSelection();
 		if ($isRangeSelection(selection)) {
 			const anchorNode = selection.anchor.getNode();
+			let element =
+				anchorNode.getKey() === "root"
+					? anchorNode
+					: $findMatchingParent(anchorNode, (e) => {
+							const parent = e.getParent();
+							return parent !== null && $isRootOrShadowRoot(parent);
+					  });
+
+			if (element === null) {
+				element = anchorNode.getTopLevelElementOrThrow();
+			}
+
+			const elementKey = element.getKey();
+			const elementDOM = editor.getElementByKey(elementKey);
+
+			if (elementDOM !== null) {
+				const type = $isHeadingNode(element)
+					? element.getTag()
+					: element.getType();
+				if (type in blockTypeToBlockName) {
+					setBlockType(type as keyof typeof blockTypeToBlockName);
+				}
+			}
+		}
+		if ($isNodeSelection(selection)) {
+			const anchorNode = selection.getNodes()[0];
+			if (!anchorNode) {
+				return;
+			}
 			let element =
 				anchorNode.getKey() === "root"
 					? anchorNode
@@ -192,18 +232,32 @@ const ToolbarPlugin = () => {
 		});
 	}, [editor]);
 
-	const insertWord = useCallback(() => {
+	const insertWord = useCallback(async () => {
+		const translation = "translation123";
+		const word = await editor.getEditorState().read(async () => {
+			const selection = $getSelection();
+			if (!selection) {
+				return;
+			}
+			const text = selection.getTextContent();
+			return text;
+		});
+		if (!word) {
+			return;
+		}
+
+		const newWord = await createWord.mutateAsync({ translation, word });
 		editor.update(async () => {
 			const selection = $getSelection();
 
 			if ($isRangeSelection(selection)) {
-				const text = selection.getTextContent();
-				const translation = "translation123";
-				const word = text;
-				const newWordNode = $createWordNode(translation, text);
-				WordStore.set(newWordNode.getKey(), text);
+				const newWordNode = $createWordNode(
+					newWord.translation,
+					newWord.word,
+					newWord.id
+				);
+				WordStore.set(newWordNode.getKey(), word);
 				selection.insertNodes([newWordNode]);
-				await createWord.mutateAsync({ translation, word });
 			}
 		});
 	}, [createWord, editor]);
@@ -250,6 +304,9 @@ const ToolbarPlugin = () => {
 				<button className="btn-ghost btn" onClick={selectWord}>
 					Select Word
 				</button>
+				<button className="btn-ghost btn" onClick={() => increasePopulation(1)}>
+					Bear
+				</button>
 			</div>
 		</div>
 	);
@@ -257,6 +314,8 @@ const ToolbarPlugin = () => {
 
 export default function Editor() {
 	const editorRef = useRef<HTMLDivElement | null>(null);
+	const bears = useBearStore((state) => state.bears);
+
 	const initialConfig = {
 		namespace: "MyEditor",
 		theme: YiLangTheme,
@@ -274,7 +333,7 @@ export default function Editor() {
 						<ToolbarPlugin />
 						<RichTextPlugin
 							contentEditable={
-								<div className="">
+								<div className="relative">
 									<div
 										className="textarea-bordered textarea  rounded-t-none"
 										ref={editorRef}
@@ -286,6 +345,7 @@ export default function Editor() {
 							placeholder={<div>Enter some text...</div>}
 							ErrorBoundary={ErrorBoundary}
 						/>
+						<FloatingTextFormatToolbarPlugin />
 						<OnChangePlugin onChange={onChange} />
 						<HistoryPlugin />
 						<MyCustomAutoFocusPlugin />

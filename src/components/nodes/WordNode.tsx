@@ -22,23 +22,32 @@ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import { TextNode } from "lexical";
 import React, { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { trpc } from "../../utils/trpc";
 
 export type SerializedWordNode = Spread<
 	{
 		word: string;
 		translation: string;
+		id: string;
 		type: "word";
 	},
 	SerializedLexicalNode
 >;
 
 type WordComponentProps = {
-	nodeKey: NodeKey;
 	word: string;
 	translation: string;
+	nodeKey: NodeKey;
+	id: string;
 };
-const WordComponent = ({ nodeKey, word, translation }: WordComponentProps) => {
+const WordComponent = ({
+	nodeKey,
+	id,
+	word,
+	translation,
+}: WordComponentProps) => {
 	const [editor] = useLexicalComposerContext();
+	const dbWord = trpc.dictionary.getWord.useQuery(id);
 	const wordRef = useRef(null);
 	const [isSelected, setSelected, clearSelected] =
 		useLexicalNodeSelection(nodeKey);
@@ -65,36 +74,57 @@ const WordComponent = ({ nodeKey, word, translation }: WordComponentProps) => {
 		);
 	}, [clearSelected, editor, isSelected, setSelected]);
 
-	console.debug({ isSelected });
+	console.debug();
 
 	return (
-		<div
-			ref={wordRef}
-			className={`mx-[2px] cursor-default rounded-sm ${
-				isSelected ? "bg-primary" : "bg-slate-400"
-			} px-[2px]`}
-		>
-			{isSelected ? translation : word}
-		</div>
+		<>
+			{dbWord.isError && <span>Error dbWord...</span>}
+			{dbWord.isFetching && <progress className="progress w-12" />}
+			{dbWord.isSuccess && !dbWord.data && (
+				<div className="indicator">
+					<span className="badge-error badge badge-xs indicator-item" />
+					<div
+						ref={wordRef}
+						className={`mx-[2px] cursor-default rounded-sm ${
+							isSelected ? "bg-primary" : "bg-slate-400"
+						} px-[2px]`}
+					>
+						{isSelected ? translation : word}
+					</div>
+				</div>
+			)}
+			{dbWord.isSuccess && dbWord.data && (
+				<div
+					ref={wordRef}
+					className={`mx-[2px] cursor-default rounded-sm ${
+						isSelected ? "bg-primary" : "bg-slate-400"
+					} px-[2px]`}
+				>
+					{isSelected ? dbWord.data.translation : dbWord.data.word}
+				</div>
+			)}
+		</>
 	);
 };
 
 export class WordNode extends DecoratorNode<React.ReactElement> {
 	__word: string;
 	__translation: string;
+	__id: string;
 
 	static getType(): string {
 		return "word";
 	}
 
 	static clone(node: WordNode): WordNode {
-		return new WordNode(node.__translation, node.__text, node.__key);
+		return new WordNode(node.__translation, node.__word, node.__id, node.__key);
 	}
 
-	constructor(translation: string, word: string, key?: NodeKey) {
+	constructor(translation: string, word: string, id: string, key?: NodeKey) {
 		super(key);
 		this.__translation = translation;
 		this.__word = word;
+		this.__id = id;
 	}
 
 	createDOM(config: EditorConfig): HTMLElement {
@@ -111,6 +141,11 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return false;
 	}
 
+	getId(): string {
+		const self = this.getLatest();
+		return self.__id;
+	}
+
 	getTranslation(): string {
 		const self = this.getLatest();
 		return self.__translation;
@@ -125,6 +160,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return {
 			word: this.getWord(),
 			translation: this.getTranslation(),
+			id: this.getId(),
 			type: "word",
 			version: 1,
 		};
@@ -133,7 +169,8 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 	static importJSON(serializedNode: SerializedWordNode): WordNode {
 		const node = $createWordNode(
 			serializedNode.translation,
-			serializedNode.word
+			serializedNode.word,
+			serializedNode.id
 		);
 		return node;
 	}
@@ -142,6 +179,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return (
 			<WordComponent
 				nodeKey={this.__key}
+				id={this.__id}
 				word={this.__word}
 				translation={this.__translation}
 			/>
@@ -164,6 +202,10 @@ export function $isWordNode(
 	return node instanceof WordNode;
 }
 
-export function $createWordNode(translation: string, word: string): WordNode {
-	return new WordNode(translation, word);
+export function $createWordNode(
+	translation: string,
+	word: string,
+	id: string
+): WordNode {
+	return new WordNode(translation, word, id);
 }
