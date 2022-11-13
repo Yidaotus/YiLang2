@@ -1,14 +1,7 @@
-import {
-	$isNodeSelection,
-	EditorConfig,
-	EditorState,
-	Klass,
-	LexicalNode,
-	NodeKey,
-} from "lexical";
+import type { EditorState, Klass, LexicalNode, NodeKey } from "lexical";
+import { $isNodeSelection } from "lexical";
 import {
 	$createParagraphNode,
-	$getNodeByKey,
 	$getRoot,
 	$getSelection,
 	$isRangeSelection,
@@ -47,7 +40,6 @@ import { $createWordNode, WordNode } from "../nodes/WordNode";
 import { trpc } from "../../utils/trpc";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin";
 import useBearStore from "../../store/store";
-import { isBuffer } from "util";
 import { useRouter } from "next/router";
 
 // When the editor changes, you can get notified via the
@@ -81,21 +73,6 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	WordNode,
 ];
 
-// Lexical React plugins are React components, which makes them
-// highly composable. Furthermore, you can lazy load plugins if
-// desired, so you don't pay the cost for plugins until you
-// actually use them.
-function MyCustomAutoFocusPlugin() {
-	const [editor] = useLexicalComposerContext();
-
-	useEffect(() => {
-		// Focus the editor when the effect fires!
-		editor.focus();
-	}, [editor]);
-
-	return null;
-}
-
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will
 // try to recover gracefully without losing user data.
@@ -120,14 +97,9 @@ const blockTypeToBlockName = {
 
 const WordStore = new Map<NodeKey, string>();
 
-const ToolbarPlugin = () => {
-	const createWord = trpc.dictionary.createWord.useMutation();
-
-	const editorState = useBearStore((state) => state.editorState);
-	const increasePopulation = useBearStore((state) => state.increase);
-
+const PersistStateOnPageChangePlugion = () => {
 	const [editor] = useLexicalComposerContext();
-
+	const editorState = useBearStore((state) => state.editorState);
 	const setEditorState = useBearStore((state) => state.setEditorState);
 	const router = useRouter();
 
@@ -149,6 +121,12 @@ const ToolbarPlugin = () => {
 		};
 	}, [editor, router, setEditorState]);
 
+	return null;
+};
+
+const ToolbarPlugin = () => {
+	const [editor] = useLexicalComposerContext();
+	const createWord = trpc.dictionary.createWord.useMutation();
 	const [blockType, setBlockType] =
 		useState<keyof typeof blockTypeToBlockName>("paragraph");
 
@@ -329,9 +307,6 @@ const ToolbarPlugin = () => {
 				<button className="btn-ghost btn" onClick={selectWord}>
 					Select Word
 				</button>
-				<button className="btn-ghost btn" onClick={() => increasePopulation(1)}>
-					Bear
-				</button>
 			</div>
 		</div>
 	);
@@ -372,7 +347,7 @@ export default function Editor() {
 						<FloatingTextFormatToolbarPlugin />
 						<OnChangePlugin onChange={onChange} />
 						<HistoryPlugin />
-						<MyCustomAutoFocusPlugin />
+						<PersistStateOnPageChangePlugion />
 					</LexicalComposer>
 					<div className="card-actions justify-end"></div>
 				</div>
