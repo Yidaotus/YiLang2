@@ -1,5 +1,6 @@
 import {
 	$isNodeSelection,
+	EditorConfig,
 	EditorState,
 	Klass,
 	LexicalNode,
@@ -47,6 +48,7 @@ import { trpc } from "../../utils/trpc";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin";
 import useBearStore from "../../store/store";
 import { isBuffer } from "util";
+import { useRouter } from "next/router";
 
 // When the editor changes, you can get notified via the
 // LexicalOnChangePlugin!
@@ -121,9 +123,32 @@ const WordStore = new Map<NodeKey, string>();
 const ToolbarPlugin = () => {
 	const createWord = trpc.dictionary.createWord.useMutation();
 
+	const editorState = useBearStore((state) => state.editorState);
 	const increasePopulation = useBearStore((state) => state.increase);
 
 	const [editor] = useLexicalComposerContext();
+
+	const setEditorState = useBearStore((state) => state.setEditorState);
+	const router = useRouter();
+
+	useEffect(() => {
+		if (editorState) {
+			const savedEditorState = editor.parseEditorState(editorState);
+			editor.setEditorState(savedEditorState);
+		}
+	}, [editor, editorState]);
+
+	useEffect(() => {
+		const handleRouteChange = () => {
+			setEditorState(JSON.stringify(editor.getEditorState()));
+		};
+
+		router.events.on("routeChangeStart", handleRouteChange);
+		return () => {
+			router.events.off("routeChangeStart", handleRouteChange);
+		};
+	}, [editor, router, setEditorState]);
+
 	const [blockType, setBlockType] =
 		useState<keyof typeof blockTypeToBlockName>("paragraph");
 
@@ -314,7 +339,6 @@ const ToolbarPlugin = () => {
 
 export default function Editor() {
 	const editorRef = useRef<HTMLDivElement | null>(null);
-	const bears = useBearStore((state) => state.bears);
 
 	const initialConfig = {
 		namespace: "MyEditor",
