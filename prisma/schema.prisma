@@ -64,3 +64,11 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Word {
+  id          String   @id @default(cuid())
+  word        String
+  translation String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
