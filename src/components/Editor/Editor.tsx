@@ -97,6 +97,34 @@ const blockTypeToBlockName = {
 
 const WordStore = new Map<NodeKey, string>();
 
+const FetchDocumentPlugin = ({ id }: { id: string }) => {
+	const [editor] = useLexicalComposerContext();
+	const [shouldFetch, setShouldFetch] = useState(false);
+	const editorDocument = trpc.document.getById.useQuery(id, {
+		enabled: shouldFetch,
+	});
+
+	useEffect(() => {
+		if (id) {
+			console.debug("Set Fetch Document on");
+			setShouldFetch(true);
+		}
+	}, [id]);
+
+	useEffect(() => {
+		if (editorDocument.data) {
+			setShouldFetch(false);
+			console.debug("Acutally Fetching Document");
+			const savedEditorState = editor.parseEditorState(
+				editorDocument.data.serializedDocument
+			);
+			editor.setEditorState(savedEditorState);
+		}
+	}, [editor, editorDocument, shouldFetch]);
+
+	return null;
+};
+
 const PersistStateOnPageChangePlugion = () => {
 	const [editor] = useLexicalComposerContext();
 	const editorState = useBearStore((state) => state.editorState);
@@ -126,9 +154,40 @@ const PersistStateOnPageChangePlugion = () => {
 
 const ToolbarPlugin = () => {
 	const [editor] = useLexicalComposerContext();
+	const [idToLoad, setIdToLoad] = useState<string | null>(null);
 	const createWord = trpc.dictionary.createWord.useMutation();
+	const upsertDocument = trpc.document.createDocument.useMutation();
+
+	const documentToLoad = trpc.document.getById.useQuery(idToLoad || "", {
+		enabled: !!idToLoad,
+	});
+
 	const [blockType, setBlockType] =
 		useState<keyof typeof blockTypeToBlockName>("paragraph");
+
+	useEffect(() => {
+		console.debug("Loading document effect");
+		if (documentToLoad.data && documentToLoad.isFetched) {
+			setIdToLoad(null);
+			console.debug("Actually loading document");
+			const parsedState = editor.parseEditorState(
+				documentToLoad.data.serializedDocument
+			);
+			editor.setEditorState(parsedState);
+		}
+	}, [documentToLoad, editor]);
+
+	const loadDocument = useCallback(() => {
+		setIdToLoad("clah1kjb50004u5ejvqfvxs81");
+	}, []);
+
+	const saveDocument = useCallback(async () => {
+		const serializedState = JSON.stringify(editor.getEditorState());
+		await upsertDocument.mutate({
+			title: "test upsert",
+			serializedDocument: serializedState,
+		});
+	}, [editor, upsertDocument]);
 
 	const updateToolbar = useCallback(() => {
 		const selection = $getSelection();
@@ -307,12 +366,22 @@ const ToolbarPlugin = () => {
 				<button className="btn-ghost btn" onClick={selectWord}>
 					Select Word
 				</button>
+				<button className="btn-ghost btn" onClick={saveDocument}>
+					Save
+				</button>
+				<button className="btn-ghost btn" onClick={loadDocument}>
+					Load State
+				</button>
 			</div>
 		</div>
 	);
 };
 
-export default function Editor() {
+type EditorProps = {
+	id?: string;
+};
+
+export default function Editor({ id }: EditorProps) {
 	const editorRef = useRef<HTMLDivElement | null>(null);
 
 	const initialConfig = {
@@ -348,6 +417,7 @@ export default function Editor() {
 						<OnChangePlugin onChange={onChange} />
 						<HistoryPlugin />
 						<PersistStateOnPageChangePlugion />
+						<FetchDocumentPlugin id={id as string} />
 					</LexicalComposer>
 					<div className="card-actions justify-end"></div>
 				</div>

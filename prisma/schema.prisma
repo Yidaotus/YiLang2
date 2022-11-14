@@ -72,3 +72,11 @@ model Word {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Document {
+  id                 String   @id @default(cuid())
+  serializedDocument String
+  title              String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
