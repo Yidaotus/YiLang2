@@ -41,6 +41,8 @@ import { trpc } from "../../utils/trpc";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin";
 import useBearStore from "../../store/store";
 import { useRouter } from "next/router";
+import { useQueryClient } from "@tanstack/react-query";
+import { timeUntilStale } from "@tanstack/query-core/build/lib/utils";
 
 // When the editor changes, you can get notified via the
 // LexicalOnChangePlugin!
@@ -155,7 +157,22 @@ const PersistStateOnPageChangePlugion = () => {
 const ToolbarPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 	const [idToLoad, setIdToLoad] = useState<string | null>(null);
+	const utils = trpc.useContext();
+
+	const wordTest = useCallback(() => {
+		utils.dictionary.getWord.setData({
+			translation: "TTEST",
+			word: "WTEST",
+			id: "undefined",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+		utils.dictionary.getWord.invalidate();
+		utils.dictionary.getWord.cancel();
+	}, [utils.dictionary.getWord]);
+
 	const createWord = trpc.dictionary.createWord.useMutation();
+
 	const upsertDocument = trpc.document.createDocument.useMutation();
 
 	const documentToLoad = trpc.document.getById.useQuery(idToLoad || "", {
@@ -325,7 +342,7 @@ const ToolbarPlugin = () => {
 	}, [createWord, editor]);
 
 	return (
-		<div className="textarea-bordered textarea w-full rounded-b-none p-0">
+		<div className="textarea-bordered textarea w-full overflow-scroll rounded-b-none p-0">
 			<div className="flex gap-1 p-1">
 				<div className="dropdown">
 					<label tabIndex={0} className="btn-ghost btn">
@@ -372,6 +389,9 @@ const ToolbarPlugin = () => {
 				<button className="btn-ghost btn" onClick={loadDocument}>
 					Load State
 				</button>
+				<button className="btn-ghost btn" onClick={wordTest}>
+					W TEST
+				</button>
 			</div>
 		</div>
 	);
@@ -393,15 +413,15 @@ export default function Editor({ id }: EditorProps) {
 	};
 
 	return (
-		<div className="card w-10/12 bg-base-200 shadow-xl">
-			<div className="card-body">
-				<h2 className="card-title">Shoes!</h2>
+		<div className="card w-full bg-base-200 shadow-xl md:w-10/12">
+			<div className="card-body p-0 md:p-10">
+				<h2 className="card-title">Editor</h2>
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
 						<ToolbarPlugin />
 						<RichTextPlugin
 							contentEditable={
-								<div className="relative">
+								<div className="relative h-full">
 									<div
 										className="textarea-bordered textarea  rounded-t-none"
 										ref={editorRef}
