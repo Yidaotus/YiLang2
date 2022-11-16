@@ -6,8 +6,6 @@
  *
  */
 
-import style from "./index.module.css";
-
 import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
