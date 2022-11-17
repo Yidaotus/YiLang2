@@ -6,20 +6,17 @@
  *
  */
 
-import {
-	CLICK_COMMAND,
-	COMMAND_PRIORITY_LOW,
-	DecoratorNode,
+import type {
 	EditorConfig,
 	LexicalNode,
 	NodeKey,
 	SerializedLexicalNode,
-	SerializedTextNode,
 	Spread,
 } from "lexical";
+import { $getNodeByKey } from "lexical";
+import { CLICK_COMMAND, COMMAND_PRIORITY_LOW, DecoratorNode } from "lexical";
 import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
 
-import { TextNode } from "lexical";
 import React, { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "../../utils/trpc";
@@ -28,7 +25,7 @@ export type SerializedWordNode = Spread<
 	{
 		word: string;
 		translation: string;
-		id: string;
+		id?: string;
 		type: "word";
 	},
 	SerializedLexicalNode
@@ -36,21 +33,32 @@ export type SerializedWordNode = Spread<
 
 type WordComponentProps = {
 	word: string;
-	translation: string;
 	nodeKey: NodeKey;
-	id: string;
+	id?: string;
 };
-const WordComponent = ({
-	nodeKey,
-	id,
-	word,
-	translation,
-}: WordComponentProps) => {
+const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 	const [editor] = useLexicalComposerContext();
-	const dbWord = trpc.dictionary.getWord.useQuery(id);
+	const dbWord = trpc.dictionary.getWord.useQuery(id || "", { enabled: !!id });
 	const wordRef = useRef(null);
 	const [isSelected, setSelected, clearSelected] =
 		useLexicalNodeSelection(nodeKey);
+
+	useEffect(() => {
+		const remoteWord = dbWord.data;
+		if (remoteWord) {
+			editor.update(() => {
+				const node = $getNodeByKey(nodeKey);
+				if (!node || !$isWordNode(node)) return;
+
+				if (node.getWord() !== remoteWord.word) {
+					node.setWord(remoteWord.word);
+				}
+				if (node.getTranslation() !== remoteWord.translation) {
+					node.setTranslation(remoteWord.translation);
+				}
+			});
+		}
+	}, [dbWord.data, editor, nodeKey]);
 
 	useEffect(() => {
 		return editor.registerCommand<MouseEvent>(
@@ -74,33 +82,27 @@ const WordComponent = ({
 		);
 	}, [clearSelected, editor, isSelected, setSelected]);
 
-	console.debug();
-
 	return (
 		<>
-			{dbWord.isError && <span>Error dbWord...</span>}
-			{dbWord.isFetching && <progress className="progress w-12" />}
-			{dbWord.isSuccess && !dbWord.data && (
-				<div className="indicator">
-					<span className="badge-error badge badge-xs indicator-item" />
-					<div
-						ref={wordRef}
-						className={`mx-[2px] cursor-default rounded-sm ${
-							isSelected ? "bg-primary" : "bg-slate-400"
-						} px-[2px]`}
-					>
-						{isSelected ? translation : word}
-					</div>
-				</div>
-			)}
-			{dbWord.isSuccess && dbWord.data && (
+			{!dbWord.data && (
 				<div
 					ref={wordRef}
 					className={`mx-[2px] cursor-default rounded-sm ${
 						isSelected ? "bg-primary" : "bg-slate-400"
 					} px-[2px]`}
 				>
-					{isSelected ? dbWord.data.translation : dbWord.data.word}
+					{word}
+					{/*isSelected ? translation : word*/}
+				</div>
+			)}
+			{dbWord.data && (
+				<div
+					ref={wordRef}
+					className={`mx-[2px] cursor-default rounded-sm ${
+						isSelected ? "bg-primary" : "bg-slate-400"
+					} px-[2px]`}
+				>
+					{dbWord.data.word}
 				</div>
 			)}
 		</>
@@ -110,7 +112,7 @@ const WordComponent = ({
 export class WordNode extends DecoratorNode<React.ReactElement> {
 	__word: string;
 	__translation: string;
-	__id: string;
+	__id?: string;
 
 	static getType(): string {
 		return "word";
@@ -120,7 +122,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return new WordNode(node.__translation, node.__word, node.__id, node.__key);
 	}
 
-	constructor(translation: string, word: string, id: string, key?: NodeKey) {
+	constructor(translation: string, word: string, id?: string, key?: NodeKey) {
 		super(key);
 		this.__translation = translation;
 		this.__word = word;
@@ -141,16 +143,28 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return false;
 	}
 
-	getId(): string {
+	setId(id: string) {
+		const self = this.getWritable();
+		self.__id = id;
+	}
+	getId(): string | undefined {
 		const self = this.getLatest();
 		return self.__id;
 	}
 
+	setTranslation(translation: string) {
+		const self = this.getWritable();
+		self.__translation = translation;
+	}
 	getTranslation(): string {
 		const self = this.getLatest();
 		return self.__translation;
 	}
 
+	setWord(word: string) {
+		const self = this.getWritable();
+		self.__word = word;
+	}
 	getWord(): string {
 		const self = this.getLatest();
 		return self.__word;
@@ -177,12 +191,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 
 	decorate(): JSX.Element {
 		return (
-			<WordComponent
-				nodeKey={this.__key}
-				id={this.__id}
-				word={this.__word}
-				translation={this.__translation}
-			/>
+			<WordComponent nodeKey={this.__key} id={this.__id} word={this.__word} />
 		);
 	}
 
@@ -205,7 +214,7 @@ export function $isWordNode(
 export function $createWordNode(
 	translation: string,
 	word: string,
-	id: string
+	id?: string
 ): WordNode {
 	return new WordNode(translation, word, id);
 }

@@ -1,4 +1,9 @@
-import type { LexicalEditor } from "lexical";
+import {
+	$createRangeSelection,
+	$getNodeByKey,
+	$setSelection,
+	LexicalEditor,
+} from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -15,19 +20,25 @@ import {
 	useEffect,
 } from "react";
 import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
-import { INSERT_WORD_COMMAND } from "@editor/Editor";
+import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
+import { trpc } from "@utils/trpc";
+import { $createWordNode, $isWordNode } from "@components/nodes/WordNode";
+import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
+import { createPortal } from "react-dom";
 
 function CommentInputBox({
 	editor,
 	cancelAddComment,
 	submitAddComment,
+	anchorElem,
 }: {
 	cancelAddComment: () => void;
 	editor: LexicalEditor;
-	submitAddComment: (commentOrThread: string, isInlineComment: boolean) => void;
+	submitAddComment: (translation: string) => void;
+	anchorElem: HTMLElement;
 }) {
 	const [content, setContent] = useState("");
-	const [canSubmit, setCanSubmit] = useState(false);
+	const canSubmit = content.length > 0;
 	const boxRef = useRef<HTMLDivElement>(null);
 	const selectionState = useMemo(
 		() => ({
@@ -36,7 +47,10 @@ function CommentInputBox({
 		}),
 		[]
 	);
-	const author = "test";
+
+	useEffect(() => {
+		boxRef.current?.focus();
+	}, [boxRef]);
 
 	const updateLocation = useCallback(() => {
 		editor.getEditorState().read(() => {
@@ -61,8 +75,16 @@ function CommentInputBox({
 					if (correctedLeft < 10) {
 						correctedLeft = 10;
 					}
-					boxElem.style.left = `${correctedLeft}px`;
-					boxElem.style.top = `${bottom + 20}px`;
+
+					const clientRect = range.getBoundingClientRect();
+					const elemRect = boxElem.getBoundingClientRect();
+					setFloatingElemPosition(
+						range.getBoundingClientRect(),
+						boxElem,
+						anchorElem,
+						-clientRect.height - elemRect.height - 15,
+						elemRect.width / 2 - clientRect.width / 2
+					);
 					const selectionRectsLength = selectionRects.length;
 					const { container } = selectionState;
 					const elements: Array<HTMLSpanElement> = selectionState.elements;
@@ -90,7 +112,7 @@ function CommentInputBox({
 				}
 			}
 		});
-	}, [editor, selectionState]);
+	}, [anchorElem, editor, selectionState]);
 
 	useLayoutEffect(() => {
 		updateLocation();
@@ -120,37 +142,35 @@ function CommentInputBox({
 
 	const submitComment = () => {
 		if (canSubmit) {
-			let quote = editor.getEditorState().read(() => {
-				const selection = $getSelection();
-				return selection !== null ? selection.getTextContent() : "";
-			});
-			if (quote.length > 100) {
-				quote = quote.slice(0, 99) + "…";
-			}
-			submitAddComment("hi", true);
+			submitAddComment(content);
 		}
 	};
 
 	return (
 		<div
-			className="fixed z-20 w-[250px] rounded-md border border-gray-200 shadow-md"
+			className="absolute top-0 left-0 z-20 w-[250px] rounded-md border border-gray-200 shadow-md"
 			ref={boxRef}
 		>
 			<div className="absolute top-[-1px] left-[105px] z-10 h-4 w-4 translate-x-1/2 -translate-y-1/2 rotate-45 transform border-l border-t border-gray-200 bg-white" />
-			<div className="h-[145px]">
-				<textarea className="textarea relative h-full w-full resize-none rounded-b-none rounded-t-md outline-none focus:outline-none" />
+			<div>
+				<input
+					onChange={(e) => setContent(e.target.value)}
+					type="text"
+					className="input relative h-full w-full resize-none rounded-b-none rounded-t-md p-2 outline-none focus:outline-none"
+					autoFocus
+				/>
 			</div>
 			<div className="grid w-full grid-cols-2">
 				<button
 					onClick={cancelAddComment}
-					className="btn-sm btn rounded-none rounded-bl-md"
+					className="btn-sm btn rounded-none rounded-bl-md bg-gray-400"
 				>
 					Cancel
 				</button>
 				<button
 					onClick={submitComment}
 					disabled={!canSubmit}
-					className="btn-sm btn rounded-none rounded-br-md"
+					className="btn-primary btn-sm btn rounded-none rounded-br-md"
 				>
 					Comment
 				</button>
@@ -159,17 +179,58 @@ function CommentInputBox({
 	);
 }
 
-const FloatingWordEditorPlugin = () => {
+const FloatingWordEditorPlugin = ({
+	anchorElem,
+}: {
+	anchorElem: HTMLElement;
+}) => {
 	const [editor] = useLexicalComposerContext();
 	const [showInput, setShowInput] = useState(false);
+	const createWord = trpc.dictionary.createWord.useMutation();
 
-	const insertComment = () => {
-		editor.dispatchCommand(INSERT_WORD_COMMAND, undefined);
-	};
+	const insertWord = useCallback(
+		async (translation: string) => {
+			let newWordKey: string | null = null;
+			let word: string | null = null;
+
+			editor.update(() => {
+				const selection = $getSelection();
+				if (!selection) return;
+
+				const text = selection.getTextContent();
+				word = text;
+
+				if ($isRangeSelection(selection)) {
+					const newWordNode = $createWordNode(translation, text);
+					selection.insertNodes([newWordNode]);
+					setShowInput(false);
+					newWordKey = newWordNode.getKey();
+				}
+			});
+
+			if (!newWordKey || !word) return;
+
+			const newWord = await createWord.mutateAsync({
+				translation,
+				word,
+			});
+
+			editor.update(() => {
+				if (!newWord || !newWordKey) return;
+
+				const newWordNode = $getNodeByKey(newWordKey);
+
+				if (!$isWordNode(newWordNode)) return;
+
+				newWordNode.setId(newWord.id);
+			});
+		},
+		[createWord, editor]
+	);
 
 	useEffect(() => {
 		return editor.registerCommand(
-			INSERT_WORD_COMMAND,
+			SHOW_FLOATING_WORD_EDITOR_COMMAND,
 			() => {
 				const domSelection = window.getSelection();
 				if (domSelection !== null) {
@@ -182,22 +243,21 @@ const FloatingWordEditorPlugin = () => {
 		);
 	}, [editor]);
 
-	return (
-		<>
-			{showInput && (
+	const cancel = useCallback(() => {
+		setShowInput(false);
+	}, []);
+
+	return showInput
+		? createPortal(
 				<CommentInputBox
-					cancelAddComment={function (): void {
-						console.debug("cancel");
-					}}
+					cancelAddComment={cancel}
 					editor={editor}
-					submitAddComment={function (): void {
-						console.debug("subtmi");
-					}}
-				/>
-			)}
-			<button onClick={() => setShowInput(!showInput)}>los</button>
-		</>
-	);
+					submitAddComment={insertWord}
+					anchorElem={anchorElem}
+				/>,
+				anchorElem
+		  )
+		: null;
 };
 
 export default FloatingWordEditorPlugin;

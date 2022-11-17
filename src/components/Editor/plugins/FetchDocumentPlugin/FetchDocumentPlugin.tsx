@@ -11,7 +11,6 @@ const FetchDocumentPlugin = ({ id }: { id: string }) => {
 
 	useEffect(() => {
 		if (id) {
-			console.debug("Set Fetch Document on");
 			setShouldFetch(true);
 		}
 	}, [id]);
@@ -19,7 +18,6 @@ const FetchDocumentPlugin = ({ id }: { id: string }) => {
 	useEffect(() => {
 		if (editorDocument.data) {
 			setShouldFetch(false);
-			console.debug("Acutally Fetching Document");
 			const savedEditorState = editor.parseEditorState(
 				editorDocument.data.serializedDocument
 			);

@@ -3,7 +3,7 @@ import type { HeadingTagType } from "@lexical/rich-text";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
-import { INSERT_WORD_COMMAND } from "@editor/Editor";
+import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
 import { $createWordNode } from "@components/nodes/WordNode";
 import {
 	$getSelection,
@@ -155,7 +155,7 @@ const ToolbarPlugin = () => {
 	const utils = trpc.useContext();
 
 	const showWordEditor = useCallback(() => {
-		editor.dispatchCommand(INSERT_WORD_COMMAND, undefined);
+		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
 	}, [editor]);
 
 	const wordTest = useCallback(() => {
@@ -182,10 +182,8 @@ const ToolbarPlugin = () => {
 		useState<keyof typeof blockTypeToBlockName>("paragraph");
 
 	useEffect(() => {
-		console.debug("Loading document effect");
 		if (documentToLoad.data && documentToLoad.isFetched) {
 			setIdToLoad(null);
-			console.debug("Actually loading document");
 			const parsedState = editor.parseEditorState(
 				documentToLoad.data.serializedDocument
 			);
