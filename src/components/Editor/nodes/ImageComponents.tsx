@@ -209,7 +209,7 @@ export default function ImageComponent({
 	return (
 		<Suspense fallback={null}>
 			<div
-				className={`flex 
+				className={`flex py-4
 			${alignment === "left" && "justify-start"}
 			${alignment === "center" && "justify-center"}
 			${alignment === "right" && "justify-end"}

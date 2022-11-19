@@ -34,6 +34,7 @@ export interface ImagePayload {
 	showCaption?: boolean;
 	src: string;
 	width?: number;
+	alignment?: ImageAlignment;
 	captionsEnabled?: boolean;
 }
 
@@ -56,6 +57,7 @@ export type SerializedImageNode = Spread<
 		src: string;
 		width?: number;
 		type: "image";
+		alignment: ImageAlignment;
 		version: 1;
 	},
 	SerializedLexicalNode
@@ -97,6 +99,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			node.__showCaption,
 			node.__caption,
 			node.__captionsEnabled,
+			node.__alignment,
 			node.__key
 		);
 	}
@@ -153,6 +156,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		showCaption?: boolean,
 		caption?: LexicalEditor,
 		captionsEnabled?: boolean,
+		alignment?: ImageAlignment,
 		key?: NodeKey
 	) {
 		super(key);
@@ -163,6 +167,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		this.__height = height || "inherit";
 		this.__showCaption = showCaption || false;
 		this.__caption = caption || createEditor();
+		this.__alignment = alignment || "left";
 		this.__captionsEnabled = captionsEnabled || captionsEnabled === undefined;
 	}
 
@@ -176,6 +181,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			src: this.getSrc(),
 			type: "image",
 			version: 1,
+			alignment: this.getAlignment(),
 			width: this.__width === "inherit" ? 0 : this.__width,
 		};
 	}
@@ -223,7 +229,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		return (
 			<Suspense fallback={null}>
 				<ImageComponent
-					alignment={this.__alignment}
+					alignment={this.getAlignment()}
 					altText={this.__altText}
 					height={this.__height}
 					maxWidth={this.__maxWidth}
@@ -246,6 +252,7 @@ export function $createImageNode({
 	width,
 	showCaption,
 	caption,
+	alignment,
 	key,
 }: ImagePayload): ImageNode {
 	return new ImageNode(
@@ -257,6 +264,7 @@ export function $createImageNode({
 		showCaption,
 		caption,
 		captionsEnabled,
+		alignment,
 		key
 	);
 }
