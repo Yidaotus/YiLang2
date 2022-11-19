@@ -232,25 +232,30 @@ const ToolbarPlugin = () => {
 		});
 	}, [createWord, editor]);
 	return (
-		<div className="textarea-bordered textarea w-full rounded-b-none p-0">
-			<ButtonGroup>
-				<Button ghost>1</Button>
-				<Button ghost>2</Button>
-				<Dropdown ghost>
-					<Button ghost full>
-						1
+		<div>
+			<div className="top-0 flex overflow-hidden border-b border-gray-300 drop-shadow-sm">
+				<button className="rounded-md px-3 py-2 hover:bg-gray-100 active:bg-gray-200">
+					Hangzhou
+				</button>
+				<Button ghost>Shanghai</Button>
+				<Button ghost>Beijing</Button>
+				<span className="h-full w-1 border-r border-gray-300" />
+				<Button ghost>Blocks</Button>
+				<Dropdown>
+					<Button ghost full onClick={formatHeading("h1")}>
+						H1
+					</Button>
+					<Button ghost full onClick={formatHeading("h2")}>
+						H2
 					</Button>
 					<Button ghost full>
-						2
+						Beijing
 					</Button>
-					<span className="w-full bg-gray-50 px-1 py-2">hi</span>
 					<Button ghost full>
-						3
+						Chengdu
 					</Button>
 				</Dropdown>
-				<span className="bg-gray-50 px-1 py-2">hi</span>
-				<Button ghost>3</Button>
-			</ButtonGroup>
+			</div>
 		</div>
 	);
 };

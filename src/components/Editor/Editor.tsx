@@ -142,14 +142,14 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		<div
 			ref={elem}
 			className={`${wordNode ? "opacity-100" : "opacity-0"}
-			 border-base-200 bg-base-100 absolute top-0 left-0 z-30 w-32
-			 rounded-sm border p-2 transition-opacity duration-75 ease-out`}
+			 absolute top-0 left-0 z-30 w-32 rounded-sm border
+			 border-base-200 bg-base-100 p-2 transition-opacity duration-75 ease-out`}
 		>
 			<div className="relative">
 				<div
-					className="border-base-200 bg-base-100 absolute
-				 top-[-8px] left-[50px] z-10 h-2 w-2 translate-x-1/2 -translate-y-1/2 rotate-45
-				  transform border-l border-t"
+					className="absolute top-[-8px] left-[50px]
+				 z-10 h-2 w-2 translate-x-1/2 -translate-y-1/2 rotate-45 transform border-l
+				  border-t border-base-200 bg-base-100"
 				/>
 				{wordNode?.translation}
 			</div>
@@ -228,7 +228,7 @@ export default function Editor({ id }: EditorProps) {
 	};
 
 	return (
-		<div className="bg-base-200 min-h-[70vh] w-full px-4 shadow-xl md:w-10/12">
+		<div className="w-full bg-base-200 px-4 shadow-xl md:w-10/12">
 			<div className="p-0 md:p-10">
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
@@ -237,10 +237,10 @@ export default function Editor({ id }: EditorProps) {
 							contentEditable={
 								<div className="relative">
 									<div
-										className="textarea-bordered textarea h-[80%] overflow-scroll rounded-t-none"
+										className="flex  justify-center overflow-scroll py-4 pr-2 scrollbar-thin scrollbar-track-base-500 scrollbar-thumb-base-600"
 										ref={onRef}
 									>
-										<ContentEditable className="h-[80%] outline-none" />
+										<ContentEditable className="prose min-h-full max-w-[700px] outline-none selection:bg-[#b3d4fc]" />
 									</div>
 								</div>
 							}

@@ -1,19 +1,19 @@
 /** @type {import('tailwindcss').Config} */
+const defaultTheme = require("tailwindcss/defaultTheme");
+
 module.exports = {
 	content: ["./src/**/*.{js,ts,jsx,tsx}"],
 	theme: {
 		extend: {
+			fontFamily: {
+				sans: ["Noto Sans", ...defaultTheme.fontFamily.sans],
+			},
 			colors: {
 				primary: {
-					100: "#d3e5ec",
-					200: "#a7cad9",
-					300: "#7cb0c6",
-					400: "#5095b3",
-					500: "#247ba0",
-					600: "#1d6280",
-					700: "#164a60",
-					800: "#0e3140",
-					900: "#071920",
+					base: "#319795",
+					light: "#add5d5",
+					dark: "#2c7a7b",
+					darker: "#285e61",
 				},
 				base: {
 					100: "#fdfdfd",
@@ -40,4 +40,5 @@ module.exports = {
 			},
 		},
 	},
+	plugins: [require("tailwind-scrollbar"), require("@tailwindcss/typography")],
 };

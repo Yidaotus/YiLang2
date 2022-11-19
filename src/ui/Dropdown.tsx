@@ -29,7 +29,11 @@ const Dropdown = ({ children }: DropdownProps) => {
 
 	return (
 		<div className="relative" ref={dropDownRef}>
-			<Button ghost onClick={() => setShow(!show)}>
+			<Button
+				ghost
+				onClick={() => setShow(!show)}
+				className={show ? "bg-gray-200" : ""}
+			>
 				<div className="flex items-center">
 					<div>Drooo</div>
 					{show ? (

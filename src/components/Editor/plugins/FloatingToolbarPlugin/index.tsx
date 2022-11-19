@@ -10,13 +10,13 @@ import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
+import type { LexicalEditor } from "lexical";
 import {
 	$getSelection,
 	$isRangeSelection,
 	$isTextNode,
 	COMMAND_PRIORITY_LOW,
 	FORMAT_TEXT_COMMAND,
-	LexicalEditor,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,6 +24,9 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import Button, { ButtonGroup } from "ui/Button";
+import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
+import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
+import { LanguageIcon } from "@heroicons/react/24/solid";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -44,46 +47,6 @@ export function getDOMRangeRect(
 	}
 
 	return rect;
-}
-
-const VERTICAL_GAP = -80;
-const HORIZONTAL_OFFSET = 5;
-
-export function setFloatingElemPosition(
-	targetRect: ClientRect | null,
-	floatingElem: HTMLElement,
-	anchorElem: HTMLElement,
-	verticalGap: number = VERTICAL_GAP,
-	horizontalOffset: number = HORIZONTAL_OFFSET
-): void {
-	const scrollerElem = anchorElem.parentElement;
-
-	if (targetRect === null || !scrollerElem) {
-		floatingElem.style.opacity = "0";
-		floatingElem.style.transform = "translate(-10000px, -10000px)";
-		return;
-	}
-
-	const floatingElemRect = floatingElem.getBoundingClientRect();
-	const anchorElementRect = anchorElem.getBoundingClientRect();
-	const editorScrollerRect = scrollerElem.getBoundingClientRect();
-
-	let top = targetRect.top - floatingElemRect.height - verticalGap;
-	let left = targetRect.left - horizontalOffset;
-
-	if (top < editorScrollerRect.top) {
-		top += floatingElemRect.height + targetRect.height + verticalGap * 2;
-	}
-
-	if (left + floatingElemRect.width > editorScrollerRect.right) {
-		left = editorScrollerRect.right - floatingElemRect.width - horizontalOffset;
-	}
-
-	top -= anchorElementRect.top;
-	left -= anchorElementRect.left;
-
-	floatingElem.style.opacity = "1";
-	floatingElem.style.transform = `translate(${left}px, ${top}px)`;
 }
 
 function TextFormatFloatingToolbar({
@@ -144,7 +107,14 @@ function TextFormatFloatingToolbar({
 		) {
 			const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
 
-			setFloatingElemPosition(rangeRect, popupCharStylesEditorElem, anchorElem);
+			setFloatingElemPosition(
+				rangeRect,
+				popupCharStylesEditorElem,
+				anchorElem,
+				-50,
+				0,
+				"bottom"
+			);
 		}
 	}, [editor, anchorElem]);
 
@@ -193,28 +163,43 @@ function TextFormatFloatingToolbar({
 		);
 	}, [editor, updateTextFormatFloatingToolbar]);
 
+	const showWordEditor = useCallback(() => {
+		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
+	}, [editor]);
+
 	return (
 		<div
 			ref={popupCharStylesEditorRef}
-			className="absolute top-0 left-0 z-10 m-0 flex rounded-md border border-gray-300 bg-gray-300 p-0 opacity-0 shadow-lg transition-opacity"
+			style={{
+				transitionProperty: "opacity, scale",
+				transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+				transitionDuration: "150ms",
+			}}
+			className="absolute top-0 left-0 z-10 m-0 flex rounded-md p-0 opacity-0 shadow-lg duration-300 ease-in-out"
 		>
-			<ButtonGroup>
+			<div className="flex items-center rounded-md border border-gray-300 bg-base-500 py-[2px] px-[4px]">
 				<Button
 					ghost
 					onClick={() => {
 						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
 					}}
 					aria-label="Format text as bold"
+					className={isBold ? "text-primary-base" : ""}
 				>
-					<i className="format bold text-sm">B</i>
+					B
 				</Button>
+				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-300 pr-[2px]" />
 				<Button ghost onClick={insertComment} aria-label="Insert comment">
-					<i className="format add-comment text-sm">C</i>
+					C
 				</Button>
-				<Button ghost onClick={insertComment} aria-label="Insert comment">
-					<i className="format add-comment text-sm">Comm</i>
+				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-300 pr-[2px]" />
+				<Button ghost onClick={showWordEditor} aria-label="Insert comment">
+					<div className="flex">
+						<LanguageIcon className="mr-2 w-4 text-gray-800" />
+						<span className="text-sm">Vocab</span>
+					</div>
 				</Button>
-			</ButtonGroup>
+			</div>
 		</div>
 	);
 }

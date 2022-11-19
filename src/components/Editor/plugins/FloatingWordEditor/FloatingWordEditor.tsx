@@ -25,6 +25,7 @@ import { trpc } from "@utils/trpc";
 import { $createWordNode, $isWordNode } from "@components/nodes/WordNode";
 import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
 import { createPortal } from "react-dom";
+import Button from "@ui/Button";
 
 function CommentInputBox({
 	editor,
@@ -148,29 +149,33 @@ function CommentInputBox({
 
 	return (
 		<div
-			className="absolute top-0 left-0 z-20 w-[250px] rounded-md border border-gray-200 shadow-md"
+			className="absolute top-0 left-0 z-20 w-[250px] rounded-md border-2 border-gray-300 bg-white shadow-lg"
 			ref={boxRef}
 		>
-			<div className="absolute top-[-1px] left-[105px] z-10 h-4 w-4 translate-x-1/2 -translate-y-1/2 rotate-45 transform border-l border-t border-gray-200 bg-white" />
-			<div>
+			<div
+				className="absolute top-[-1px] left-[105px] z-10 h-4 w-4 translate-x-1/2 -translate-y-1/2
+						   rotate-45 transform border-l-2 border-t-2 border-gray-300 bg-white"
+			/>
+			<div className="h-10">
 				<input
 					onChange={(e) => setContent(e.target.value)}
 					type="text"
-					className="input relative h-full w-full resize-none rounded-b-none rounded-t-md p-2 outline-none focus:outline-none"
+					className="input relative h-full w-full resize-none rounded-b-none rounded-t-md bg-white p-2 outline-none focus:outline-none"
 					autoFocus
 				/>
 			</div>
-			<div className="grid w-full grid-cols-2">
-				<button
-					onClick={cancelAddComment}
-					className="btn-sm btn rounded-none rounded-bl-md bg-gray-400"
-				>
+			<div className="grid h-9 w-full grid-cols-2 border-t border-gray-200">
+				<button className="bg-base-500" onClick={cancelAddComment}>
 					Cancel
 				</button>
 				<button
+					className={`${
+						canSubmit
+							? "bg-primary-base font-bold text-gray-200 transition-colors duration-500 ease-in-out hover:bg-primary-dark active:bg-primary-darker active:duration-75"
+							: "bg-primary-light font-bold text-base-500"
+					}`}
 					onClick={submitComment}
 					disabled={!canSubmit}
-					className="btn-primary btn-sm btn rounded-none rounded-br-md"
 				>
 					Comment
 				</button>
