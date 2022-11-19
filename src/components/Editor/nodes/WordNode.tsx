@@ -19,7 +19,7 @@ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 
 import React, { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { trpc } from "../../utils/trpc";
+import { trpc } from "@utils/trpc";
 
 export type SerializedWordNode = Spread<
 	{

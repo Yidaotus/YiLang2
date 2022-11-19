@@ -4,7 +4,7 @@ import type { HeadingTagType } from "@lexical/rich-text";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { $createWordNode } from "@components/nodes/WordNode";
+import { $createWordNode } from "@editor/nodes/WordNode";
 import {
 	$getSelection,
 	$isRangeSelection,

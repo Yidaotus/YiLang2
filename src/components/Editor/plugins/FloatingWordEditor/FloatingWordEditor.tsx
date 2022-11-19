@@ -22,7 +22,7 @@ import {
 import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
 import { trpc } from "@utils/trpc";
-import { $createWordNode, $isWordNode } from "@components/nodes/WordNode";
+import { $createWordNode, $isWordNode } from "@editor/nodes/WordNode";
 import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
 import { createPortal } from "react-dom";
 import Button from "@ui/Button";

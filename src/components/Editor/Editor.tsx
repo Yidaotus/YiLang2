@@ -29,7 +29,7 @@ import { mergeRegister } from "@lexical/utils";
 
 import YiLangTheme from "./themes/YiLangEditorTheme";
 import ErrorBoundary from "./ui/ErrorBoundary";
-import { $isWordNode, WordNode } from "../nodes/WordNode";
+import { $isWordNode, WordNode } from "./nodes/WordNode";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin";
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
@@ -38,6 +38,7 @@ import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChan
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { createPortal } from "react-dom";
 import { setFloatingElemPosition } from "./utils/setFloatingPosition";
+import { ImageNode } from "./nodes/ImageNode";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -54,6 +55,7 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	LinkNode,
 	OverflowNode,
 	HorizontalRuleNode,
+	ImageNode,
 	MarkNode,
 	WordNode,
 ];
