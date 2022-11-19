@@ -28,7 +28,7 @@ const Dropdown = ({ children }: DropdownProps) => {
 	}, [show]);
 
 	return (
-		<div className="relative" ref={dropDownRef}>
+		<div className="" ref={dropDownRef}>
 			<Button
 				ghost
 				onClick={() => setShow(!show)}
@@ -44,13 +44,15 @@ const Dropdown = ({ children }: DropdownProps) => {
 				</div>
 			</Button>
 			<div
-				className={`${
+				className={`
+				${
 					show
 						? "visible scale-100 opacity-100"
 						: "pointer-events-none invisible scale-95 opacity-0"
-				} ${!visible && "invisible"} text-contrast absolute z-50 my-2 origin-top
-				 list-none divide-y divide-gray-200
-				rounded border border-gray-200 bg-gray-50 shadow-sm
+				} 
+				absolute z-30 my-2 origin-top list-none
+				divide-y divide-gray-200 rounded
+				border border-gray-200 bg-gray-100 text-gray-200 shadow-sm
 				transition duration-100 ease-in-out`}
 			>
 				<ul className="min-w-[100px] py-1" aria-labelledby="dropdown">

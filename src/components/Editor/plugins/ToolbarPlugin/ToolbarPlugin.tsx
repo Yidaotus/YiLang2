@@ -233,14 +233,13 @@ const ToolbarPlugin = () => {
 	}, [createWord, editor]);
 	return (
 		<div>
-			<div className="top-0 flex overflow-hidden border-b border-gray-300 drop-shadow-sm">
+			<div className="top-0 flex border-b border-gray-300 drop-shadow-sm z-20">
 				<button className="rounded-md px-3 py-2 hover:bg-gray-100 active:bg-gray-200">
 					Hangzhou
 				</button>
 				<Button ghost>Shanghai</Button>
 				<Button ghost>Beijing</Button>
 				<span className="h-full w-1 border-r border-gray-300" />
-				<Button ghost>Blocks</Button>
 				<Dropdown>
 					<Button ghost full onClick={formatHeading("h1")}>
 						H1
@@ -255,6 +254,7 @@ const ToolbarPlugin = () => {
 						Chengdu
 					</Button>
 				</Dropdown>
+				<Button ghost>Blocks</Button>
 			</div>
 		</div>
 	);

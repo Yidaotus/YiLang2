@@ -237,9 +237,9 @@ export default function Editor({ id }: EditorProps) {
 						<ToolbarPlugin />
 						<RichTextPlugin
 							contentEditable={
-								<div className="relative">
+								<div>
 									<div
-										className="flex  justify-center overflow-scroll py-4 pr-2 scrollbar-thin scrollbar-track-base-500 scrollbar-thumb-base-600"
+										className="flex justify-center py-4 pr-2 scrollbar-thin scrollbar-track-base-500 scrollbar-thumb-base-600"
 										ref={onRef}
 									>
 										<ContentEditable className="prose min-h-full max-w-[700px] outline-none selection:bg-[#b3d4fc]" />
@@ -263,7 +263,6 @@ export default function Editor({ id }: EditorProps) {
 							)}
 						</>
 					</LexicalComposer>
-					<div className="card-actions justify-end"></div>
 				</div>
 			</div>
 		</div>

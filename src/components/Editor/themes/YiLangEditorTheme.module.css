@@ -14,7 +14,6 @@
 }
 .PlaygroundEditorTheme__paragraph {
 	margin: 0;
-	position: relative;
 	font-family: system-ui, -apple-system, BlinkMacSystemFont, ".SFNSText-Regular",
 		sans-serif;
 }
