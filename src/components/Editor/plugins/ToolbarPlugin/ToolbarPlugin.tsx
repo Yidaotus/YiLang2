@@ -20,6 +20,9 @@ import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import { $createHeadingNode, $isHeadingNode } from "@lexical/rich-text";
 import { $wrapNodes } from "@lexical/selection";
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import Button from "@ui/Button";
+import Dropdown from "@ui/Dropdown";
+import { ButtonGroup } from "@ui/Button";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -37,115 +40,6 @@ const blockTypeToBlockName = {
 };
 
 const WordStore = new Map<NodeKey, string>();
-
-type Handler = (event: MouseEvent | TouchEvent) => void;
-function useOnClickOutside<T extends HTMLElement = HTMLElement>(
-	ref: React.RefObject<T>,
-	handler: Handler
-): void {
-	useEffect(() => {
-		const listener = (event: MouseEvent | TouchEvent) => {
-			const el = ref?.current;
-			if (!el || el.contains(event.target as Node)) {
-				return;
-			}
-			handler(event);
-		};
-		document.addEventListener("mousedown", listener);
-		document.addEventListener("touchstart", listener);
-		return () => {
-			document.removeEventListener("mousedown", listener);
-			document.removeEventListener("touchstart", listener);
-		};
-	}, [ref, handler]);
-}
-
-const DropDown = () => {
-	const [show, setShow] = useState(false);
-	const [visible, setVisible] = useState(false);
-	const dropDownRef = useRef(null);
-
-	useOnClickOutside(dropDownRef, () => setShow(false));
-
-	useEffect(() => {
-		let tov: ReturnType<typeof setTimeout>;
-		if (!show) {
-			tov = setTimeout(() => {
-				setVisible(false);
-			}, 100);
-		} else {
-			setVisible(true);
-		}
-		return () => {
-			if (tov) {
-				clearTimeout(tov);
-			}
-		};
-	}, [show]);
-
-	return (
-		<div className="relative" ref={dropDownRef}>
-			<button
-				className={`rounded-sm p-2 transition duration-75 ease-in-out hover:bg-slate-200 active:scale-90 ${
-					show && "bg-slate-200"
-				}`}
-				onClick={() => setShow(!show)}
-			>
-				Hi
-			</button>
-			<div
-				className={`${
-					show
-						? "visible scale-100 opacity-100"
-						: "pointer-events-none scale-95 opacity-0"
-				} ${
-					!visible && "invisible"
-				} absolute z-50 my-4 origin-top -translate-x-1/3 list-none divide-y divide-gray-100 rounded bg-white text-base shadow transition duration-100 ease-in-out`}
-			>
-				<div className="px-4 py-3">
-					<span className="block text-sm">Bonnie Green</span>
-					<span className="block truncate text-sm font-medium text-gray-900">
-						name@flowbite.com
-					</span>
-				</div>
-				<ul className="py-1" aria-labelledby="dropdown">
-					<li>
-						<a
-							href="#"
-							className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-						>
-							Dashboard
-						</a>
-					</li>
-					<li>
-						<a
-							href="#"
-							className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-						>
-							Settings
-						</a>
-					</li>
-					<li>
-						<a
-							href="#"
-							className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-						>
-							Earnings
-						</a>
-					</li>
-					<li>
-						<a
-							href="#"
-							className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-						>
-							Sign out
-						</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-	);
-};
 
 const ToolbarPlugin = () => {
 	const [editor] = useLexicalComposerContext();
@@ -339,41 +233,24 @@ const ToolbarPlugin = () => {
 	}, [createWord, editor]);
 	return (
 		<div className="textarea-bordered textarea w-full rounded-b-none p-0">
-			<div className="flex gap-1 p-1">
-				<button
-					className={`btn-ghost btn ${blockType === "h1" && "btn-active"}`}
-					onClick={formatHeading("h1")}
-				>
-					h1
-				</button>
-				<button
-					className={`btn-ghost btn ${blockType === "h2" && "btn-active"}`}
-					onClick={formatHeading("h2")}
-				>
-					h2
-				</button>
-				<DropDown />
-				<button className="btn-ghost btn" onClick={insertWord}>
-					Word
-				</button>
-				<button className="btn-ghost btn" onClick={selectWord}>
-					Select Word
-				</button>
-				<button className="btn-ghost btn" onClick={saveDocument}>
-					Save
-				</button>
-				<DropDown />
-				<button className="btn-ghost btn" onClick={loadDocument}>
-					Load State
-				</button>
-				<button className="btn-ghost btn" onClick={wordTest}>
-					W TEST
-				</button>
-				<DropDown />
-				<button className="btn-ghost btn" onClick={showWordEditor}>
-					FLOATER
-				</button>
-			</div>
+			<ButtonGroup>
+				<Button ghost>1</Button>
+				<Button ghost>2</Button>
+				<Dropdown ghost>
+					<Button ghost full>
+						1
+					</Button>
+					<Button ghost full>
+						2
+					</Button>
+					<span className="w-full bg-gray-50 px-1 py-2">hi</span>
+					<Button ghost full>
+						3
+					</Button>
+				</Dropdown>
+				<span className="bg-gray-50 px-1 py-2">hi</span>
+				<Button ghost>3</Button>
+			</ButtonGroup>
 		</div>
 	);
 };

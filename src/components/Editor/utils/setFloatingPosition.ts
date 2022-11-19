@@ -12,7 +12,8 @@ export function setFloatingElemPosition(
 
 	if (targetRect === null || !scrollerElem) {
 		floatingElem.style.opacity = "0";
-		// floatingElem.style.transform = "translate(-10000px, -10000px)";
+		// So it won't be in the way (preventing clicking) of nodes below
+		floatingElem.style.transform = "translate(-10000px, -10000px)";
 		return;
 	}
 

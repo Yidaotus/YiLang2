@@ -23,6 +23,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
+import Button, { ButtonGroup } from "ui/Button";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -195,28 +196,25 @@ function TextFormatFloatingToolbar({
 	return (
 		<div
 			ref={popupCharStylesEditorRef}
-			className="absolute top-0 left-0 flex h-[35px] rounded-sm bg-slate-200 p-1 opacity-0 shadow transition-opacity"
+			className="absolute top-0 left-0 z-10 m-0 flex rounded-md border border-gray-300 bg-gray-300 p-0 opacity-0 shadow-lg transition-opacity"
 		>
-			{editor.isEditable() && (
-				<>
-					<button
-						onClick={() => {
-							editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
-						}}
-						className="btn-ghost btn h-[10px]"
-						aria-label="Format text as bold"
-					>
-						<i className="format bold">B</i>
-					</button>
-				</>
-			)}
-			<button
-				onClick={insertComment}
-				className="btn-ghost btn"
-				aria-label="Insert comment"
-			>
-				<i className="format add-comment">C</i>
-			</button>
+			<ButtonGroup>
+				<Button
+					ghost
+					onClick={() => {
+						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
+					}}
+					aria-label="Format text as bold"
+				>
+					<i className="format bold text-sm">B</i>
+				</Button>
+				<Button ghost onClick={insertComment} aria-label="Insert comment">
+					<i className="format add-comment text-sm">C</i>
+				</Button>
+				<Button ghost onClick={insertComment} aria-label="Insert comment">
+					<i className="format add-comment text-sm">Comm</i>
+				</Button>
+			</ButtonGroup>
 		</div>
 	);
 }

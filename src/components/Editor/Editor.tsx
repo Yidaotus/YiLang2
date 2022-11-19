@@ -1,13 +1,11 @@
+import type { Klass, LexicalCommand, LexicalNode } from "lexical";
 import {
+	$createNodeSelection,
 	$getNodeByKey,
 	$getSelection,
 	$isNodeSelection,
-	$isRangeSelection,
+	$setSelection,
 	COMMAND_PRIORITY_LOW,
-	Klass,
-	LexicalCommand,
-	LexicalNode,
-	NodeSelection,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 
@@ -27,7 +25,7 @@ import { MarkNode } from "@lexical/mark";
 import { OverflowNode } from "@lexical/overflow";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { $findMatchingParent, mergeRegister } from "@lexical/utils";
+import { mergeRegister } from "@lexical/utils";
 
 import YiLangTheme from "./themes/YiLangEditorTheme";
 import ErrorBoundary from "./ui/ErrorBoundary";
@@ -74,10 +72,7 @@ type EditorProps = {
 	id?: string;
 };
 
-const WordStore = new Map<string, string>();
-
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
-	const [show, setShow] = useState(false);
 	const elem = useRef<HTMLDivElement | null>(null);
 	const [wordNode, setWordNode] = useState<{
 		word: string;
@@ -121,26 +116,6 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	}, [anchorElem, editor]);
 
 	useEffect(() => {
-		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
-			for (const [nodeKey, mutation] of mutatedNodes) {
-				if (mutation === "created") {
-					editor.getEditorState().read(() => {
-						const wordNode = $getNodeByKey(nodeKey) as WordNode;
-
-						if (!WordStore.has(nodeKey)) {
-							WordStore.set(nodeKey, wordNode.getWord());
-						}
-					});
-				}
-				if (mutation === "destroyed") {
-					WordStore.delete(nodeKey);
-				}
-				console.debug({ WordStore });
-			}
-		});
-	});
-
-	useEffect(() => {
 		document.addEventListener("resize", updatePopup);
 		return () => document.removeEventListener("resize", updatePopup);
 	}, [updatePopup]);
@@ -166,17 +141,15 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	return createPortal(
 		<div
 			ref={elem}
-			className={`${
-				wordNode ? "opacity-100" : "opacity-0"
-			} absolute top-0 left-0 z-30 w-32 rounded-sm
-			 border
-			 border-slate-200 bg-slate-100 p-2 transition-opacity ease-in-out`}
+			className={`${wordNode ? "opacity-100" : "opacity-0"}
+			 border-base-200 bg-base-100 absolute top-0 left-0 z-30 w-32
+			 rounded-sm border p-2 transition-opacity duration-75 ease-out`}
 		>
 			<div className="relative">
 				<div
-					className="absolute top-[-8px] left-[50px]
-				 z-10 h-2 w-2 translate-x-1/2 -translate-y-1/2 rotate-45 transform border-l
-				  border-t border-slate-200 bg-slate-100"
+					className="border-base-200 bg-base-100 absolute
+				 top-[-8px] left-[50px] z-10 h-2 w-2 translate-x-1/2 -translate-y-1/2 rotate-45
+				  transform border-l border-t"
 				/>
 				{wordNode?.translation}
 			</div>
@@ -185,9 +158,58 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	);
 };
 
-export default function Editor({ id }: EditorProps) {
-	const editorRef = useRef(null);
+const WordListPlugin = () => {
+	const [editor] = useLexicalComposerContext();
+	const [wordStore, setWordStore] = useState<{ [key in string]: string }>({});
 
+	useEffect(() => {
+		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
+			for (const [nodeKey, mutation] of mutatedNodes) {
+				if (mutation === "created") {
+					editor.getEditorState().read(() => {
+						const wordNode = $getNodeByKey(nodeKey) as WordNode;
+						const wordText = wordNode.getWord();
+						setWordStore((currentStore) => ({
+							...currentStore,
+							[nodeKey]: wordText,
+						}));
+					});
+				}
+				if (mutation === "destroyed") {
+					setWordStore((currentStore) => {
+						delete currentStore[nodeKey];
+						return { ...currentStore };
+					});
+				}
+			}
+		});
+	}, [editor]);
+
+	const highlightWord = useCallback(
+		(key: string) => {
+			editor.update(() => {
+				const newSelection = $createNodeSelection();
+				newSelection.add(key);
+				$setSelection(newSelection);
+			});
+		},
+		[editor]
+	);
+
+	return (
+		<div>
+			<ul>
+				{Object.entries(wordStore).map(([key, value]) => (
+					<li key={value}>
+						<button onClick={() => highlightWord(key)}>{value}</button>
+					</li>
+				))}
+			</ul>
+		</div>
+	);
+};
+
+export default function Editor({ id }: EditorProps) {
 	const initialConfig = {
 		namespace: "MyEditor",
 		theme: YiLangTheme,
@@ -206,9 +228,8 @@ export default function Editor({ id }: EditorProps) {
 	};
 
 	return (
-		<div className="card min-h-[70vh] w-full bg-base-200 px-4 shadow-xl md:w-10/12">
-			<div className="card-body p-0 md:p-10">
-				<h2 className="card-title">Editor</h2>
+		<div className="bg-base-200 min-h-[70vh] w-full px-4 shadow-xl md:w-10/12">
+			<div className="p-0 md:p-10">
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
 						<ToolbarPlugin />
@@ -230,6 +251,7 @@ export default function Editor({ id }: EditorProps) {
 						<HistoryPlugin />
 						<PersistStateOnPageChangePlugion />
 						<FetchDocumentPlugin id={id as string} />
+						<WordListPlugin />
 						<>
 							{floatingAnchorElem && (
 								<>
