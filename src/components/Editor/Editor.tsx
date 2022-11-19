@@ -39,6 +39,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { createPortal } from "react-dom";
 import { setFloatingElemPosition } from "./utils/setFloatingPosition";
 import { ImageNode } from "./nodes/ImageNode";
+import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -254,6 +255,7 @@ export default function Editor({ id }: EditorProps) {
 						<PersistStateOnPageChangePlugion />
 						<FetchDocumentPlugin id={id as string} />
 						<WordListPlugin />
+						<ImagesPlugin />
 						<>
 							{floatingAnchorElem && (
 								<>

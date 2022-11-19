@@ -1,4 +1,4 @@
-import type { NodeKey } from "lexical";
+import { FORMAT_ELEMENT_COMMAND, NodeKey } from "lexical";
 import type { HeadingTagType } from "@lexical/rich-text";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -233,13 +233,51 @@ const ToolbarPlugin = () => {
 	}, [createWord, editor]);
 	return (
 		<div>
-			<div className="top-0 flex border-b border-gray-300 drop-shadow-sm z-20">
+			<div className="top-0 z-20 flex border-b border-gray-300 drop-shadow-sm">
 				<button className="rounded-md px-3 py-2 hover:bg-gray-100 active:bg-gray-200">
 					Hangzhou
 				</button>
 				<Button ghost>Shanghai</Button>
 				<Button ghost>Beijing</Button>
 				<span className="h-full w-1 border-r border-gray-300" />
+				<Dropdown>
+					<Button
+						ghost
+						full
+						onClick={() =>
+							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
+						}
+					>
+						Left
+					</Button>
+					<Button
+						ghost
+						full
+						onClick={() =>
+							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
+						}
+					>
+						Center
+					</Button>
+					<Button
+						ghost
+						full
+						onClick={() =>
+							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
+						}
+					>
+						Right
+					</Button>
+					<Button
+						ghost
+						full
+						onClick={() =>
+							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
+						}
+					>
+						Justify
+					</Button>
+				</Dropdown>
 				<Dropdown>
 					<Button ghost full onClick={formatHeading("h1")}>
 						H1

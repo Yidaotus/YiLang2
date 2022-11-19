@@ -1,6 +1,17 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $wrapNodeInElement, mergeRegister } from "@lexical/utils";
-import type { LexicalCommand, LexicalEditor } from "lexical";
+import {
+	COMMAND_PRIORITY_NORMAL,
+	ElementFormatType,
+	LexicalCommand,
+	LexicalEditor,
+} from "lexical";
+import {
+	$getNodeByKey,
+	$isRangeSelection,
+	COMMAND_PRIORITY_CRITICAL,
+	FORMAT_ELEMENT_COMMAND,
+} from "lexical";
 import {
 	$createParagraphNode,
 	$createRangeSelection,
@@ -18,7 +29,7 @@ import {
 	DROP_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
-import type { ImagePayload } from "../../nodes/ImageNode";
+import type { ImageAlignment, ImagePayload } from "../../nodes/ImageNode";
 
 import {
 	$createImageNode,
@@ -206,6 +217,32 @@ export default function ImagesPlugin({
 		}
 
 		return mergeRegister(
+			editor.registerCommand<ElementFormatType>(
+				FORMAT_ELEMENT_COMMAND,
+				(formatType) => {
+					const selection = $getSelection();
+					if (!$isNodeSelection(selection)) return false;
+
+					const nodes = selection.getNodes();
+					if (nodes.length < 1) return false;
+
+					const node = nodes[0];
+					if (!$isImageNode(node)) return false;
+
+					let cleanFormat: ImageAlignment;
+					if (!formatType) {
+						cleanFormat = "left";
+					} else if (formatType === "justify") {
+						cleanFormat = "center";
+					} else {
+						cleanFormat = formatType;
+					}
+
+					node.setAlignment(cleanFormat);
+					return true;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
 			editor.registerCommand<InsertImagePayload>(
 				INSERT_IMAGE_COMMAND,
 				(payload) => {
@@ -217,7 +254,7 @@ export default function ImagesPlugin({
 
 					return true;
 				},
-				COMMAND_PRIORITY_EDITOR
+				COMMAND_PRIORITY_LOW
 			),
 			editor.registerCommand<DragEvent>(
 				DRAGSTART_COMMAND,

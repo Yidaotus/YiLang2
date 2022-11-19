@@ -30,7 +30,7 @@ import {
 import * as React from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { $isImageNode } from "./ImageNode";
+import { $isImageNode, ImageAlignment } from "./ImageNode";
 import ImageResizer from "./ImageResizer";
 
 const imageCache = new Set();
@@ -90,6 +90,7 @@ export default function ImageComponent({
 	height,
 	maxWidth,
 	resizable,
+	alignment,
 }: {
 	altText: string;
 	height: "inherit" | number;
@@ -98,6 +99,7 @@ export default function ImageComponent({
 	resizable: boolean;
 	src: string;
 	width: "inherit" | number;
+	alignment: ImageAlignment;
 }): JSX.Element {
 	const imageRef = useRef<null | HTMLImageElement>(null);
 	const [isSelected, setSelected, clearSelection] =
@@ -206,7 +208,13 @@ export default function ImageComponent({
 	const isFocused = isSelected || isResizing;
 	return (
 		<Suspense fallback={null}>
-			<div className="flex w-full justify-center py-4">
+			<div
+				className={`flex 
+			${alignment === "left" && "justify-start"}
+			${alignment === "center" && "justify-center"}
+			${alignment === "right" && "justify-end"}
+			`}
+			>
 				<div className="relative inline-block">
 					<LazyImage
 						className={

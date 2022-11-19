@@ -61,6 +61,7 @@ export type SerializedImageNode = Spread<
 	SerializedLexicalNode
 >;
 
+export type ImageAlignment = "left" | "center" | "right";
 export class ImageNode extends DecoratorNode<JSX.Element> {
 	__src: string;
 	__altText: string;
@@ -69,11 +70,21 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 	__maxWidth: number;
 	__showCaption: boolean;
 	__caption: LexicalEditor;
+	__alignment: ImageAlignment = "left";
 	// Captions cannot yet be used within editor cells
 	__captionsEnabled: boolean;
 
 	static getType(): string {
 		return "image";
+	}
+
+	getAlignment() {
+		return this.__alignment;
+	}
+
+	setAlignment(alignment: ImageAlignment) {
+		const writable = this.getWritable();
+		writable.__alignment = alignment;
 	}
 
 	static clone(node: ImageNode): ImageNode {
@@ -109,11 +120,19 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		return node;
 	}
 
+	setFormat(newFormat: string) {
+		console.debug(newFormat);
+	}
+
 	exportDOM(): DOMExportOutput {
 		const element = document.createElement("img");
 		element.setAttribute("src", this.__src);
 		element.setAttribute("alt", this.__altText);
 		return { element };
+	}
+
+	isInline(): boolean {
+		return false;
 	}
 
 	static importDOM(): DOMConversionMap | null {
@@ -178,13 +197,14 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 	// View
 
 	createDOM(config: EditorConfig): HTMLElement {
-		const span = document.createElement("span");
+		const div = document.createElement("div");
+		div.style.display = "block";
 		const theme = config.theme;
 		const className = theme.image;
 		if (className !== undefined) {
-			span.className = className;
+			div.className = className;
 		}
-		return span;
+		return div;
 	}
 
 	updateDOM(): false {
@@ -203,6 +223,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		return (
 			<Suspense fallback={null}>
 				<ImageComponent
+					alignment={this.__alignment}
 					altText={this.__altText}
 					height={this.__height}
 					maxWidth={this.__maxWidth}
