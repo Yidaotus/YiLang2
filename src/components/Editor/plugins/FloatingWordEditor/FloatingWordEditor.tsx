@@ -32,11 +32,13 @@ function CommentInputBox({
 	cancelAddComment,
 	submitAddComment,
 	anchorElem,
+	show,
 }: {
 	cancelAddComment: () => void;
 	editor: LexicalEditor;
 	submitAddComment: (translation: string) => void;
 	anchorElem: HTMLElement;
+	show: boolean;
 }) {
 	const [content, setContent] = useState("");
 	const canSubmit = content.length > 0;
@@ -49,11 +51,36 @@ function CommentInputBox({
 		[]
 	);
 
+	/*
 	useEffect(() => {
 		boxRef.current?.focus();
 	}, [boxRef]);
+*/
 
 	const updateLocation = useCallback(() => {
+		const boxElem = boxRef.current;
+		if (!boxElem) return;
+
+		if (!show) {
+			setFloatingElemPosition({
+				targetRect: null,
+				floatingElem: boxElem,
+				anchorElem,
+				verticalOffset: 10,
+			});
+
+			const { container } = selectionState;
+			const elements: Array<HTMLSpanElement> = selectionState.elements;
+			const elementsLength = elements.length;
+			for (let i = elementsLength - 1; i >= 0; i--) {
+				const elem = elements[i];
+				if (!elem) continue;
+				container.removeChild(elem);
+				elements.pop();
+			}
+			return;
+		}
+
 		editor.getEditorState().read(() => {
 			const selection = $getSelection();
 
@@ -67,29 +94,18 @@ function CommentInputBox({
 					focus.getNode(),
 					focus.offset
 				);
-				const boxElem = boxRef.current;
-				if (range !== null && boxElem !== null) {
-					const { left, bottom, width } = range.getBoundingClientRect();
+				if (range !== null) {
 					const selectionRects = createRectsFromDOMRange(editor, range);
-					let correctedLeft =
-						selectionRects.length === 1 ? left + width / 2 - 125 : left - 125;
-					if (correctedLeft < 10) {
-						correctedLeft = 10;
-					}
 
-					const clientRect = range.getBoundingClientRect();
-					const elemRect = boxElem.getBoundingClientRect();
-					setFloatingElemPosition(
-						range.getBoundingClientRect(),
-						boxElem,
+					setFloatingElemPosition({
+						targetRect: range.getBoundingClientRect(),
+						floatingElem: boxElem,
 						anchorElem,
-						-clientRect.height - elemRect.height - 15,
-						elemRect.width / 2 - clientRect.width / 2
-					);
+						verticalOffset: 10,
+					});
 					const selectionRectsLength = selectionRects.length;
 					const { container } = selectionState;
 					const elements: Array<HTMLSpanElement> = selectionState.elements;
-					const elementsLength = elements.length;
 
 					for (let i = 0; i < selectionRectsLength; i++) {
 						const selectionRect = selectionRects[i];
@@ -101,19 +117,19 @@ function CommentInputBox({
 							container.appendChild(elem);
 						}
 						const color = "255, 212, 0";
-						const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
+						const style = `position:absolute;top:${
+							selectionRect.top + window.scrollY
+						}px;left:${selectionRect.left}px;height:${
+							selectionRect.height
+						}px;width:${
+							selectionRect.width + window.scrollX
+						}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
 						elem.style.cssText = style;
-					}
-					for (let i = elementsLength - 1; i >= selectionRectsLength; i--) {
-						const elem = elements[i];
-						if (!elem) continue;
-						container.removeChild(elem);
-						elements.pop();
 					}
 				}
 			}
 		});
-	}, [anchorElem, editor, selectionState]);
+	}, [anchorElem, editor, selectionState, show]);
 
 	useLayoutEffect(() => {
 		updateLocation();
@@ -252,17 +268,16 @@ const FloatingWordEditorPlugin = ({
 		setShowInput(false);
 	}, []);
 
-	return showInput
-		? createPortal(
-				<CommentInputBox
-					cancelAddComment={cancel}
-					editor={editor}
-					submitAddComment={insertWord}
-					anchorElem={anchorElem}
-				/>,
-				anchorElem
-		  )
-		: null;
+	return createPortal(
+		<CommentInputBox
+			show={showInput}
+			cancelAddComment={cancel}
+			editor={editor}
+			submitAddComment={insertWord}
+			anchorElem={anchorElem}
+		/>,
+		anchorElem
+	);
 };
 
 export default FloatingWordEditorPlugin;

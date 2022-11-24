@@ -42,11 +42,11 @@ const Button = ({
 	<button
 		className={mergeClasses(
 			className,
-			`rounded-md py-2 px-3 text-base transition duration-75 ease-in font-semibold 
-			 ${ghost && "bg-base-500 text-gray-800 hover:bg-gray-300 active:bg-base-400"}
+			`rounded-md py-2 px-3 text-base font-semibold transition duration-75 ease-in 
+			 ${ghost && "bg-white text-gray-800 hover:bg-gray-100 active:bg-base-200"}
 			 ${
 					!ghost &&
-					"bg-primary-400 text-base-500 hover:bg-primary-400 active:bg-primary-600"
+					"bg-primary-400 hover:bg-primary-400 active:bg-primary-600 text-base-500"
 				}
 			 ${full && "w-full text-left"}`
 		)}

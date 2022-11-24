@@ -30,7 +30,7 @@ import { mergeRegister } from "@lexical/utils";
 import YiLangTheme from "./themes/YiLangEditorTheme";
 import ErrorBoundary from "./ui/ErrorBoundary";
 import { $isWordNode, WordNode } from "./nodes/WordNode";
-import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin";
+import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/FloatingToolbarPlugin";
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
 import ToolbarPlugin from "./plugins/ToolbarPlugin/ToolbarPlugin";
@@ -89,7 +89,11 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		const selection = $getSelection();
 
 		if (!$isNodeSelection(selection)) {
-			setFloatingElemPosition(null, elem.current, anchorElem);
+			setFloatingElemPosition({
+				targetRect: null,
+				floatingElem: elem.current,
+				anchorElem,
+			});
 			return;
 		}
 
@@ -109,13 +113,13 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		const clientRect = domPos.getBoundingClientRect();
 		const elemRect = elem.current.getBoundingClientRect();
 
-		setFloatingElemPosition(
-			clientRect,
-			elem.current,
+		setFloatingElemPosition({
+			targetRect: clientRect,
+			floatingElem: elem.current,
 			anchorElem,
-			-clientRect.height - elemRect.height - 7,
-			elemRect.width / 2 - clientRect.width / 2
-		);
+			verticalOffset: -clientRect.height - elemRect.height - 7,
+			horizontalOffset: elemRect.width / 2 - clientRect.width / 2,
+		});
 	}, [anchorElem, editor]);
 
 	useEffect(() => {
@@ -240,7 +244,7 @@ export default function Editor({ id }: EditorProps) {
 							contentEditable={
 								<div>
 									<div
-										className="flex justify-center py-4 pr-2 scrollbar-thin scrollbar-track-base-500 scrollbar-thumb-base-600"
+										className="relative flex justify-center py-4 pr-2 scrollbar-thin scrollbar-track-base-500 scrollbar-thumb-base-600"
 										ref={onRef}
 									>
 										<ContentEditable className="prose min-h-full max-w-[700px] outline-none selection:bg-[#b3d4fc]" />
@@ -250,7 +254,6 @@ export default function Editor({ id }: EditorProps) {
 							placeholder={<div>Enter some text...</div>}
 							ErrorBoundary={ErrorBoundary}
 						/>
-						<FloatingTextFormatToolbarPlugin />
 						<HistoryPlugin />
 						<PersistStateOnPageChangePlugion />
 						<FetchDocumentPlugin id={id as string} />
@@ -259,6 +262,9 @@ export default function Editor({ id }: EditorProps) {
 						<>
 							{floatingAnchorElem && (
 								<>
+									<FloatingTextFormatToolbarPlugin
+										anchorElem={floatingAnchorElem}
+									/>
 									<FloatingWordEditorPlugin anchorElem={floatingAnchorElem} />
 									<WordPopupPlugin anchorElem={floatingAnchorElem} />
 								</>

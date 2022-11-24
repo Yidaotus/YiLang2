@@ -22,7 +22,6 @@ import type {
 import { createEditor, DecoratorNode } from "lexical";
 import * as React from "react";
 import { Suspense } from "react";
-import ImageResizer from "./ImageResizer";
 import ImageComponent from "./ImageComponents";
 
 export interface ImagePayload {
@@ -41,7 +40,7 @@ export interface ImagePayload {
 function convertImageElement(domNode: Node): null | DOMConversionOutput {
 	if (domNode instanceof HTMLImageElement) {
 		const { alt: altText, src } = domNode;
-		const node = $createImageNode({ altText, src });
+		const node = $createImageNode({ altText, src, alignment: "center" });
 		return { node };
 	}
 	return null;
@@ -72,7 +71,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 	__maxWidth: number;
 	__showCaption: boolean;
 	__caption: LexicalEditor;
-	__alignment: ImageAlignment = "left";
+	__alignment: ImageAlignment = "center";
 	// Captions cannot yet be used within editor cells
 	__captionsEnabled: boolean;
 
@@ -114,6 +113,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			showCaption,
 			src,
 			width,
+			alignment: "center",
 		});
 		const nestedEditor = node.__caption;
 		const editorState = nestedEditor.parseEditorState(caption.editorState);

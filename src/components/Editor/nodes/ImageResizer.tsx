@@ -34,7 +34,6 @@ export default function ImageResizer({
 	onResizeEnd: (width: "inherit" | number, height: "inherit" | number) => void;
 	onResizeStart: () => void;
 }): JSX.Element {
-	const controlWrapperRef = useRef<HTMLDivElement>(null);
 	const userSelect = useRef({
 		priority: "",
 		value: "default",
@@ -97,28 +96,22 @@ export default function ImageResizer({
 				`${cursorDir}-resize`,
 				"important"
 			);
-			userSelect.current.value = document.body.style.getPropertyValue(
-				"-webkit-user-select"
-			);
-			userSelect.current.priority = document.body.style.getPropertyPriority(
-				"-webkit-user-select"
-			);
-			document.body.style.setProperty(
-				"-webkit-user-select",
-				`none`,
-				"important"
-			);
+			userSelect.current.value =
+				document.body.style.getPropertyValue("user-select");
+			userSelect.current.priority =
+				document.body.style.getPropertyPriority("user-select");
+			document.body.style.setProperty("user-select", `none`, "important");
 		}
 	};
 
 	const setEndCursor = () => {
 		if (editorRootElement !== null) {
-			editorRootElement.style.setProperty("cursor", "default");
+			editorRootElement.style.removeProperty("cursor");
 		}
 		if (document.body !== null) {
-			document.body.style.setProperty("cursor", "default");
+			document.body.style.removeProperty("cursor");
 			document.body.style.setProperty(
-				"-webkit-user-select",
+				"user-select",
 				userSelect.current.value,
 				userSelect.current.priority
 			);
@@ -130,9 +123,8 @@ export default function ImageResizer({
 		direction: number
 	) => {
 		const image = imageRef.current;
-		const controlWrapper = controlWrapperRef.current;
 
-		if (image !== null && controlWrapper !== null) {
+		if (image !== null) {
 			const { width, height } = image.getBoundingClientRect();
 			const positioning = positioningRef.current;
 			positioning.startWidth = width;
@@ -148,7 +140,6 @@ export default function ImageResizer({
 			setStartCursor(direction);
 			onResizeStart();
 
-			controlWrapper.classList.add("image-control-wrapper--resizing");
 			image.style.height = `${height}px`;
 			image.style.width = `${width}px`;
 
@@ -212,8 +203,7 @@ export default function ImageResizer({
 	const handlePointerUp = () => {
 		const image = imageRef.current;
 		const positioning = positioningRef.current;
-		const controlWrapper = controlWrapperRef.current;
-		if (image !== null && controlWrapper !== null && positioning.isResizing) {
+		if (image !== null) {
 			const width = positioning.currentWidth;
 			const height = positioning.currentHeight;
 			positioning.startWidth = 0;
@@ -225,8 +215,6 @@ export default function ImageResizer({
 			positioning.currentHeight = 0;
 			positioning.isResizing = false;
 
-			controlWrapper.classList.remove("image-control-wrapper--resizing");
-
 			setEndCursor();
 			onResizeEnd(width, height);
 
@@ -235,9 +223,10 @@ export default function ImageResizer({
 		}
 	};
 	return (
-		<div ref={controlWrapperRef}>
+		<div>
 			<div
-				className="absolute bottom-[-7px] right-[-7px] z-20 block h-3 w-3 cursor-se-resize border border-primary-light bg-primary-base"
+				className="absolute bottom-[-7px] right-[-7px] z-20 block h-3 w-3
+				cursor-se-resize rounded-sm border border-slate-400 bg-slate-300"
 				onPointerDown={(event) => {
 					handlePointerDown(event, Direction.east | Direction.south);
 				}}

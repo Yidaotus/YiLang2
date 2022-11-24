@@ -67,8 +67,9 @@ function LazyImage({
 }): JSX.Element {
 	useSuspenseImage(src);
 	return (
+		// eslint-disable-next-line @next/next/no-img-element
 		<img
-			className={`${className} m-0 p-0`}
+			className={`${className} m-0 rounded border border-slate-400 p-0 shadow-md`}
 			src={src}
 			alt={altText}
 			ref={imageRef}
@@ -221,7 +222,7 @@ export default function ImageComponent({
 							isFocused
 								? `focused ${
 										$isNodeSelection(selection)
-											? "z-10 block outline outline-2 outline-primary-base"
+											? "z-10 block outline outline-2 outline-slate-300"
 											: ""
 								  }`
 								: null

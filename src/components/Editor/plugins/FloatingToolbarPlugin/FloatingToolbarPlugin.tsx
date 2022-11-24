@@ -6,6 +6,34 @@
  *
  */
 
+type ToolbarButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+	ghost?: boolean;
+	full?: boolean;
+};
+const ToolbarButton = ({
+	children,
+	className,
+	full = false,
+	ghost = false,
+	...other
+}: ToolbarButtonProps) => (
+	<button
+		className={mergeClasses(
+			className,
+			`rounded-md py-[6px] px-3 text-md font-semibold transition duration-75 ease-in 
+			 ${ghost && "bg-white text-gray-800 hover:bg-gray-100 active:bg-base-200"}
+			 ${
+					!ghost &&
+					"bg-primary-400 hover:bg-primary-400 active:bg-primary-600 text-base-500"
+				}
+			 ${full && "w-full text-left"}`
+		)}
+		{...other}
+	>
+		{children}
+	</button>
+);
+
 import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -27,6 +55,7 @@ import Button, { ButtonGroup } from "ui/Button";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
 import { LanguageIcon } from "@heroicons/react/24/solid";
+import { mergeClasses } from "@ui/Base";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -107,14 +136,12 @@ function TextFormatFloatingToolbar({
 		) {
 			const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
 
-			setFloatingElemPosition(
-				rangeRect,
-				popupCharStylesEditorElem,
+			setFloatingElemPosition({
+				targetRect: rangeRect,
+				floatingElem: popupCharStylesEditorElem,
 				anchorElem,
-				-50,
-				0,
-				"bottom"
-			);
+				verticalOffset: 5,
+			});
 		}
 	}, [editor, anchorElem]);
 
@@ -171,14 +198,14 @@ function TextFormatFloatingToolbar({
 		<div
 			ref={popupCharStylesEditorRef}
 			style={{
-				transitionProperty: "opacity, scale",
+				transitionProperty: "opacity, scale, left, top",
 				transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
 				transitionDuration: "150ms",
 			}}
-			className="absolute top-0 left-0 z-10 m-0 flex rounded-md p-0 opacity-0 shadow-lg duration-300 ease-in-out"
+			className="border-gray-120 absolute z-10 m-0 flex  rounded-md border bg-white p-0 shadow-lg"
 		>
-			<div className="flex items-center rounded-md border border-gray-300 bg-base-500 py-[2px] px-[4px]">
-				<Button
+			<div className="flex items-center py-[2px] px-[4px]">
+				<ToolbarButton
 					ghost
 					onClick={() => {
 						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
@@ -187,18 +214,26 @@ function TextFormatFloatingToolbar({
 					className={isBold ? "text-primary-base" : ""}
 				>
 					B
-				</Button>
-				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-300 pr-[2px]" />
-				<Button ghost onClick={insertComment} aria-label="Insert comment">
+				</ToolbarButton>
+				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-200 pr-[2px]" />
+				<ToolbarButton
+					ghost
+					onClick={insertComment}
+					aria-label="Insert comment"
+				>
 					C
-				</Button>
-				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-300 pr-[2px]" />
-				<Button ghost onClick={showWordEditor} aria-label="Insert comment">
+				</ToolbarButton>
+				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-200 pr-[2px]" />
+				<ToolbarButton
+					ghost
+					onClick={showWordEditor}
+					aria-label="Insert comment"
+				>
 					<div className="flex">
 						<LanguageIcon className="mr-2 w-4 text-gray-800" />
 						<span className="text-sm">Vocab</span>
 					</div>
-				</Button>
+				</ToolbarButton>
 			</div>
 		</div>
 	);
