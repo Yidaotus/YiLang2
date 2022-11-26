@@ -6,38 +6,11 @@
  *
  */
 
-type ToolbarButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-	ghost?: boolean;
-	full?: boolean;
-};
-const ToolbarButton = ({
-	children,
-	className,
-	full = false,
-	ghost = false,
-	...other
-}: ToolbarButtonProps) => (
-	<button
-		className={mergeClasses(
-			className,
-			`rounded-md py-[6px] px-3 text-md font-semibold transition duration-75 ease-in 
-			 ${ghost && "bg-white text-gray-800 hover:bg-gray-100 active:bg-base-200"}
-			 ${
-					!ghost &&
-					"bg-primary-400 hover:bg-primary-400 active:bg-primary-600 text-base-500"
-				}
-			 ${full && "w-full text-left"}`
-		)}
-		{...other}
-	>
-		{children}
-	</button>
-);
-
 import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
+import { Button, Box, ButtonGroup, IconButton } from "@chakra-ui/react";
 import type { LexicalEditor } from "lexical";
 import {
 	$getSelection,
@@ -51,11 +24,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
-import Button, { ButtonGroup } from "ui/Button";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { LanguageIcon } from "@heroicons/react/24/solid";
-import { mergeClasses } from "@ui/Base";
+import { withRouter } from "next/router";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -195,47 +166,53 @@ function TextFormatFloatingToolbar({
 	}, [editor]);
 
 	return (
-		<div
+		<Box
 			ref={popupCharStylesEditorRef}
 			style={{
 				transitionProperty: "opacity, scale, left, top",
 				transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
 				transitionDuration: "150ms",
 			}}
-			className="border-gray-120 absolute z-10 m-0 flex  rounded-md border bg-white p-0 shadow-lg"
+			sx={{
+				pos: "absolute",
+				zIndex: 10,
+				display: "flex",
+				borderRadius: "3px",
+				bg: "white",
+				border: "1px gray",
+				boxShadow:
+					"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+			}}
 		>
-			<div className="flex items-center py-[2px] px-[4px]">
-				<ToolbarButton
-					ghost
+			<ButtonGroup
+				size="sm"
+				isAttached
+				variant="outline"
+				sx={{
+					"&>button": {
+						height: "40px",
+						minWidth: "40px",
+					},
+				}}
+			>
+				<Button
 					onClick={() => {
 						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
 					}}
 					aria-label="Format text as bold"
-					className={isBold ? "text-primary-base" : ""}
 				>
 					B
-				</ToolbarButton>
-				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-200 pr-[2px]" />
-				<ToolbarButton
-					ghost
-					onClick={insertComment}
-					aria-label="Insert comment"
-				>
+				</Button>
+				<Button onClick={insertComment} aria-label="Insert comment">
 					C
-				</ToolbarButton>
-				<div className="ml-[2px] h-[70%] w-0 border-l border-gray-200 pr-[2px]" />
-				<ToolbarButton
-					ghost
+				</Button>
+				<IconButton
 					onClick={showWordEditor}
-					aria-label="Insert comment"
-				>
-					<div className="flex">
-						<LanguageIcon className="mr-2 w-4 text-gray-800" />
-						<span className="text-sm">Vocab</span>
-					</div>
-				</ToolbarButton>
-			</div>
-		</div>
+					icon={<span>L</span>}
+					aria-label="Open Word Modal"
+				/>
+			</ButtonGroup>
+		</Box>
 	);
 }
 

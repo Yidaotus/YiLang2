@@ -12,6 +12,8 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createCommand } from "lexical";
 
+import { Box } from "@chakra-ui/react";
+
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -235,7 +237,7 @@ export default function Editor({ id }: EditorProps) {
 	};
 
 	return (
-		<div className="w-full bg-base-200 px-4 shadow-xl md:w-10/12">
+		<Box sx={{ w: "100%", px: 4 }}>
 			<div className="p-0 md:p-10">
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
@@ -243,12 +245,25 @@ export default function Editor({ id }: EditorProps) {
 						<RichTextPlugin
 							contentEditable={
 								<div>
-									<div
-										className="relative flex justify-center py-4 pr-2 scrollbar-thin scrollbar-track-base-500 scrollbar-thumb-base-600"
+									<Box
+										sx={{
+											pos: "relative",
+											display: "flex",
+											justifyContent: "center",
+											py: 4,
+											pr: 2,
+										}}
 										ref={onRef}
 									>
-										<ContentEditable className="prose min-h-full max-w-[700px] outline-none selection:bg-[#b3d4fc]" />
-									</div>
+										<ContentEditable
+											style={{
+												outline: "none",
+												maxWidth: "700px",
+												height: "100%",
+												minHeight: "100px",
+											}}
+										/>
+									</Box>
 								</div>
 							}
 							placeholder={<div>Enter some text...</div>}
@@ -273,6 +288,6 @@ export default function Editor({ id }: EditorProps) {
 					</LexicalComposer>
 				</div>
 			</div>
-		</div>
+		</Box>
 	);
 }

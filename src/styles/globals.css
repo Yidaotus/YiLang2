@@ -1,8 +1,10 @@
+
+/* 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* noto-sans-300 - latin */
+noto-sans-300 - latin */
 @font-face {
 	font-family: "Noto Sans";
 	font-style: normal;

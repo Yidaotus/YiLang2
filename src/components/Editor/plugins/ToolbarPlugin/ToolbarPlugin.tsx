@@ -1,6 +1,16 @@
 import { FORMAT_ELEMENT_COMMAND, NodeKey } from "lexical";
 import type { HeadingTagType } from "@lexical/rich-text";
 
+import {
+	Button,
+	ButtonGroup,
+	Menu,
+	MenuItem,
+	MenuButton,
+	MenuList,
+	Box,
+} from "@chakra-ui/react";
+
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
@@ -20,9 +30,6 @@ import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import { $createHeadingNode, $isHeadingNode } from "@lexical/rich-text";
 import { $wrapNodes } from "@lexical/selection";
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import Button from "@ui/Button";
-import Dropdown from "@ui/Dropdown";
-import { ButtonGroup } from "@ui/Button";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -233,67 +240,52 @@ const ToolbarPlugin = () => {
 	}, [createWord, editor]);
 	return (
 		<div>
-			<div className="top-0 z-20 flex border-b border-gray-300 drop-shadow-sm">
-				<button className="rounded-md px-3 py-2 hover:bg-gray-100 active:bg-gray-200">
-					Hangzhou
-				</button>
-				<Button ghost>Shanghai</Button>
-				<Button ghost>Beijing</Button>
-				<span className="h-full w-1 border-r border-gray-300" />
-				<Dropdown>
-					<Button
-						ghost
-						full
+			<ButtonGroup isAttached variant="outline" sx={{ w: "100%" }}>
+				<Button>Shanghai</Button>
+				<Button>Beijing</Button>
+				<Menu>
+					<MenuButton
 						onClick={() =>
 							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
 						}
+						as={Button}
 					>
 						Left
-					</Button>
+					</MenuButton>
+					<MenuList>
+						<MenuItem
+							onClick={() =>
+								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
+							}
+						>
+							Center
+						</MenuItem>
+						<MenuItem
+							onClick={() =>
+								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
+							}
+						>
+							Right
+						</MenuItem>
+						<MenuItem
+							onClick={() =>
+								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
+							}
+						>
+							Justify
+						</MenuItem>
+					</MenuList>
+					<Box sx={{ flexGrow: 1 }} />
 					<Button
-						ghost
-						full
-						onClick={() =>
-							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
-						}
-					>
-						Center
-					</Button>
-					<Button
-						ghost
-						full
-						onClick={() =>
-							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
-						}
-					>
-						Right
-					</Button>
-					<Button
-						ghost
-						full
 						onClick={() =>
 							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
 						}
 					>
-						Justify
+						Last
 					</Button>
-				</Dropdown>
-				<Dropdown>
-					<Button ghost full onClick={formatHeading("h1")}>
-						H1
-					</Button>
-					<Button ghost full onClick={formatHeading("h2")}>
-						H2
-					</Button>
-					<Button ghost full>
-						Beijing
-					</Button>
-					<Button ghost full>
-						Chengdu
-					</Button>
-				</Dropdown>
-				<Button ghost>Blocks</Button>
-			</div>
+				</Menu>
+				<Button>Blocks</Button>
+			</ButtonGroup>
 		</div>
 	);
 };

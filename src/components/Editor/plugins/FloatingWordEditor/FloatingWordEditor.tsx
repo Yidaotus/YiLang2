@@ -1,9 +1,5 @@
-import {
-	$createRangeSelection,
-	$getNodeByKey,
-	$setSelection,
-	LexicalEditor,
-} from "lexical";
+import type { LexicalEditor } from "lexical";
+import { $getNodeByKey } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -25,180 +21,262 @@ import { trpc } from "@utils/trpc";
 import { $createWordNode, $isWordNode } from "@editor/nodes/WordNode";
 import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
 import { createPortal } from "react-dom";
-import Button from "@ui/Button";
+import useOnClickOutside from "@ui/hooks/useOnClickOutside";
+import { CreatableSelect } from "chakra-react-select";
+import { Box, Input, Stack, Button, ButtonGroup } from "@chakra-ui/react";
+import React from "react";
 
-function CommentInputBox({
-	editor,
-	cancelAddComment,
-	submitAddComment,
-	anchorElem,
-	show,
-}: {
+type TagOption = {
+	name: string;
+	color: string;
+};
+
+const WordForm = () => {
+	const [tagOptions, setOptions] = useState<Array<TagOption>>([
+		{ name: "initial", color: "red" },
+	]);
+
+	return (
+		<div>
+			<form action="" className="flex flex-col gap-2">
+				<Stack>
+					<Input size="sm" placeholder="Translation" />
+					<Input size="sm" placeholder="Spelling" />
+					<CreatableSelect
+						size="sm"
+						placeholder="Tags"
+						isMulti
+						options={[...tagOptions, { name: "debug", color: "gray" }]}
+						getOptionValue={(o) => o.name}
+						getOptionLabel={(o) => o.name}
+						onCreateOption={(newOpt) => {
+							setOptions([...tagOptions, { name: newOpt, color: "yellow" }]);
+						}}
+						components={{
+							Option: ({ children, data, innerProps}) => (
+								<Box
+									as="div"
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										cursor: "pointer",
+										w: "100%",
+										"&:hover": {
+											bg: "#f4f4f4",
+										},
+									}}
+									{...innerProps}
+								>
+									<Box
+										sx={{
+											w: "2px",
+											h: "15px",
+											ml: 1,
+											mr: 2,
+											borderRadius: "3px",
+											border: `2px solid ${data.color}`,
+										}}
+									/>
+									{children}
+								</Box>
+							),
+						}}
+					/>
+				</Stack>
+			</form>
+		</div>
+	);
+};
+
+type CommentInputBoxProps = {
 	cancelAddComment: () => void;
 	editor: LexicalEditor;
 	submitAddComment: (translation: string) => void;
 	anchorElem: HTMLElement;
 	show: boolean;
-}) {
-	const [content, setContent] = useState("");
-	const canSubmit = content.length > 0;
-	const boxRef = useRef<HTMLDivElement>(null);
-	const selectionState = useMemo(
-		() => ({
-			container: document.createElement("div"),
-			elements: [],
-		}),
-		[]
-	);
+};
 
-	/*
-	useEffect(() => {
-		boxRef.current?.focus();
-	}, [boxRef]);
-*/
+// eslint-disable-next-line react/display-name
+const CommentInputBox = React.forwardRef<
+	HTMLDivElement | null,
+	CommentInputBoxProps
+>(
+	(
+		{
+			editor,
+			cancelAddComment,
+			submitAddComment,
+			anchorElem,
+			show,
+		}: CommentInputBoxProps,
+		ref
+	) => {
+		const [content, setContent] = useState("");
+		const canSubmit = content.length > 0;
+		const boxRef = useRef<HTMLDivElement | null>(null);
+		const selectionState = useMemo(
+			() => ({
+				container: document.createElement("div"),
+				elements: [],
+			}),
+			[]
+		);
 
-	const updateLocation = useCallback(() => {
-		const boxElem = boxRef.current;
-		if (!boxElem) return;
+		const updateLocation = useCallback(() => {
+			const boxElem = boxRef.current;
+			if (!boxElem) return;
 
-		if (!show) {
-			setFloatingElemPosition({
-				targetRect: null,
-				floatingElem: boxElem,
-				anchorElem,
-				verticalOffset: 10,
-			});
+			if (!show) {
+				setFloatingElemPosition({
+					targetRect: null,
+					floatingElem: boxElem,
+					anchorElem,
+					verticalOffset: 10,
+				});
 
-			const { container } = selectionState;
-			const elements: Array<HTMLSpanElement> = selectionState.elements;
-			const elementsLength = elements.length;
-			for (let i = elementsLength - 1; i >= 0; i--) {
-				const elem = elements[i];
-				if (!elem) continue;
-				container.removeChild(elem);
-				elements.pop();
+				const { container } = selectionState;
+				const elements: Array<HTMLSpanElement> = selectionState.elements;
+				const elementsLength = elements.length;
+				for (let i = elementsLength - 1; i >= 0; i--) {
+					const elem = elements[i];
+					if (!elem) continue;
+					container.removeChild(elem);
+					elements.pop();
+				}
+				return;
 			}
-			return;
-		}
 
-		editor.getEditorState().read(() => {
-			const selection = $getSelection();
+			editor.getEditorState().read(() => {
+				const selection = $getSelection();
 
-			if ($isRangeSelection(selection)) {
-				const anchor = selection.anchor;
-				const focus = selection.focus;
-				const range = createDOMRange(
-					editor,
-					anchor.getNode(),
-					anchor.offset,
-					focus.getNode(),
-					focus.offset
-				);
-				if (range !== null) {
-					const selectionRects = createRectsFromDOMRange(editor, range);
+				if ($isRangeSelection(selection)) {
+					const anchor = selection.anchor;
+					const focus = selection.focus;
+					const range = createDOMRange(
+						editor,
+						anchor.getNode(),
+						anchor.offset,
+						focus.getNode(),
+						focus.offset
+					);
+					if (range !== null) {
+						const selectionRects = createRectsFromDOMRange(editor, range);
 
-					setFloatingElemPosition({
-						targetRect: range.getBoundingClientRect(),
-						floatingElem: boxElem,
-						anchorElem,
-						verticalOffset: 10,
-					});
-					const selectionRectsLength = selectionRects.length;
-					const { container } = selectionState;
-					const elements: Array<HTMLSpanElement> = selectionState.elements;
+						setFloatingElemPosition({
+							targetRect: range.getBoundingClientRect(),
+							floatingElem: boxElem,
+							anchorElem,
+							verticalOffset: 10,
+						});
+						const selectionRectsLength = selectionRects.length;
+						const { container } = selectionState;
+						const elements: Array<HTMLSpanElement> = selectionState.elements;
 
-					for (let i = 0; i < selectionRectsLength; i++) {
-						const selectionRect = selectionRects[i];
-						if (!selectionRect) continue;
-						let elem: HTMLSpanElement | undefined = elements[i];
-						if (elem === undefined) {
-							elem = document.createElement("span");
-							elements[i] = elem;
-							container.appendChild(elem);
+						for (let i = 0; i < selectionRectsLength; i++) {
+							const selectionRect = selectionRects[i];
+							if (!selectionRect) continue;
+							let elem: HTMLSpanElement | undefined = elements[i];
+							if (elem === undefined) {
+								elem = document.createElement("span");
+								elements[i] = elem;
+								container.appendChild(elem);
+							}
+							const color = "255, 212, 0";
+							const style = `position:absolute;top:${
+								selectionRect.top + window.scrollY
+							}px;left:${selectionRect.left}px;height:${
+								selectionRect.height
+							}px;width:${
+								selectionRect.width + window.scrollX
+							}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
+							elem.style.cssText = style;
 						}
-						const color = "255, 212, 0";
-						const style = `position:absolute;top:${
-							selectionRect.top + window.scrollY
-						}px;left:${selectionRect.left}px;height:${
-							selectionRect.height
-						}px;width:${
-							selectionRect.width + window.scrollX
-						}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
-						elem.style.cssText = style;
 					}
 				}
+			});
+		}, [anchorElem, editor, selectionState, show]);
+
+		useLayoutEffect(() => {
+			updateLocation();
+			const container = selectionState.container;
+			const body = document.body;
+			if (body !== null) {
+				body.appendChild(container);
+				return () => {
+					body.removeChild(container);
+				};
 			}
-		});
-	}, [anchorElem, editor, selectionState, show]);
+		}, [selectionState.container, updateLocation]);
 
-	useLayoutEffect(() => {
-		updateLocation();
-		const container = selectionState.container;
-		const body = document.body;
-		if (body !== null) {
-			body.appendChild(container);
+		useEffect(() => {
+			window.addEventListener("resize", updateLocation);
+
 			return () => {
-				body.removeChild(container);
+				window.removeEventListener("resize", updateLocation);
 			};
-		}
-	}, [selectionState.container, updateLocation]);
+		}, [updateLocation]);
 
-	useEffect(() => {
-		window.addEventListener("resize", updateLocation);
-
-		return () => {
-			window.removeEventListener("resize", updateLocation);
+		const onEscape = (event: KeyboardEvent): boolean => {
+			event.preventDefault();
+			cancelAddComment();
+			return true;
 		};
-	}, [updateLocation]);
 
-	const onEscape = (event: KeyboardEvent): boolean => {
-		event.preventDefault();
-		cancelAddComment();
-		return true;
-	};
+		const submitComment = () => {
+			if (canSubmit) {
+				submitAddComment(content);
+			}
+		};
 
-	const submitComment = () => {
-		if (canSubmit) {
-			submitAddComment(content);
-		}
-	};
+		return (
+			<Box
+				sx={{
+					pos: "absolute",
+					top: 0,
+					left: 0,
+					zIndex: 20,
+					p: 1,
+					w: "300px",
+					borderRadius: "3px",
+					border: "1px solid #f4f4f4",
+					bg: "white",
+					boxShadow:
+						"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+					display: "flex",
+					flexDir: "column",
+				}}
+				ref={(r) => {
+					boxRef.current = r;
 
-	return (
-		<div
-			className="absolute top-0 left-0 z-20 w-[250px] rounded-md border-2 border-gray-300 bg-white shadow-lg"
-			ref={boxRef}
-		>
-			<div
-				className="absolute top-[-1px] left-[105px] z-10 h-4 w-4 translate-x-1/2 -translate-y-1/2
-						   rotate-45 transform border-l-2 border-t-2 border-gray-300 bg-white"
-			/>
-			<div className="h-10">
-				<input
-					onChange={(e) => setContent(e.target.value)}
-					type="text"
-					className="input relative h-full w-full resize-none rounded-b-none rounded-t-md bg-white p-2 outline-none focus:outline-none"
-					autoFocus
-				/>
-			</div>
-			<div className="grid h-9 w-full grid-cols-2 border-t border-gray-200">
-				<button className="bg-base-500" onClick={cancelAddComment}>
-					Cancel
-				</button>
-				<button
-					className={`${
-						canSubmit
-							? "bg-primary-base font-bold text-gray-200 transition-colors duration-500 ease-in-out hover:bg-primary-dark active:bg-primary-darker active:duration-75"
-							: "bg-primary-light font-bold text-base-500"
-					}`}
-					onClick={submitComment}
-					disabled={!canSubmit}
+					if (ref) {
+						if (typeof ref === "function") {
+							ref(r);
+						} else {
+							ref.current = r;
+						}
+					}
+				}}
+			>
+				<WordForm />
+				<ButtonGroup
+					isAttached
+					sx={{
+						pt: 2,
+						w: "100%",
+						"&>button": {
+							flexGrow: 1,
+						},
+					}}
 				>
-					Comment
-				</button>
-			</div>
-		</div>
-	);
-}
+					<Button variant="outline">Cancel</Button>
+					<Button variant="solid" disabled={canSubmit}>
+						Submit
+					</Button>
+				</ButtonGroup>
+			</Box>
+		);
+	}
+);
 
 const FloatingWordEditorPlugin = ({
 	anchorElem,
@@ -207,7 +285,15 @@ const FloatingWordEditorPlugin = ({
 }) => {
 	const [editor] = useLexicalComposerContext();
 	const [showInput, setShowInput] = useState(false);
+	const inputRef = useRef(null);
 	const createWord = trpc.dictionary.createWord.useMutation();
+
+	useOnClickOutside(inputRef, () => {
+		if (showInput && inputRef.current) {
+			console.debug("CLICK OUTSIDE");
+			setShowInput(false);
+		}
+	});
 
 	const insertWord = useCallback(
 		async (translation: string) => {
@@ -270,6 +356,7 @@ const FloatingWordEditorPlugin = ({
 
 	return createPortal(
 		<CommentInputBox
+			ref={inputRef}
 			show={showInput}
 			cancelAddComment={cancel}
 			editor={editor}
