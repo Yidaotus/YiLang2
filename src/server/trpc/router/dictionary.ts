@@ -14,7 +14,7 @@ export const dictionaryRouter = router({
 		.input(
 			z.object({
 				word: z.string(),
-				translation: z.string(),
+				translations: z.array(z.string()),
 				spelling: z.string().optional(),
 				tags: z.array(
 					z.union([
@@ -31,11 +31,11 @@ export const dictionaryRouter = router({
 		.mutation(
 			async ({
 				ctx,
-				input: { translation, spelling, word, tags, documentId },
+				input: { translations, spelling, word, tags, documentId },
 			}) => {
 				const dbWord = await ctx.prisma.word.create({
 					data: {
-						translation: translation,
+						translation: translations.join(";"),
 						spelling: spelling,
 						word: word,
 						sourceDocument: documentId
@@ -82,8 +82,8 @@ export const dictionaryRouter = router({
 			});
 			return tag;
 		}),
-	getWord: publicProcedure.input(z.string()).query(({ ctx, input }) => {
-		return ctx.prisma.word.findUnique({
+	getWord: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
+		const dbResult = await ctx.prisma.word.findUnique({
 			where: { id: input },
 			include: {
 				tags: {
@@ -93,6 +93,11 @@ export const dictionaryRouter = router({
 				},
 			},
 		});
+		if (dbResult) {
+			const { translation, ...rest } = dbResult;
+			return { ...rest, translations: translation.split(";") };
+		}
+		return null;
 	}),
 	getAll: publicProcedure.query(({ ctx }) => {
 		return ctx.prisma.word.findMany();

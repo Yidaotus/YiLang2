@@ -42,6 +42,7 @@ import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { $setSelection, isDeleteWordForward } from "lexical/LexicalUtils";
 import { Tag, Word } from "@prisma/client";
+import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 
 type TagOption =
 	| Tag
@@ -52,7 +53,7 @@ type TagOption =
 
 type WordFormType = {
 	word: string;
-	translation: string;
+	translations: Array<string>;
 	spelling?: string;
 	tags: Array<TagOption>;
 };
@@ -176,7 +177,7 @@ const WordForm = ({
 	} = useForm<WordFormType>({
 		defaultValues: {
 			word,
-			translation: "",
+			translations: [],
 			spelling: "",
 			tags: [],
 		},
@@ -193,6 +194,11 @@ const WordForm = ({
 		resolveWord(data);
 	});
 
+	const cancel = useCallback(() => {
+		reset();
+		resolveWord(null);
+	}, [reset, resolveWord]);
+
 	const createNewTag = useCallback(
 		async (newTagName: string) => {
 			const getNewTag = await showTagEditor(newTagName);
@@ -205,18 +211,22 @@ const WordForm = ({
 		<div>
 			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
 				<Stack>
-					<FormControl isInvalid={!!errors.translation}>
+					<FormControl isInvalid={!!errors.translations}>
 						<FormLabel htmlFor="translation">Translation</FormLabel>
-						<Input
-							id="translation"
-							placeholder="Translation"
-							{...register("translation", {
-								required: "Please enter a translation",
-								minLength: { value: 2, message: "Minimum length should be 4" },
-							})}
+						<Controller
+							control={control}
+							name="translations"
+							render={({ field: { onChange, value, ref } }) => (
+								<YiSimpleCreatableSelect
+									ref={ref}
+									value={value}
+									onChange={(val) => onChange(val)}
+									placeholder="Translation(s)"
+								/>
+							)}
 						/>
 						<FormErrorMessage>
-							{errors.translation && errors.translation.message}
+							{errors.translations && errors.translations.message}
 						</FormErrorMessage>
 					</FormControl>
 					<FormControl isInvalid={!!errors.spelling}>
@@ -301,7 +311,9 @@ const WordForm = ({
 							},
 						}}
 					>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline" onClick={cancel}>
+							Cancel
+						</Button>
 						<Button variant="solid" type="submit">
 							Submit
 						</Button>
@@ -487,15 +499,17 @@ const CommentInputBox = React.forwardRef<
 				if (word) {
 					const newWord = await createWord.mutateAsync({
 						word: word.word,
-						translation: word.translation,
+						translations: word.translations,
 						spelling: word.spelling,
 						tags: word.tags.map((tag) => ("id" in tag ? tag.id : tag)),
 					});
 					submitWord(newWord);
 					console.debug(newWord);
+				} else {
+					cancel();
 				}
 			},
-			[createWord, submitWord]
+			[cancel, createWord, submitWord]
 		);
 
 		const { data: dbTags, isLoading } = trpc.dictionary.getAllTags.useQuery(
