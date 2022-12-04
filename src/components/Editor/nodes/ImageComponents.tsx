@@ -32,6 +32,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { $isImageNode, ImageAlignment } from "./ImageNode";
 import ImageResizer from "./ImageResizer";
+import { Box } from "@chakra-ui/react";
 
 const imageCache = new Set();
 
@@ -50,7 +51,8 @@ function useSuspenseImage(src: string) {
 
 function LazyImage({
 	altText,
-	className,
+	isFocused,
+	isResizing,
 	imageRef,
 	src,
 	width,
@@ -58,7 +60,8 @@ function LazyImage({
 	maxWidth,
 }: {
 	altText: string;
-	className: string | null;
+	isFocused: boolean;
+	isResizing: boolean;
 	height: "inherit" | number;
 	imageRef: { current: null | HTMLImageElement };
 	maxWidth: number;
@@ -67,9 +70,18 @@ function LazyImage({
 }): JSX.Element {
 	useSuspenseImage(src);
 	return (
-		// eslint-disable-next-line @next/next/no-img-element
-		<img
-			className={`${className} m-0 rounded border border-slate-400 p-0 shadow-md`}
+		<Box
+			sx={{
+				m: 0,
+				borderRadius: "5px",
+				outline: isFocused && "1px solid #abb5c1",
+				border: "1px solid #cbd5e1",
+				p: 0,
+				boxShadow:
+					"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+				userSelect: isResizing ? "none" : "default",
+			}}
+			as="img"
 			src={src}
 			alt={altText}
 			ref={imageRef}
@@ -209,24 +221,17 @@ export default function ImageComponent({
 	const isFocused = isSelected || isResizing;
 	return (
 		<Suspense fallback={null}>
-			<div
-				className={`flex py-4
-			${alignment === "left" && "justify-start"}
-			${alignment === "center" && "justify-center"}
-			${alignment === "right" && "justify-end"}
-			`}
+			<Box
+				sx={{
+					display: "flex",
+					py: 4,
+					justifyContent: alignment,
+				}}
 			>
-				<div className="relative inline-block">
+				<Box sx={{ position: "relative", display: "inline-block" }}>
 					<LazyImage
-						className={
-							isFocused
-								? `focused ${
-										$isNodeSelection(selection)
-											? "z-10 block outline outline-2 outline-slate-300"
-											: ""
-								  }`
-								: null
-						}
+						isResizing={isResizing}
+						isFocused={isFocused}
 						src={src}
 						altText={altText}
 						imageRef={imageRef}
@@ -243,8 +248,8 @@ export default function ImageComponent({
 							onResizeEnd={onResizeEnd}
 						/>
 					)}
-				</div>
-			</div>
+				</Box>
+			</Box>
 		</Suspense>
 	);
 }

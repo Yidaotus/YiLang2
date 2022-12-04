@@ -20,6 +20,7 @@ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import React, { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
+import { Box } from "@chakra-ui/react";
 
 export type SerializedWordNode = Spread<
 	{
@@ -85,25 +86,32 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 	return (
 		<>
 			{!dbWord.data && (
-				<div
+				<Box
 					ref={wordRef}
-					className={`mx-[2px] cursor-default rounded-sm ${
-						isSelected ? "bg-primary" : "bg-slate-400"
-					} px-[2px]`}
+					sx={{
+						mx: "2px",
+						cursor: "default",
+						borderRadius: "4px",
+						px: "2px",
+						bg: isSelected ? "#CCCCCC" : "#DDDDDD",
+					}}
 				>
 					{word}
-					{/*isSelected ? translation : word*/}
-				</div>
+				</Box>
 			)}
 			{dbWord.data && (
-				<div
+				<Box
 					ref={wordRef}
-					className={`mx-[2px] cursor-default rounded-sm ${
-						isSelected ? "bg-primary" : "bg-slate-400"
-					} px-[2px]`}
+					sx={{
+						mx: "2px",
+						cursor: "default",
+						borderRadius: "4px",
+						px: "2px",
+						bg: isSelected ? "#CCCCCC" : "#DDDDDD",
+					}}
 				>
 					{dbWord.data.word}
-				</div>
+				</Box>
 			)}
 		</>
 	);
@@ -131,7 +139,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 
 	createDOM(config: EditorConfig): HTMLElement {
 		const div = document.createElement("div");
-		div.className = "inline-block";
+		div.style.display = "inline-block";
 		return div;
 	}
 

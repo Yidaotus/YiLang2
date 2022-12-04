@@ -1,4 +1,9 @@
-import type { LexicalEditor } from "lexical";
+import type {
+	GridSelection,
+	LexicalEditor,
+	NodeSelection,
+	RangeSelection,
+} from "lexical";
 import { $getNodeByKey } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -23,65 +28,284 @@ import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
 import { createPortal } from "react-dom";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { CreatableSelect } from "chakra-react-select";
-import { Box, Input, Stack, Button, ButtonGroup } from "@chakra-ui/react";
+import {
+	Box,
+	Input,
+	Stack,
+	Button,
+	ButtonGroup,
+	FormControl,
+	FormErrorMessage,
+	FormLabel,
+} from "@chakra-ui/react";
 import React from "react";
+import { useForm, Controller } from "react-hook-form";
+import { $setSelection, isDeleteWordForward } from "lexical/LexicalUtils";
+import { Tag, Word } from "@prisma/client";
 
-type TagOption = {
+type TagOption =
+	| Tag
+	| {
+			name: string;
+			color: string;
+	  };
+
+type WordFormType = {
+	word: string;
+	translation: string;
+	spelling?: string;
+	tags: Array<TagOption>;
+};
+
+type TagFormType = {
 	name: string;
 	color: string;
 };
 
-const WordForm = () => {
-	const [tagOptions, setOptions] = useState<Array<TagOption>>([
-		{ name: "initial", color: "red" },
-	]);
+function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const TagForm = ({
+	resolveTag,
+	name,
+}: {
+	resolveTag: (newTag: TagOption | null) => void;
+	name: string;
+}) => {
+	const {
+		handleSubmit,
+		register,
+		reset,
+		setValue,
+		formState: { errors },
+	} = useForm<TagFormType>({
+		defaultValues: {
+			name,
+			color: "",
+		},
+	});
+
+	useEffect(() => {
+		setValue("name", name);
+	}, [name, setValue]);
+
+	const onSubmit = handleSubmit((data) => {
+		reset();
+		resolveTag(data);
+	});
+
+	const cancel = useCallback(() => {
+		reset();
+		resolveTag(null);
+	}, [reset, resolveTag]);
 
 	return (
 		<div>
-			<form action="" className="flex flex-col gap-2">
+			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
 				<Stack>
-					<Input size="sm" placeholder="Translation" />
-					<Input size="sm" placeholder="Spelling" />
-					<CreatableSelect
-						size="sm"
-						placeholder="Tags"
-						isMulti
-						options={[...tagOptions, { name: "debug", color: "gray" }]}
-						getOptionValue={(o) => o.name}
-						getOptionLabel={(o) => o.name}
-						onCreateOption={(newOpt) => {
-							setOptions([...tagOptions, { name: newOpt, color: "yellow" }]);
+					<FormControl isInvalid={!!errors.name}>
+						<FormLabel htmlFor="name">Name</FormLabel>
+						<Input
+							id="name"
+							placeholder="Name"
+							{...register("name", {
+								required: "Please enter a name",
+								minLength: { value: 2, message: "Minimum length should be 4" },
+							})}
+						/>
+						<FormErrorMessage>
+							{errors.name && errors.name.message}
+						</FormErrorMessage>
+					</FormControl>
+					<FormControl isInvalid={!!errors.color}>
+						<FormLabel htmlFor="spelling">Color</FormLabel>
+						<Input
+							id="color"
+							placeholder="Color"
+							{...register("color", {
+								required: "Please enter a color",
+								minLength: { value: 7, message: "Minimum length should be 7" },
+							})}
+						/>
+						<FormErrorMessage>
+							{errors.color && errors.color.message}
+						</FormErrorMessage>
+					</FormControl>
+					<ButtonGroup
+						isAttached
+						sx={{
+							pt: 2,
+							w: "100%",
+							"&>button": {
+								flexGrow: 1,
+							},
 						}}
-						components={{
-							Option: ({ children, data, innerProps}) => (
-								<Box
-									as="div"
-									sx={{
-										display: "flex",
-										alignItems: "center",
-										cursor: "pointer",
-										w: "100%",
-										"&:hover": {
-											bg: "#f4f4f4",
-										},
-									}}
-									{...innerProps}
-								>
-									<Box
-										sx={{
-											w: "2px",
-											h: "15px",
-											ml: 1,
-											mr: 2,
-											borderRadius: "3px",
-											border: `2px solid ${data.color}`,
-										}}
-									/>
-									{children}
-								</Box>
-							),
-						}}
+					>
+						<Button variant="outline" onClick={cancel}>
+							Cancel
+						</Button>
+						<Button variant="solid" type="submit">
+							Submit
+						</Button>
+					</ButtonGroup>
+				</Stack>
+			</form>
+		</div>
+	);
+};
+
+const WordForm = ({
+	word,
+	showTagEditor,
+	resolveWord,
+	dbTags,
+}: {
+	word: string;
+	showTagEditor: (newTagName: string) => Promise<TagOption | null>;
+	resolveWord: (newWord: WordFormType | null) => void;
+	dbTags: Array<Tag>;
+}) => {
+	const {
+		handleSubmit,
+		control,
+		register,
+		reset,
+		setValue,
+		formState: { errors },
+	} = useForm<WordFormType>({
+		defaultValues: {
+			word,
+			translation: "",
+			spelling: "",
+			tags: [],
+		},
+	});
+
+	useEffect(() => {
+		setValue("word", word);
+	}, [setValue, word]);
+
+	const [tagOptions, setTagOptions] = useState<Array<TagOption>>(dbTags);
+
+	const onSubmit = handleSubmit((data) => {
+		reset();
+		resolveWord(data);
+	});
+
+	const createNewTag = useCallback(
+		async (newTagName: string) => {
+			const getNewTag = await showTagEditor(newTagName);
+			return getNewTag;
+		},
+		[showTagEditor]
+	);
+
+	return (
+		<div>
+			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
+				<Stack>
+					<FormControl isInvalid={!!errors.translation}>
+						<FormLabel htmlFor="translation">Translation</FormLabel>
+						<Input
+							id="translation"
+							placeholder="Translation"
+							{...register("translation", {
+								required: "Please enter a translation",
+								minLength: { value: 2, message: "Minimum length should be 4" },
+							})}
+						/>
+						<FormErrorMessage>
+							{errors.translation && errors.translation.message}
+						</FormErrorMessage>
+					</FormControl>
+					<FormControl isInvalid={!!errors.spelling}>
+						<FormLabel htmlFor="spelling">Spelling</FormLabel>
+						<Input
+							id="spelling"
+							placeholder="Spelling"
+							{...register("spelling", {
+								required: "Please enter a spelling",
+								minLength: { value: 2, message: "Minimum length should be 4" },
+							})}
+						/>
+						<FormErrorMessage>
+							{errors.spelling && errors.spelling.message}
+						</FormErrorMessage>
+					</FormControl>
+					<Controller
+						control={control}
+						name="tags"
+						render={({ field: { onChange, value, ref } }) => (
+							<CreatableSelect
+								ref={ref}
+								size="sm"
+								value={value}
+								onChange={(val) => onChange(val)}
+								noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
+								placeholder="Tags"
+								isMulti
+								options={tagOptions}
+								getOptionValue={(o) => o.name}
+								getOptionLabel={(o) => o.name}
+								getNewOptionData={(input, label) => ({
+									name: `Create ${input} tag...`,
+									color: "",
+								})}
+								onCreateOption={async (newOpt) => {
+									const newTag = await createNewTag(newOpt);
+									if (newTag) {
+										setTagOptions([...value, ...tagOptions, newTag]);
+										onChange([...value, newTag]);
+									}
+								}}
+								components={{
+									Option: ({ children, data, innerProps }) => (
+										<Box
+											as="div"
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												cursor: "pointer",
+												w: "100%",
+												"&:hover": {
+													bg: "#f4f4f4",
+												},
+											}}
+											{...innerProps}
+										>
+											<Box
+												sx={{
+													w: "2px",
+													h: "15px",
+													ml: 1,
+													mr: 2,
+													borderRadius: "3px",
+													border: `2px solid ${data.color}`,
+												}}
+											/>
+											{children}
+										</Box>
+									),
+								}}
+							/>
+						)}
 					/>
+					<ButtonGroup
+						isAttached
+						sx={{
+							pt: 2,
+							w: "100%",
+							"&>button": {
+								flexGrow: 1,
+							},
+						}}
+					>
+						<Button variant="outline">Cancel</Button>
+						<Button variant="solid" type="submit">
+							Submit
+						</Button>
+					</ButtonGroup>
 				</Stack>
 			</form>
 		</div>
@@ -89,9 +313,10 @@ const WordForm = () => {
 };
 
 type CommentInputBoxProps = {
-	cancelAddComment: () => void;
+	word: string;
+	cancel: () => void;
 	editor: LexicalEditor;
-	submitAddComment: (translation: string) => void;
+	submitWord: (word: Word) => void;
 	anchorElem: HTMLElement;
 	show: boolean;
 };
@@ -104,16 +329,22 @@ const CommentInputBox = React.forwardRef<
 	(
 		{
 			editor,
-			cancelAddComment,
-			submitAddComment,
+			cancel,
+			submitWord,
 			anchorElem,
+			word,
 			show,
 		}: CommentInputBoxProps,
 		ref
 	) => {
-		const [content, setContent] = useState("");
-		const canSubmit = content.length > 0;
+		const utils = trpc.useContext();
+		const createWord = trpc.dictionary.createWord.useMutation({
+			onSuccess() {
+				utils.dictionary.getAllTags.invalidate();
+			},
+		});
 		const boxRef = useRef<HTMLDivElement | null>(null);
+
 		const selectionState = useMemo(
 			() => ({
 				container: document.createElement("div"),
@@ -218,15 +449,61 @@ const CommentInputBox = React.forwardRef<
 
 		const onEscape = (event: KeyboardEvent): boolean => {
 			event.preventDefault();
-			cancelAddComment();
+			cancel();
 			return true;
 		};
 
-		const submitComment = () => {
-			if (canSubmit) {
-				submitAddComment(content);
+		const [move, setMove] = useState(false);
+		const [tagName, setTagName] = useState("");
+
+		const [waitingForTagPromise, setWaitingForTagPromise] = useState<{
+			resolve: (newTag: TagOption | null) => void;
+			reject: () => void;
+		} | null>(null);
+
+		const resolveNewTag = useCallback(
+			(newTag: TagOption | null) => {
+				if (waitingForTagPromise) {
+					waitingForTagPromise.resolve(newTag || null);
+					setMove(false);
+				}
+			},
+			[waitingForTagPromise]
+		);
+
+		const getNewTag = useCallback(async (newTagName: string) => {
+			setMove(true);
+			const wordFormWaitPromise = new Promise<TagOption | null>(
+				(resolve, reject) => {
+					setTagName(newTagName);
+					setWaitingForTagPromise({ resolve, reject });
+				}
+			);
+			return wordFormWaitPromise;
+		}, []);
+
+		const resolveWord = useCallback(
+			async (word: WordFormType | null) => {
+				if (word) {
+					const newWord = await createWord.mutateAsync({
+						word: word.word,
+						translation: word.translation,
+						spelling: word.spelling,
+						tags: word.tags.map((tag) => ("id" in tag ? tag.id : tag)),
+					});
+					submitWord(newWord);
+					console.debug(newWord);
+				}
+			},
+			[createWord, submitWord]
+		);
+
+		const { data: dbTags, isLoading } = trpc.dictionary.getAllTags.useQuery(
+			undefined,
+			{
+				enabled: show,
 			}
-		};
+		);
 
 		return (
 			<Box
@@ -235,15 +512,16 @@ const CommentInputBox = React.forwardRef<
 					top: 0,
 					left: 0,
 					zIndex: 20,
-					p: 1,
+					p: 4,
 					w: "300px",
 					borderRadius: "3px",
 					border: "1px solid #f4f4f4",
 					bg: "white",
 					boxShadow:
 						"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-					display: "flex",
-					flexDir: "column",
+					display: "grid",
+					gridTemplateRows: "1fr",
+					gridTemplateColumns: "1fr",
 				}}
 				ref={(r) => {
 					boxRef.current = r;
@@ -257,22 +535,33 @@ const CommentInputBox = React.forwardRef<
 					}
 				}}
 			>
-				<WordForm />
-				<ButtonGroup
-					isAttached
-					sx={{
-						pt: 2,
-						w: "100%",
-						"&>button": {
-							flexGrow: 1,
-						},
-					}}
-				>
-					<Button variant="outline">Cancel</Button>
-					<Button variant="solid" disabled={canSubmit}>
-						Submit
-					</Button>
-				</ButtonGroup>
+				{show && (
+					<>
+						<Box
+							sx={{
+								gridColumnStart: 1,
+								gridRowStart: 1,
+								display: move ? "none" : "block",
+							}}
+						>
+							<WordForm
+								showTagEditor={getNewTag}
+								resolveWord={resolveWord}
+								word={word}
+								dbTags={dbTags || []}
+							/>
+						</Box>
+						<Box
+							sx={{
+								gridColumnStart: 1,
+								gridRowStart: 1,
+								display: move ? "block" : "none",
+							}}
+						>
+							<TagForm resolveTag={resolveNewTag} name={tagName} />
+						</Box>
+					</>
+				)}
 			</Box>
 		);
 	}
@@ -285,8 +574,9 @@ const FloatingWordEditorPlugin = ({
 }) => {
 	const [editor] = useLexicalComposerContext();
 	const [showInput, setShowInput] = useState(false);
+	const [word, setWord] = useState("");
 	const inputRef = useRef(null);
-	const createWord = trpc.dictionary.createWord.useMutation();
+	const [selection, setSelection] = useState<RangeSelection | null>(null);
 
 	useOnClickOutside(inputRef, () => {
 		if (showInput && inputRef.current) {
@@ -296,53 +586,40 @@ const FloatingWordEditorPlugin = ({
 	});
 
 	const insertWord = useCallback(
-		async (translation: string) => {
-			let newWordKey: string | null = null;
-			let word: string | null = null;
-
+		(newWord: Word) => {
 			editor.update(() => {
-				const selection = $getSelection();
+				console.debug({ selection });
 				if (!selection) return;
 
-				const text = selection.getTextContent();
-				word = text;
-
 				if ($isRangeSelection(selection)) {
-					const newWordNode = $createWordNode(translation, text);
+					const newWordNode = $createWordNode(
+						newWord.translation,
+						newWord.word,
+						newWord.id
+					);
 					selection.insertNodes([newWordNode]);
 					setShowInput(false);
-					newWordKey = newWordNode.getKey();
 				}
 			});
-
-			if (!newWordKey || !word) return;
-
-			const newWord = await createWord.mutateAsync({
-				translation,
-				word,
-			});
-
-			editor.update(() => {
-				if (!newWord || !newWordKey) return;
-
-				const newWordNode = $getNodeByKey(newWordKey);
-
-				if (!$isWordNode(newWordNode)) return;
-
-				newWordNode.setId(newWord.id);
-			});
 		},
-		[createWord, editor]
+		[editor, selection]
 	);
 
 	useEffect(() => {
 		return editor.registerCommand(
 			SHOW_FLOATING_WORD_EDITOR_COMMAND,
 			() => {
+				const selection = $getSelection();
+				if (!$isRangeSelection(selection)) return true;
+
+				setSelection(selection);
 				const domSelection = window.getSelection();
 				if (domSelection !== null) {
 					domSelection.removeAllRanges();
 				}
+
+				const word = selection.getTextContent();
+				setWord(word);
 				setShowInput(true);
 				return true;
 			},
@@ -356,11 +633,12 @@ const FloatingWordEditorPlugin = ({
 
 	return createPortal(
 		<CommentInputBox
+			word={word}
 			ref={inputRef}
 			show={showInput}
-			cancelAddComment={cancel}
+			cancel={cancel}
 			editor={editor}
-			submitAddComment={insertWord}
+			submitWord={insertWord}
 			anchorElem={anchorElem}
 		/>,
 		anchorElem

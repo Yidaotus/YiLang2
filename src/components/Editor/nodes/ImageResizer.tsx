@@ -6,6 +6,7 @@
  *
  */
 
+import { Box } from "@chakra-ui/react";
 import type { LexicalEditor } from "lexical";
 
 import { useRef } from "react";
@@ -224,9 +225,20 @@ export default function ImageResizer({
 	};
 	return (
 		<div>
-			<div
-				className="absolute bottom-[-7px] right-[-7px] z-20 block h-3 w-3
-				cursor-se-resize rounded-sm border border-slate-400 bg-slate-300"
+			<Box
+				sx={{
+					position: "absolute",
+					bottom: "-7px",
+					right: "-7px",
+					zIndex: "20",
+					display: "block",
+					h: "8px",
+					w: "8px",
+					cursor: "se-resize",
+					borderRadius: "3px",
+					border: "1px solid #bba5d1",
+					bg: "#cbd5e1",
+				}}
 				onPointerDown={(event) => {
 					handlePointerDown(event, Direction.east | Direction.south);
 				}}

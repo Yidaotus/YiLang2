@@ -65,12 +65,35 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Tag {
+  id        String        @id @default(cuid())
+  color     String
+  name      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  words     TagsOnWords[]
+}
+
 model Word {
-  id          String   @id @default(cuid())
-  word        String
-  translation String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String        @id @default(cuid())
+  word           String
+  translation    String
+  spelling       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  sourceDocument Document?     @relation(fields: [documentId], references: [id])
+  documentId     String?
+  tags           TagsOnWords[]
+}
+
+model TagsOnWords {
+  tag        Tag      @relation(fields: [tagId], references: [id])
+  tagId      String 
+  word       Word     @relation(fields: [wordId], references: [id])
+  wordId     String 
+  assignedAt DateTime @default(now())
+
+  @@id([tagId, wordId])
 }
 
 model Document {
@@ -79,4 +102,5 @@ model Document {
   title              String
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  Word               Word[]
 }

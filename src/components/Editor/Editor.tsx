@@ -42,6 +42,7 @@ import { createPortal } from "react-dom";
 import { setFloatingElemPosition } from "./utils/setFloatingPosition";
 import { ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
+import { trpc } from "@utils/trpc";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -80,9 +81,13 @@ type EditorProps = {
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const elem = useRef<HTMLDivElement | null>(null);
 	const [wordNode, setWordNode] = useState<{
+		id?: string;
 		word: string;
 		translation: string;
 	} | null>(null);
+	const dbWord = trpc.dictionary.getWord.useQuery(wordNode?.id || "", {
+		enabled: !!wordNode?.id,
+	});
 	const [editor] = useLexicalComposerContext();
 
 	const updatePopup = useCallback(() => {
@@ -106,6 +111,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		if (!$isWordNode(target)) return;
 
 		setWordNode({
+			id: target.getId(),
 			word: target.getWord(),
 			translation: target.getTranslation(),
 		});
@@ -119,8 +125,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			targetRect: clientRect,
 			floatingElem: elem.current,
 			anchorElem,
-			verticalOffset: -clientRect.height - elemRect.height - 7,
-			horizontalOffset: elemRect.width / 2 - clientRect.width / 2,
+			verticalOffset: 5,
 		});
 	}, [anchorElem, editor]);
 
@@ -148,21 +153,32 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	}, [editor, updatePopup]);
 
 	return createPortal(
-		<div
+		<Box
 			ref={elem}
-			className={`${wordNode ? "opacity-100" : "opacity-0"}
-			 absolute top-0 left-0 z-30 w-32 rounded-sm border
-			 border-base-200 bg-base-100 p-2 transition-opacity duration-75 ease-out`}
+			sx={{
+				pos: "absolute",
+				display: !!wordNode ? "block" : "none",
+				top: 0,
+				left: 0,
+				zIndex: 30,
+				width: "150px",
+				borderRadius: "5px",
+				border: "1px solid #eaeaea",
+				p: 2,
+				bg: "white",
+				boxShadow:
+					"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+			}}
 		>
-			<div className="relative">
-				<div
-					className="absolute top-[-8px] left-[50px]
-				 z-10 h-2 w-2 translate-x-1/2 -translate-y-1/2 rotate-45 transform border-l
-				  border-t border-base-200 bg-base-100"
-				/>
-				{wordNode?.translation}
-			</div>
-		</div>,
+			<Box sx={{ display: "flex", flexDir: "column" }}>
+				<Box>{wordNode?.translation}</Box>
+				<Box>
+					{dbWord.data?.tags.map((t) => (
+						<span key={t.tagId}>{t.tag.name}</span>
+					))}
+				</Box>
+			</Box>
+		</Box>,
 		anchorElem
 	);
 };
