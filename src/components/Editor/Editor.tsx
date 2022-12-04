@@ -1,4 +1,4 @@
-import type { Klass, LexicalCommand, LexicalNode } from "lexical";
+import { DecoratorNode, Klass, LexicalCommand, LexicalNode } from "lexical";
 import {
 	$createNodeSelection,
 	$getNodeByKey,
@@ -12,7 +12,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createCommand } from "lexical";
 
-import { Box } from "@chakra-ui/react";
+import { Box, propNames } from "@chakra-ui/react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -171,7 +171,9 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			}}
 		>
 			<Box sx={{ display: "flex", flexDir: "column" }}>
-				<Box>{wordNode?.translation}</Box>
+				<Box>
+					{dbWord.data?.translations.join(" ") || wordNode?.translation}
+				</Box>
 				<Box>
 					{dbWord.data?.tags.map((t) => (
 						<span key={t.tagId}>{t.tag.name}</span>
@@ -185,28 +187,21 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 
 const WordListPlugin = () => {
 	const [editor] = useLexicalComposerContext();
-	const [wordStore, setWordStore] = useState<{ [key in string]: string }>({});
+	const [wordStore, setWordStore] = useState<
+		Array<{ key: string; text: string }>
+	>([]);
 
 	useEffect(() => {
-		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
-			for (const [nodeKey, mutation] of mutatedNodes) {
-				if (mutation === "created") {
-					editor.getEditorState().read(() => {
-						const wordNode = $getNodeByKey(nodeKey) as WordNode;
-						const wordText = wordNode.getWord();
-						setWordStore((currentStore) => ({
-							...currentStore,
-							[nodeKey]: wordText,
-						}));
-					});
-				}
-				if (mutation === "destroyed") {
-					setWordStore((currentStore) => {
-						delete currentStore[nodeKey];
-						return { ...currentStore };
-					});
-				}
-			}
+		return editor.registerDecoratorListener((decorators) => {
+			console.debug({ decorators });
+			setWordStore(
+				Object.entries(decorators)
+					.filter(([key, value]) => !!value?.props?.word)
+					.map(([key, value]) => ({
+						key,
+						text: value.props.word,
+					}))
+			);
 		});
 	}, [editor]);
 
@@ -224,9 +219,9 @@ const WordListPlugin = () => {
 	return (
 		<div>
 			<ul>
-				{Object.entries(wordStore).map(([key, value]) => (
-					<li key={value}>
-						<button onClick={() => highlightWord(key)}>{value}</button>
+				{wordStore.map((word) => (
+					<li key={word.key}>
+						<button onClick={() => highlightWord(word.key)}>{word.text}</button>
 					</li>
 				))}
 			</ul>
