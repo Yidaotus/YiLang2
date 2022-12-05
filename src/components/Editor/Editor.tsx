@@ -1,7 +1,6 @@
-import { DecoratorNode, Klass, LexicalCommand, LexicalNode } from "lexical";
+import type { Klass, LexicalCommand, LexicalNode } from "lexical";
 import {
 	$createNodeSelection,
-	$getNodeByKey,
 	$getSelection,
 	$isNodeSelection,
 	$setSelection,
@@ -12,7 +11,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createCommand } from "lexical";
 
-import { Box, propNames } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -43,6 +42,8 @@ import { setFloatingElemPosition } from "./utils/setFloatingPosition";
 import { ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import { trpc } from "@utils/trpc";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+import { Prose } from "@nikolovlazar/chakra-ui-prose";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -83,7 +84,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const [wordNode, setWordNode] = useState<{
 		id?: string;
 		word: string;
-		translation: string;
+		translations: Array<string>;
 	} | null>(null);
 	const dbWord = trpc.dictionary.getWord.useQuery(wordNode?.id || "", {
 		enabled: !!wordNode?.id,
@@ -113,7 +114,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		setWordNode({
 			id: target.getId(),
 			word: target.getWord(),
-			translation: target.getTranslation(),
+			translations: target.getTranslations(),
 		});
 		const domPos = editor.getElementByKey(target.getKey());
 
@@ -172,7 +173,8 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		>
 			<Box sx={{ display: "flex", flexDir: "column" }}>
 				<Box>
-					{dbWord.data?.translations.join(" ") || wordNode?.translation}
+					{dbWord.data?.translations.join(" ") ||
+						wordNode?.translations.join(" ")}
 				</Box>
 				<Box>
 					{dbWord.data?.tags.map((t) => (
@@ -192,17 +194,26 @@ const WordListPlugin = () => {
 	>([]);
 
 	useEffect(() => {
-		return editor.registerDecoratorListener((decorators) => {
-			console.debug({ decorators });
-			setWordStore(
-				Object.entries(decorators)
-					.filter(([key, value]) => !!value?.props?.word)
-					.map(([key, value]) => ({
-						key,
-						text: value.props.word,
-					}))
-			);
-		});
+		return mergeRegister(
+			editor.registerDecoratorListener<any>((decorators) => {
+				console.debug({ decorators });
+				setWordStore(
+					Object.entries(decorators)
+						.filter(([key, value]) => value?.props?.word)
+						.map(([key, value]) => ({
+							key,
+							text: value.props.word,
+						}))
+				);
+			})
+			/** see https://github.com/facebook/lexical/issues/3490
+			editor.registerMutationListener(WordNode, (nodes) => {
+				for (const node of nodes) {
+					console.debug({ node });
+				}
+			})
+			 */
+		);
 	}, [editor]);
 
 	const highlightWord = useCallback(
@@ -252,10 +263,10 @@ export default function Editor({ id }: EditorProps) {
 			<div className="p-0 md:p-10">
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
-						<ToolbarPlugin />
+						<ToolbarPlugin documentId={id} />
 						<RichTextPlugin
 							contentEditable={
-								<div>
+								<Prose>
 									<Box
 										sx={{
 											pos: "relative",
@@ -275,7 +286,7 @@ export default function Editor({ id }: EditorProps) {
 											}}
 										/>
 									</Box>
-								</div>
+								</Prose>
 							}
 							placeholder={<div>Enter some text...</div>}
 							ErrorBoundary={ErrorBoundary}
@@ -284,6 +295,7 @@ export default function Editor({ id }: EditorProps) {
 						<PersistStateOnPageChangePlugion />
 						<FetchDocumentPlugin id={id as string} />
 						<WordListPlugin />
+						<ListPlugin />
 						<ImagesPlugin />
 						<>
 							{floatingAnchorElem && (

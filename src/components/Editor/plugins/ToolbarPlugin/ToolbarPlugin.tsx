@@ -1,5 +1,8 @@
-import { FORMAT_ELEMENT_COMMAND, NodeKey } from "lexical";
+import type { NodeKey } from "lexical";
 import type { HeadingTagType } from "@lexical/rich-text";
+
+import { $getRoot } from "lexical";
+import { FORMAT_ELEMENT_COMMAND } from "lexical";
 
 import {
 	Button,
@@ -12,9 +15,13 @@ import {
 } from "@chakra-ui/react";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import {
+	INSERT_CHECK_LIST_COMMAND,
+	INSERT_ORDERED_LIST_COMMAND,
+	INSERT_UNORDERED_LIST_COMMAND,
+	REMOVE_LIST_COMMAND,
+} from "@lexical/list";
 import { trpc } from "@utils/trpc";
-import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { $createWordNode } from "@editor/nodes/WordNode";
 import {
 	$getSelection,
 	$isRangeSelection,
@@ -27,9 +34,14 @@ import {
 	$setSelection,
 } from "lexical";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
-import { $createHeadingNode, $isHeadingNode } from "@lexical/rich-text";
+import {
+	$createHeadingNode,
+	$isHeadingNode,
+	$createQuoteNode,
+} from "@lexical/rich-text";
 import { $wrapNodes } from "@lexical/selection";
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/router";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -48,61 +60,40 @@ const blockTypeToBlockName = {
 
 const WordStore = new Map<NodeKey, string>();
 
-const ToolbarPlugin = () => {
+const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
+	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
-	const [idToLoad, setIdToLoad] = useState<string | null>(null);
-	const x = useRef<HTMLElement>();
-	x.current;
-	const utils = trpc.useContext();
 
-	const showWordEditor = useCallback(() => {
-		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
-	}, [editor]);
-
-	const wordTest = useCallback(() => {
-		utils.dictionary.getWord.setData({
-			translation: "TTEST",
-			word: "WTEST",
-			id: "undefined",
-			createdAt: new Date(),
-			updatedAt: new Date(),
-		});
-		utils.dictionary.getWord.invalidate();
-		utils.dictionary.getWord.cancel();
-	}, [utils.dictionary.getWord]);
-
-	const createWord = trpc.dictionary.createWord.useMutation();
-
-	const upsertDocument = trpc.document.createDocument.useMutation();
-
-	const documentToLoad = trpc.document.getById.useQuery(idToLoad || "", {
-		enabled: !!idToLoad,
+	const upsertDocument = trpc.document.upsertDocument.useMutation({
+		onSuccess: (data) => {
+			if (!documentId) {
+				router.push(`/editor/${data.id}`);
+			}
+		},
 	});
 
 	const [blockType, setBlockType] =
 		useState<keyof typeof blockTypeToBlockName>("paragraph");
 
-	useEffect(() => {
-		if (documentToLoad.data && documentToLoad.isFetched) {
-			setIdToLoad(null);
-			const parsedState = editor.parseEditorState(
-				documentToLoad.data.serializedDocument
-			);
-			editor.setEditorState(parsedState);
-		}
-	}, [documentToLoad, editor]);
-
-	const loadDocument = useCallback(() => {
-		setIdToLoad("clah1kjb50004u5ejvqfvxs81");
-	}, []);
-
 	const saveDocument = useCallback(async () => {
 		const serializedState = JSON.stringify(editor.getEditorState());
-		await upsertDocument.mutate({
-			title: "test upsert",
-			serializedDocument: serializedState,
+		editor.getEditorState().read(() => {
+			const root = $getRoot();
+			const rootElements = root.getChildren();
+			let title = "";
+			for (const node of rootElements) {
+				if ($isHeadingNode(node)) {
+					title = node.getTextContent();
+					break;
+				}
+			}
+			upsertDocument.mutate({
+				id: documentId,
+				title,
+				serializedDocument: serializedState,
+			});
 		});
-	}, [editor, upsertDocument]);
+	}, [documentId, editor, upsertDocument]);
 
 	const updateToolbar = useCallback(() => {
 		const selection = $getSelection();
@@ -184,6 +175,7 @@ const ToolbarPlugin = () => {
 	const formatHeading = (headingSize: HeadingTagType) => () => {
 		editor.update(() => {
 			const selection = $getSelection();
+			console.debug({ selection });
 
 			if ($isRangeSelection(selection)) {
 				if (blockType === headingSize) {
@@ -209,50 +201,71 @@ const ToolbarPlugin = () => {
 		});
 	}, [editor]);
 
-	const insertWord = useCallback(async () => {
-		const translation = "translation123";
-		const word = await editor.getEditorState().read(async () => {
-			const selection = $getSelection();
-			if (!selection) {
-				return;
-			}
-			const text = selection.getTextContent();
-			return text;
-		});
-		if (!word) {
-			return;
+	const formatParagraph = () => {
+		if (blockType !== "paragraph") {
+			editor.update(() => {
+				const selection = $getSelection();
+
+				if ($isRangeSelection(selection)) {
+					$wrapNodes(selection, () => $createParagraphNode());
+				}
+			});
 		}
+	};
 
-		const newWord = await createWord.mutateAsync({ translation, word });
-		editor.update(async () => {
-			const selection = $getSelection();
+	const formatBulletList = () => {
+		console.debug("Format B List");
+		console.debug({ blockType });
+		if (blockType !== "bullet") {
+			editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+		} else {
+			editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+		}
+	};
 
-			if ($isRangeSelection(selection)) {
-				const newWordNode = $createWordNode(
-					newWord.translation,
-					newWord.word,
-					newWord.id
-				);
-				WordStore.set(newWordNode.getKey(), word);
-				selection.insertNodes([newWordNode]);
-			}
-		});
-	}, [createWord, editor]);
+	const formatCheckList = () => {
+		if (blockType !== "check") {
+			editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
+		} else {
+			editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+		}
+	};
+
+	const formatNumberedList = () => {
+		if (blockType !== "number") {
+			editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+		} else {
+			editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+		}
+	};
+
+	const formatQuote = () => {
+		if (blockType !== "quote") {
+			editor.update(() => {
+				const selection = $getSelection();
+
+				if ($isRangeSelection(selection)) {
+					$wrapNodes(selection, () => $createQuoteNode());
+				}
+			});
+		}
+	};
+
 	return (
 		<div>
 			<ButtonGroup isAttached variant="outline" sx={{ w: "100%" }}>
 				<Button>Shanghai</Button>
 				<Button>Beijing</Button>
 				<Menu>
-					<MenuButton
-						onClick={() =>
-							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
-						}
-						as={Button}
-					>
-						Left
-					</MenuButton>
+					<MenuButton as={Button}>Alignment</MenuButton>
 					<MenuList>
+						<MenuItem
+							onClick={() =>
+								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
+							}
+						>
+							Left
+						</MenuItem>
 						<MenuItem
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
@@ -275,15 +288,31 @@ const ToolbarPlugin = () => {
 							Justify
 						</MenuItem>
 					</MenuList>
-					<Box sx={{ flexGrow: 1 }} />
-					<Button
-						onClick={() =>
-							editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
-						}
-					>
-						Last
-					</Button>
 				</Menu>
+				<Menu>
+					<MenuButton as={Button}>{blockType}</MenuButton>
+					<MenuList>
+						<MenuItem onClick={formatHeading("h1")}>H1</MenuItem>
+						<MenuItem onClick={formatHeading("h2")}>H2</MenuItem>
+						<MenuItem onClick={formatHeading("h3")}>H3</MenuItem>
+						<MenuItem onClick={formatHeading("h4")}>H4</MenuItem>
+						<MenuItem onClick={() => formatParagraph()}>Paragraph</MenuItem>
+						<MenuItem onClick={() => formatBulletList()}>B List</MenuItem>
+						<MenuItem onClick={() => formatNumberedList()}>N List</MenuItem>
+						<MenuItem onClick={() => formatQuote()}>Quote</MenuItem>
+					</MenuList>
+				</Menu>
+				<Button onClick={() => saveDocument()} as={Button}>
+					Save
+				</Button>
+				<Box sx={{ flexGrow: 1 }} />
+				<Button
+					onClick={() =>
+						editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
+					}
+				>
+					Last
+				</Button>
 				<Button>Blocks</Button>
 			</ButtonGroup>
 		</div>

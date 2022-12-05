@@ -56,7 +56,15 @@ export const dictionaryRouter = router({
 						tags: true,
 					},
 				});
-				return dbWord;
+				console.debug({ tags: dbWord.tags });
+				const wordWithDeserializedTranslations = {
+					...dbWord,
+					spelling: dbWord.spelling || undefined,
+					translations: dbWord.translation.split(";"),
+					documentId: dbWord.documentId || undefined,
+					tags: dbWord.tags.map((tagOnWord) => tagOnWord.tagId),
+				};
+				return wordWithDeserializedTranslations;
 			}
 		),
 	getAllTags: publicProcedure.query(({ ctx }) => {

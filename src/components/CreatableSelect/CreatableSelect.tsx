@@ -1,8 +1,9 @@
-import type { KeyboardEventHandler } from "react";
+import type { ForwardRefRenderFunction, KeyboardEventHandler } from "react";
 import type { RefCallBack } from "react-hook-form";
 
 import { useState } from "react";
 import { CreatableSelect } from "chakra-react-select";
+import React from "react";
 
 const components = {
 	DropdownIndicator: null,
@@ -15,12 +16,10 @@ type YiSimpleCreatableSelectProps = {
 	ref: RefCallBack;
 };
 
-const YiSimpleCreatableSelect = ({
-	value,
-	onChange,
-	ref,
-	placeholder,
-}: YiSimpleCreatableSelectProps) => {
+const YiSimpleCreatableSelect: ForwardRefRenderFunction<
+	any,
+	YiSimpleCreatableSelectProps
+> = ({ value, onChange, placeholder }, ref) => {
 	const [inputValue, setInputValue] = useState("");
 
 	const handleKeyDown: KeyboardEventHandler = (event) => {
@@ -55,4 +54,4 @@ const YiSimpleCreatableSelect = ({
 	);
 };
 
-export default YiSimpleCreatableSelect;
+export default React.forwardRef(YiSimpleCreatableSelect);

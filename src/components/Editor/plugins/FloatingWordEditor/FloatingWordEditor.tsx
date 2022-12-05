@@ -1,10 +1,4 @@
-import type {
-	GridSelection,
-	LexicalEditor,
-	NodeSelection,
-	RangeSelection,
-} from "lexical";
-import { $getNodeByKey } from "lexical";
+import type { LexicalEditor, RangeSelection } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -23,7 +17,8 @@ import {
 import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
 import { trpc } from "@utils/trpc";
-import { $createWordNode, $isWordNode } from "@editor/nodes/WordNode";
+import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
+import { $createWordNode } from "@editor/nodes/WordNode";
 import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
 import { createPortal } from "react-dom";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
@@ -40,16 +35,9 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { $setSelection, isDeleteWordForward } from "lexical/LexicalUtils";
-import { Tag, Word } from "@prisma/client";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 
-type TagOption =
-	| Tag
-	| {
-			name: string;
-			color: string;
-	  };
+type TagOption = EditorTag;
 
 type WordFormType = {
 	word: string;
@@ -165,7 +153,7 @@ const WordForm = ({
 	word: string;
 	showTagEditor: (newTagName: string) => Promise<TagOption | null>;
 	resolveWord: (newWord: WordFormType | null) => void;
-	dbTags: Array<Tag>;
+	dbTags: Array<EditorTag>;
 }) => {
 	const {
 		handleSubmit,
@@ -187,7 +175,7 @@ const WordForm = ({
 		setValue("word", word);
 	}, [setValue, word]);
 
-	const [tagOptions, setTagOptions] = useState<Array<TagOption>>(dbTags);
+	const [tagOptions, setTagOptions] = useState<Array<EditorTag>>(dbTags);
 
 	const onSubmit = handleSubmit((data) => {
 		reset();
@@ -328,7 +316,7 @@ type CommentInputBoxProps = {
 	word: string;
 	cancel: () => void;
 	editor: LexicalEditor;
-	submitWord: (word: Word) => void;
+	submitWord: (word: EditorWord) => void;
 	anchorElem: HTMLElement;
 	show: boolean;
 };
@@ -501,7 +489,7 @@ const CommentInputBox = React.forwardRef<
 						word: word.word,
 						translations: word.translations,
 						spelling: word.spelling,
-						tags: word.tags.map((tag) => ("id" in tag ? tag.id : tag)),
+						tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
 					});
 					submitWord(newWord);
 					console.debug(newWord);
@@ -512,12 +500,9 @@ const CommentInputBox = React.forwardRef<
 			[cancel, createWord, submitWord]
 		);
 
-		const { data: dbTags, isLoading } = trpc.dictionary.getAllTags.useQuery(
-			undefined,
-			{
-				enabled: show,
-			}
-		);
+		const dbTags = trpc.dictionary.getAllTags.useQuery(undefined, {
+			enabled: show,
+		});
 
 		return (
 			<Box
@@ -549,7 +534,7 @@ const CommentInputBox = React.forwardRef<
 					}
 				}}
 			>
-				{show && (
+				{show && dbTags.isFetched && (
 					<>
 						<Box
 							sx={{
@@ -562,7 +547,7 @@ const CommentInputBox = React.forwardRef<
 								showTagEditor={getNewTag}
 								resolveWord={resolveWord}
 								word={word}
-								dbTags={dbTags || []}
+								dbTags={dbTags.data || []}
 							/>
 						</Box>
 						<Box
@@ -600,14 +585,14 @@ const FloatingWordEditorPlugin = ({
 	});
 
 	const insertWord = useCallback(
-		(newWord: Word) => {
+		(newWord: EditorWord) => {
 			editor.update(() => {
 				console.debug({ selection });
 				if (!selection) return;
 
 				if ($isRangeSelection(selection)) {
 					const newWordNode = $createWordNode(
-						newWord.translation,
+						newWord.translations,
 						newWord.word,
 						newWord.id
 					);

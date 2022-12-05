@@ -4,18 +4,35 @@ import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 
 export const documentRouter = router({
-	createDocument: publicProcedure
+	upsertDocument: publicProcedure
 		.input(
-			z.object({ title: z.string().optional(), serializedDocument: z.string() })
+			z.object({
+				title: z.string().optional(),
+				serializedDocument: z.string(),
+				id: z.string().optional(),
+			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const newDocument = await ctx.prisma.document.create({
-				data: {
-					title: input.title || "Untitled Document",
-					serializedDocument: input.serializedDocument,
-				},
-			});
-			return newDocument;
+			let dbDocument;
+			if (input.id) {
+				dbDocument = await ctx.prisma.document.update({
+					where: {
+						id: input.id,
+					},
+					data: {
+						title: input.title || "Untitled Document",
+						serializedDocument: input.serializedDocument,
+					},
+				});
+			} else {
+				dbDocument = await ctx.prisma.document.create({
+					data: {
+						title: input.title || "Untitled Document",
+						serializedDocument: input.serializedDocument,
+					},
+				});
+			}
+			return dbDocument;
 		}),
 	updateDocument: publicProcedure
 		.input(

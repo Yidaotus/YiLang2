@@ -6,6 +6,21 @@
  *
  */
 
+export type EditorTag = {
+	id?: string;
+	name: string;
+	color: string;
+};
+
+export type EditorWord = {
+	id?: string;
+	word: string;
+	spelling?: string;
+	translations: Array<string>;
+	tags: Array<string>;
+	documentId?: string;
+};
+
 import type {
 	EditorConfig,
 	LexicalNode,
@@ -25,7 +40,7 @@ import { Box } from "@chakra-ui/react";
 export type SerializedWordNode = Spread<
 	{
 		word: string;
-		translation: string;
+		translations: Array<string>;
 		id?: string;
 		type: "word";
 	},
@@ -54,8 +69,8 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 				if (node.getWord() !== remoteWord.word) {
 					node.setWord(remoteWord.word);
 				}
-				if (node.getTranslation() !== remoteWord.translation) {
-					node.setTranslation(remoteWord.translation);
+				if (node.getTranslations() !== remoteWord.translations) {
+					node.setTranslation(remoteWord.translations);
 				}
 			});
 		}
@@ -119,7 +134,7 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 
 export class WordNode extends DecoratorNode<React.ReactElement> {
 	__word: string;
-	__translation: string;
+	__translations: Array<string>;
 	__id?: string;
 
 	static getType(): string {
@@ -127,12 +142,22 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 	}
 
 	static clone(node: WordNode): WordNode {
-		return new WordNode(node.__translation, node.__word, node.__id, node.__key);
+		return new WordNode(
+			node.__translations,
+			node.__word,
+			node.__id,
+			node.__key
+		);
 	}
 
-	constructor(translation: string, word: string, id?: string, key?: NodeKey) {
+	constructor(
+		translations: Array<string>,
+		word: string,
+		id?: string,
+		key?: NodeKey
+	) {
 		super(key);
-		this.__translation = translation;
+		this.__translations = translations;
 		this.__word = word;
 		this.__id = id;
 	}
@@ -160,13 +185,13 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return self.__id;
 	}
 
-	setTranslation(translation: string) {
+	setTranslation(translations: Array<string>) {
 		const self = this.getWritable();
-		self.__translation = translation;
+		self.__translations = translations;
 	}
-	getTranslation(): string {
+	getTranslations(): Array<string> {
 		const self = this.getLatest();
-		return self.__translation;
+		return self.__translations;
 	}
 
 	setWord(word: string) {
@@ -181,7 +206,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 	exportJSON(): SerializedWordNode {
 		return {
 			word: this.getWord(),
-			translation: this.getTranslation(),
+			translations: this.getTranslations(),
 			id: this.getId(),
 			type: "word",
 			version: 1,
@@ -190,7 +215,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 
 	static importJSON(serializedNode: SerializedWordNode): WordNode {
 		const node = $createWordNode(
-			serializedNode.translation,
+			serializedNode.translations,
 			serializedNode.word,
 			serializedNode.id
 		);
@@ -220,9 +245,9 @@ export function $isWordNode(
 }
 
 export function $createWordNode(
-	translation: string,
+	translations: Array<string>,
 	word: string,
 	id?: string
 ): WordNode {
-	return new WordNode(translation, word, id);
+	return new WordNode(translations, word, id);
 }
