@@ -406,11 +406,15 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 	}, [anchorElem]);
 
 	const dragStart = useCallback(
-		(e: MouseEvent) => {
-			dragParams.current.startY = e.clientY;
+		(e: MouseEvent | TouchEvent) => {
+			if (e instanceof TouchEvent) {
+				dragParams.current.startY = e.touches[0]?.clientY || 0;
+			} else {
+				dragParams.current.startY = e.clientY;
+			}
 			dragParams.current.anchorTop = anchorElem.scrollTop;
 			dragParams.current.dragging = true;
-			console.debug(dragParams.current.startY, { cY: e.clientY });
+
 			const currentScrollIndicator = scrollIndicatorRef.current;
 			if (currentScrollIndicator) {
 				currentScrollIndicator.style.cursor = "grabbing";
@@ -419,24 +423,22 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 		[anchorElem]
 	);
 	const drag = useCallback(
-		(e: MouseEvent) => {
+		(e: MouseEvent | TouchEvent) => {
 			if (!scrollContainerRef.current || !dragParams.current.dragging) {
 				return;
 			}
 			const dragStartPos = dragParams.current.startY;
 			const anchorTop = dragParams.current.anchorTop;
-			const yMoveDiff = e.clientY - dragStartPos;
+			let clientY;
+			if (e instanceof TouchEvent) {
+				clientY = e.touches[0]?.clientY || 0;
+			} else {
+				clientY = e.clientY;
+			}
+			const yMoveDiff = clientY - dragStartPos;
 			const relativeMove = yMoveDiff / height;
 			const windowMove = relativeMove * anchorElem.scrollHeight;
 
-			console.debug({
-				cY: e.clientY,
-				sY: dragParams.current.startY,
-				relativeMove,
-				windowMove,
-				anchorTop,
-				dragStartPos,
-			});
 			anchorElem.scrollTo({ top: anchorTop + windowMove });
 		},
 		[anchorElem]
@@ -451,23 +453,31 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 
 	useEffect(() => {
 		updateMinimap();
+		window.addEventListener("resize", updateMinimap);
 		anchorElem.addEventListener("scroll", updateMinimap);
 		const currentScrollIndicator = scrollIndicatorRef.current;
 		const currentScrollContainer = scrollContainerRef.current;
 		if (currentScrollIndicator && currentScrollContainer) {
 			currentScrollIndicator.addEventListener("mousedown", dragStart);
+			currentScrollIndicator.addEventListener("touchstart", dragStart);
 			currentScrollContainer.addEventListener("mousemove", drag);
+			currentScrollContainer.addEventListener("touchmove", drag);
+			currentScrollIndicator.addEventListener("touchend", dragEnd);
 			currentScrollIndicator.addEventListener("mouseup", dragEnd);
 			currentScrollIndicator.addEventListener("mouseleave", dragEnd);
 		}
 		return () => {
 			anchorElem.removeEventListener("scroll", updateMinimap);
+			window.removeEventListener("resize", updateMinimap);
 			if (currentScrollIndicator) {
 				currentScrollIndicator.removeEventListener("mousedown", dragStart);
 				currentScrollIndicator.removeEventListener("mouseup", dragEnd);
 				currentScrollIndicator.removeEventListener("mouseleave", dragEnd);
+				currentScrollIndicator.removeEventListener("touchstart", dragStart);
+				currentScrollIndicator.removeEventListener("touchend", dragEnd);
 			}
 			if (currentScrollContainer) {
+				currentScrollContainer.removeEventListener("touchmove", drag);
 				currentScrollContainer.removeEventListener("mousemove", drag);
 			}
 		};
@@ -476,11 +486,11 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 	return (
 		<Box
 			h={`${height}px`}
-			pos="fixed"
+			pos="absolute"
 			w={`${width}px`}
 			bg="rgba(0, 0, 0, 0.2)"
 			top="20px"
-			right="50px"
+			right={{ sm: 10, md: 10, lg: 10, xl: 10 }}
 			borderRadius={3}
 			bgImage='url("/images/scrollBg.png")'
 			bgRepeat="repeat-y"
@@ -530,11 +540,13 @@ export default function Editor({ id }: EditorProps) {
 			<Box
 				sx={{
 					w: "100%",
+					py: 8,
 					px: 4,
 					display: "flex",
 					justifyContent: "center",
 					height: "95vh",
 					overflow: "auto",
+					pos: "relative",
 				}}
 				ref={onRootRef}
 			>
@@ -578,7 +590,6 @@ export default function Editor({ id }: EditorProps) {
 							{rootAnchorElem && <MinimapPlugin anchorElem={rootAnchorElem} />}
 							{floatingAnchorElem && (
 								<>
-									<BlockEditorPlugin anchorElem={floatingAnchorElem} />
 									<FloatingTextFormatToolbarPlugin
 										anchorElem={floatingAnchorElem}
 									/>
