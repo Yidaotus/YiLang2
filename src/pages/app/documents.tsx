@@ -43,6 +43,9 @@ import {
 	IoPencil,
 	IoClose,
 	IoArrowDown,
+	IoFunnel,
+	IoArrowUp,
+	IoSwapVertical,
 } from "react-icons/io5";
 
 const MAX_PAGINATION_BUTTONS = 5;
@@ -55,14 +58,12 @@ const DocumentsPage: NextPageWithLayout = () => {
 		refetchOnWindowFocus: false,
 	});
 	const [searchTerm, setSearchTerm] = useState("");
-	const [pageSize, setPageSize] = useState(4);
+	const [pageSize, setPageSize] = useState(10);
 	const [page, setPage] = useState(0);
-	const [sortByColumns, setSortByColumns] = useState<
-		Array<{
-			column: keyof Exclude<typeof allDocuments.data, undefined>[number];
-			order: "asc" | "desc";
-		}>
-	>([]);
+	const [sortByColumn, setSortByColumn] = useState<{
+		column: keyof Exclude<typeof allDocuments.data, undefined>[number];
+		order: "asc" | "desc";
+	}>();
 
 	const pageSearchResult = useMemo(() => {
 		if (!allDocuments.data) {
@@ -74,33 +75,35 @@ const DocumentsPage: NextPageWithLayout = () => {
 	}, [allDocuments.data, searchTerm]);
 
 	const sortedPage = useMemo(() => {
-		const sortedPageResult = [...pageSearchResult];
-		for (const sorter of sortByColumns) {
-			sortedPageResult.sort((a, b) => {
-				const t1 = a[sorter.column];
-				const t2 = b[sorter.column];
-
-				if (t1 instanceof Date && t2 instanceof Date) {
-					if (sorter.order === "asc") {
-						return t1.getTime() - t2.getTime();
-					} else {
-						return t2.getTime() - t1.getTime();
-					}
-				}
-
-				if (typeof t1 === "string" && typeof t2 === "string") {
-					if (sorter.order === "asc") {
-						return t1.localeCompare(t2);
-					} else {
-						return t2.localeCompare(t1);
-					}
-				}
-
-				return 1;
-			});
+		if (!sortByColumn) {
+			return pageSearchResult;
 		}
+
+		const sortedPageResult = [...pageSearchResult];
+		sortedPageResult.sort((a, b) => {
+			const t1 = a[sortByColumn.column];
+			const t2 = b[sortByColumn.column];
+
+			if (t1 instanceof Date && t2 instanceof Date) {
+				if (sortByColumn.order === "asc") {
+					return t1.getTime() - t2.getTime();
+				} else {
+					return t2.getTime() - t1.getTime();
+				}
+			}
+
+			if (typeof t1 === "string" && typeof t2 === "string") {
+				if (sortByColumn.order === "asc") {
+					return t1.localeCompare(t2);
+				} else {
+					return t2.localeCompare(t1);
+				}
+			}
+
+			return 1;
+		});
 		return sortedPageResult;
-	}, [sortByColumns, pageSearchResult]);
+	}, [sortByColumn, pageSearchResult]);
 
 	const pageSlice = useMemo(() => {
 		const startIndex = page * pageSize;
@@ -127,6 +130,7 @@ const DocumentsPage: NextPageWithLayout = () => {
 	);
 
 	const paginationFillerElements = useMemo(() => {
+		return [];
 		const pageDifference = pageSize - pageSlice.length;
 		const filler = [];
 		for (let index = 0; index < pageDifference; index++) {
@@ -156,33 +160,24 @@ const DocumentsPage: NextPageWithLayout = () => {
 	}, [page, pageCount]);
 
 	const addSortColumn = useCallback(
-		(columnName: typeof sortByColumns[number]["column"]) => {
-			const sorterIndex = sortByColumns.findIndex(
-				(sorter) => sorter.column === columnName
-			);
-			const sorterItem = sortByColumns[sorterIndex];
-			if (sorterItem) {
+		(columnName: Exclude<typeof sortByColumn, undefined>["column"]) => {
+			if (!sortByColumn || sortByColumn.column !== columnName) {
+				setSortByColumn({ column: columnName, order: "asc" });
+			} else {
 				// toggle order
 				let newOrder: "asc" | "desc";
-				if (sorterItem.order === "asc") {
+				if (sortByColumn.order === "asc") {
 					newOrder = "desc";
 				} else {
 					newOrder = "asc";
 				}
-				const newSorterColumns = [...sortByColumns];
-				newSorterColumns.splice(sorterIndex, 1, {
-					column: sorterItem.column,
+				setSortByColumn({
+					column: columnName,
 					order: newOrder,
 				});
-				setSortByColumns(newSorterColumns);
-			} else {
-				setSortByColumns([
-					...sortByColumns,
-					{ column: columnName, order: "asc" },
-				]);
 			}
 		},
-		[sortByColumns]
+		[sortByColumn]
 	);
 
 	return (
@@ -245,7 +240,7 @@ const DocumentsPage: NextPageWithLayout = () => {
 				</Box>
 			</Box>
 			<TableContainer pt={5}>
-				<Table variant="striped" size={{ sm: "sm", md: "md", lg: "lg" }}>
+				<Table variant="striped" size="sm">
 					<Thead>
 						<Tr>
 							<Th w="100px">#</Th>
@@ -256,7 +251,17 @@ const DocumentsPage: NextPageWithLayout = () => {
 										onClick={() => addSortColumn("title")}
 										variant="link"
 										aria-label="Sort by Title"
-										icon={<IoArrowDown />}
+										icon={
+											sortByColumn?.column === "title" ? (
+												sortByColumn.order === "asc" ? (
+													<IoArrowDown />
+												) : (
+													<IoArrowUp />
+												)
+											) : (
+												<IoSwapVertical />
+											)
+										}
 									/>
 								</Box>
 							</Th>
@@ -267,7 +272,17 @@ const DocumentsPage: NextPageWithLayout = () => {
 										onClick={() => addSortColumn("createdAt")}
 										variant="link"
 										aria-label="Sort by Date"
-										icon={<IoArrowDown />}
+										icon={
+											sortByColumn?.column === "createdAt" ? (
+												sortByColumn.order === "asc" ? (
+													<IoArrowDown />
+												) : (
+													<IoArrowUp />
+												)
+											) : (
+												<IoSwapVertical />
+											)
+										}
 									/>
 								</Box>
 							</Th>

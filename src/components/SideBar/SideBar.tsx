@@ -59,7 +59,7 @@ const SideBar = () => {
 	}, [isCollapsed, setIsCollapsed]);
 
 	return (
-		<Box height="100%" position="relative" bg="gray.400" top={0} left={0}>
+		<Box height="100vh" position="relative" bg="gray.400" top={0} left={0}>
 			{isCollapsed && (
 				<Box position="absolute" left="70px" top="12px">
 					<IconButton

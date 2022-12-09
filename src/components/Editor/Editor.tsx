@@ -20,10 +20,16 @@ import {
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 import { createCommand } from "lexical";
 
-import { Box } from "@chakra-ui/react";
+import { Box, SkeletonText } from "@chakra-ui/react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -361,6 +367,138 @@ const WordListPlugin = () => {
 	);
 };
 
+type MinimapPluginProps = {
+	anchorElem: HTMLElement;
+};
+const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
+	const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const dragParams = useRef({ dragging: false, startY: 0, anchorTop: 0 });
+	const height = 250;
+	const width = 70;
+
+	console.debug({ dragParams });
+
+	const updateMinimap = useCallback(() => {
+		const scrollerElem = scrollIndicatorRef.current;
+		if (!scrollerElem) {
+			return;
+		}
+
+		const contentHeight = anchorElem.scrollHeight;
+		const clientHeight = anchorElem.offsetHeight;
+
+		console.debug({ contentHeight, clientHeight });
+
+		const scrollerHeight = (clientHeight / contentHeight) * height;
+
+		const scrollTop = anchorElem.scrollTop;
+		const pos = scrollTop / contentHeight;
+
+		if (contentHeight <= clientHeight) {
+			scrollerElem.style.transform = "translateY(0px)";
+			scrollerElem.style.height = "0px";
+			scrollerElem.style.width = "0px";
+		} else {
+			scrollerElem.style.transform = `translateY(${pos * height}px)`;
+			scrollerElem.style.height = `${scrollerHeight}px`;
+		}
+	}, [anchorElem]);
+
+	const dragStart = useCallback(
+		(e: MouseEvent) => {
+			dragParams.current.startY = e.clientY;
+			dragParams.current.anchorTop = anchorElem.scrollTop;
+			dragParams.current.dragging = true;
+			console.debug(dragParams.current.startY, { cY: e.clientY });
+			const currentScrollIndicator = scrollIndicatorRef.current;
+			if (currentScrollIndicator) {
+				currentScrollIndicator.style.cursor = "grabbing";
+			}
+		},
+		[anchorElem]
+	);
+	const drag = useCallback(
+		(e: MouseEvent) => {
+			if (!scrollContainerRef.current || !dragParams.current.dragging) {
+				return;
+			}
+			const dragStartPos = dragParams.current.startY;
+			const anchorTop = dragParams.current.anchorTop;
+			const yMoveDiff = e.clientY - dragStartPos;
+			const relativeMove = yMoveDiff / height;
+			const windowMove = relativeMove * anchorElem.scrollHeight;
+
+			console.debug({
+				cY: e.clientY,
+				sY: dragParams.current.startY,
+				relativeMove,
+				windowMove,
+				anchorTop,
+				dragStartPos,
+			});
+			anchorElem.scrollTo({ top: anchorTop + windowMove });
+		},
+		[anchorElem]
+	);
+	const dragEnd = useCallback(() => {
+		dragParams.current.dragging = false;
+		const currentScrollIndicator = scrollIndicatorRef.current;
+		if (currentScrollIndicator) {
+			currentScrollIndicator.style.cursor = "grab";
+		}
+	}, []);
+
+	useEffect(() => {
+		updateMinimap();
+		anchorElem.addEventListener("scroll", updateMinimap);
+		const currentScrollIndicator = scrollIndicatorRef.current;
+		const currentScrollContainer = scrollContainerRef.current;
+		if (currentScrollIndicator && currentScrollContainer) {
+			currentScrollIndicator.addEventListener("mousedown", dragStart);
+			currentScrollContainer.addEventListener("mousemove", drag);
+			currentScrollIndicator.addEventListener("mouseup", dragEnd);
+			currentScrollIndicator.addEventListener("mouseleave", dragEnd);
+		}
+		return () => {
+			anchorElem.removeEventListener("scroll", updateMinimap);
+			if (currentScrollIndicator) {
+				currentScrollIndicator.removeEventListener("mousedown", dragStart);
+				currentScrollIndicator.removeEventListener("mouseup", dragEnd);
+				currentScrollIndicator.removeEventListener("mouseleave", dragEnd);
+			}
+			if (currentScrollContainer) {
+				currentScrollContainer.removeEventListener("mousemove", drag);
+			}
+		};
+	}, [drag, dragEnd, dragStart, updateMinimap, scrollIndicatorRef, anchorElem]);
+
+	return (
+		<Box
+			h={`${height}px`}
+			pos="fixed"
+			w={`${width}px`}
+			bg="rgba(0, 0, 0, 0.2)"
+			top="20px"
+			right="50px"
+			borderRadius={3}
+			bgImage='url("/images/scrollBg.png")'
+			bgRepeat="repeat-y"
+			ref={scrollContainerRef}
+		>
+			<Box
+				userSelect="none"
+				borderRadius={3}
+				ref={scrollIndicatorRef}
+				pos="absolute"
+				bg="rgba(13, 43, 48, 0.3)"
+				w="100%"
+				cursor="grab"
+			/>
+		</Box>
+	);
+};
+
 export default function Editor({ id }: EditorProps) {
 	const initialConfig = {
 		namespace: "MyEditor",
@@ -372,23 +510,34 @@ export default function Editor({ id }: EditorProps) {
 
 	const [floatingAnchorElem, setFloatingAnchorElem] =
 		useState<HTMLDivElement | null>(null);
+	const [rootAnchorElem, setRootAnchorElem] = useState<HTMLDivElement | null>(
+		null
+	);
 
-	const onRef = (_floatingAnchorElem: HTMLDivElement) => {
+	const onRootRef = (_rootAnchorElem: HTMLDivElement) => {
+		if (_rootAnchorElem !== null) {
+			setRootAnchorElem(_rootAnchorElem);
+		}
+	};
+	const onFloatingRef = (_floatingAnchorElem: HTMLDivElement) => {
 		if (_floatingAnchorElem !== null) {
 			setFloatingAnchorElem(_floatingAnchorElem);
 		}
 	};
 
 	return (
-		<Box
-			sx={{
-				w: "100%",
-				px: 4,
-				display: "flex",
-				justifyContent: "center",
-			}}
-		>
-			<Box>
+		<Box>
+			<Box
+				sx={{
+					w: "100%",
+					px: 4,
+					display: "flex",
+					justifyContent: "center",
+					height: "95vh",
+					overflow: "auto",
+				}}
+				ref={onRootRef}
+			>
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
 						<ToolbarPlugin documentId={id} />
@@ -403,13 +552,12 @@ export default function Editor({ id }: EditorProps) {
 											py: 4,
 											pr: 2,
 										}}
-										ref={onRef}
+										ref={onFloatingRef}
 									>
 										<ContentEditable
 											style={{
 												outline: "none",
 												maxWidth: "700px",
-												height: "100%",
 												minHeight: "100px",
 											}}
 										/>
@@ -427,6 +575,7 @@ export default function Editor({ id }: EditorProps) {
 						<ListPlugin />
 						<ImagesPlugin />
 						<>
+							{rootAnchorElem && <MinimapPlugin anchorElem={rootAnchorElem} />}
 							{floatingAnchorElem && (
 								<>
 									<BlockEditorPlugin anchorElem={floatingAnchorElem} />
