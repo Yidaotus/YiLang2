@@ -125,6 +125,7 @@ const SideBar = () => {
 					isCollapsed={isCollapsed}
 					icon={<IoSettings />}
 					text="Settings"
+					onClick={() => router.push("/app/settings")}
 				/>
 			</Box>
 		</Box>

@@ -15,7 +15,7 @@ const Editor = dynamic(() => import("../../../components/Editor/Editor"), {
 	ssr: false,
 });
 
-const EditorPage: NextPageWithLayout = () => {
+const Settings: NextPageWithLayout = () => {
 	const router = useRouter();
 	const { id } = router.query;
 
@@ -37,8 +37,8 @@ const EditorPage: NextPageWithLayout = () => {
 	);
 };
 
-EditorPage.getLayout = function getLayout(page: ReactElement) {
+Settings.getLayout = function getLayout(page: ReactElement) {
 	return <Layout>{page}</Layout>;
 };
 
-export default EditorPage;
+export default Settings;
