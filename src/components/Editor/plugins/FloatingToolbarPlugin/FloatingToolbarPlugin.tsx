@@ -26,7 +26,6 @@ import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { withRouter } from "next/router";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -111,7 +110,8 @@ function TextFormatFloatingToolbar({
 				targetRect: rangeRect,
 				floatingElem: popupCharStylesEditorElem,
 				anchorElem,
-				verticalOffset: 5,
+				verticalOffset: -45,
+				pos: "top",
 			});
 		}
 	}, [editor, anchorElem]);
@@ -169,9 +169,7 @@ function TextFormatFloatingToolbar({
 		<Box
 			ref={popupCharStylesEditorRef}
 			style={{
-				transitionProperty: "opacity, scale, left, top",
-				transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
-				transitionDuration: "150ms",
+				transition: "150ms opacity ease-in-out, 30ms left linear",
 			}}
 			sx={{
 				pos: "absolute",
@@ -190,7 +188,7 @@ function TextFormatFloatingToolbar({
 				variant="outline"
 				sx={{
 					"&>button": {
-						height: "40px",
+						height: "35px",
 						minWidth: "40px",
 					},
 				}}

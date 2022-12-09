@@ -35,14 +35,13 @@ export function setFloatingElemPosition({
 	// Center bottom
 
 	if (center) {
-		top += targetRect.height;
 		left += targetRect.width / 2;
 		floatingElem.style.transform = "translateX(-50%)";
 	}
 
 	if (pos === "bottom") {
-		// top += height;
-	}
+		top += targetRect.height;
+	} 
 
 	floatingElem.style.opacity = "1";
 	floatingElem.style.scale = "1";

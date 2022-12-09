@@ -1,4 +1,16 @@
-import type { Klass, LexicalCommand, LexicalNode } from "lexical";
+import {
+	$getNodeByKey,
+	$isDecoratorNode,
+	$isElementNode,
+	$isRangeSelection,
+	$isRootOrShadowRoot,
+	COMMAND_PRIORITY_CRITICAL,
+	DecoratorNode,
+	ElementNode,
+	Klass,
+	LexicalCommand,
+	LexicalNode,
+} from "lexical";
 import {
 	$createNodeSelection,
 	$getSelection,
@@ -44,6 +56,7 @@ import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import { trpc } from "@utils/trpc";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { Prose } from "@nikolovlazar/chakra-ui-prose";
+import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -187,14 +200,107 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	);
 };
 
-const WordListPlugin = () => {
+type BlockEditorPosition = {
+	left: number;
+	top: number;
+};
+
+type BlockEditorProps = {
+	anchorElem: HTMLElement;
+};
+const BlockEditorPlugin = ({ anchorElem }: BlockEditorProps) => {
 	const [editor] = useLexicalComposerContext();
-	const [wordStore, setWordStore] = useState<
-		Array<{ key: string; text: string }>
-	>([]);
+	const [position, setPosition] = useState<BlockEditorPosition | null>(null);
+
+	const updateToolbar = useCallback(() => {
+		setPosition(null);
+		const selection = $getSelection();
+		let element: ElementNode | DecoratorNode<unknown> | null = null;
+		if ($isRangeSelection(selection)) {
+			const anchorNode = selection.anchor.getNode();
+			const focusNode = selection.focus.getNode();
+
+			const anchorElement = anchorNode.getTopLevelElementOrThrow();
+			const focusElement = focusNode.getTopLevelElementOrThrow();
+
+			if (!anchorElement || !focusElement) {
+				return;
+			}
+
+			if (focusElement.getKey() !== anchorElement.getKey()) {
+				return;
+			}
+
+			if ($isElementNode(focusElement)) {
+				element = focusElement;
+			}
+		} else if ($isNodeSelection(selection)) {
+			const anchorNode = selection.getNodes()[0];
+			if (!anchorNode) {
+				return;
+			}
+			if ($isDecoratorNode(anchorNode)) {
+				element = anchorNode.getTopLevelElementOrThrow();
+			}
+		}
+		if (!element) {
+			return;
+		}
+		const elementDOM = editor.getElementByKey(element.getKey());
+
+		if (!elementDOM) {
+			return;
+		}
+
+		const bounding = elementDOM.getBoundingClientRect();
+		const elementType = element.getType();
+
+		setPosition({
+			left: bounding.left,
+			top:
+				bounding.top +
+				anchorElem.scrollTop -
+				anchorElem.getBoundingClientRect().top,
+		});
+	}, [anchorElem, editor]);
 
 	useEffect(() => {
 		return mergeRegister(
+			editor.registerCommand(
+				SELECTION_CHANGE_COMMAND,
+				() => {
+					updateToolbar();
+					return false;
+				},
+				COMMAND_PRIORITY_CRITICAL
+			),
+			editor.registerUpdateListener(({ editorState }) => {
+				editorState.read(() => {
+					updateToolbar();
+				});
+			})
+		);
+	}, [editor, updateToolbar]);
+
+	return position ? (
+		<Box
+			zIndex={50}
+			position="absolute"
+			top={position.top}
+			left={position.left}
+			w="50px"
+			h="50px"
+			bg="gray.700"
+		/>
+	) : null;
+};
+
+const WordListPlugin = () => {
+	const [editor] = useLexicalComposerContext();
+	const [wordStore, setWordStore] = useState<Record<string, string>>({});
+
+	useEffect(() => {
+		/*
 			editor.registerDecoratorListener<any>((decorators) => {
 				console.debug({ decorators });
 				setWordStore(
@@ -206,14 +312,29 @@ const WordListPlugin = () => {
 						}))
 				);
 			})
-			/** see https://github.com/facebook/lexical/issues/3490
-			editor.registerMutationListener(WordNode, (nodes) => {
-				for (const node of nodes) {
-					console.debug({ node });
+			*/
+		// Fixed in 0.6.5 see https://github.com/facebook/lexical/issues/3490
+		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
+			for (const [nodeKey, mutation] of mutatedNodes) {
+				console.debug({ nodeKey, mutation });
+				if (mutation === "created") {
+					editor.getEditorState().read(() => {
+						const wordNode = $getNodeByKey(nodeKey) as WordNode;
+						const wordText = wordNode.getWord();
+						setWordStore((currentStore) => ({
+							...currentStore,
+							[nodeKey]: wordText,
+						}));
+					});
 				}
-			})
-			 */
-		);
+				if (mutation === "destroyed") {
+					setWordStore((currentStore) => {
+						delete currentStore[nodeKey];
+						return { ...currentStore };
+					});
+				}
+			}
+		});
 	}, [editor]);
 
 	const highlightWord = useCallback(
@@ -230,9 +351,9 @@ const WordListPlugin = () => {
 	return (
 		<div>
 			<ul>
-				{wordStore.map((word) => (
-					<li key={word.key}>
-						<button onClick={() => highlightWord(word.key)}>{word.text}</button>
+				{Object.entries(wordStore).map(([nodeKey, word]) => (
+					<li key={nodeKey}>
+						<button onClick={() => highlightWord(nodeKey)}>{word}</button>
 					</li>
 				))}
 			</ul>
@@ -259,8 +380,15 @@ export default function Editor({ id }: EditorProps) {
 	};
 
 	return (
-		<Box sx={{ w: "100%", px: 4 }}>
-			<div className="p-0 md:p-10">
+		<Box
+			sx={{
+				w: "100%",
+				px: 4,
+				display: "flex",
+				justifyContent: "center",
+			}}
+		>
+			<Box>
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
 						<ToolbarPlugin documentId={id} />
@@ -294,12 +422,14 @@ export default function Editor({ id }: EditorProps) {
 						<HistoryPlugin />
 						<PersistStateOnPageChangePlugion />
 						<FetchDocumentPlugin id={id as string} />
+						<ListMaxIndentLevelPlugin maxDepth={4} />
 						<WordListPlugin />
 						<ListPlugin />
 						<ImagesPlugin />
 						<>
 							{floatingAnchorElem && (
 								<>
+									<BlockEditorPlugin anchorElem={floatingAnchorElem} />
 									<FloatingTextFormatToolbarPlugin
 										anchorElem={floatingAnchorElem}
 									/>
@@ -310,7 +440,7 @@ export default function Editor({ id }: EditorProps) {
 						</>
 					</LexicalComposer>
 				</div>
-			</div>
+			</Box>
 		</Box>
 	);
 }

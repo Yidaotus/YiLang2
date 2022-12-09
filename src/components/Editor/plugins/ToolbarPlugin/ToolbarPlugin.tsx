@@ -12,6 +12,7 @@ import {
 	MenuButton,
 	MenuList,
 	Box,
+	IconButton,
 } from "@chakra-ui/react";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -252,10 +253,19 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 	};
 
 	return (
-		<div>
+		<Box
+			sx={{
+				position: "fixed",
+				bottom: "50px",
+				right: "50px",
+				zIndex: 40,
+				bg: "white",
+				borderRadius: "5px",
+				boxShadow:
+					"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+			}}
+		>
 			<ButtonGroup isAttached variant="outline" sx={{ w: "100%" }}>
-				<Button>Shanghai</Button>
-				<Button>Beijing</Button>
 				<Menu>
 					<MenuButton as={Button}>Alignment</MenuButton>
 					<MenuList>
@@ -290,7 +300,12 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 					</MenuList>
 				</Menu>
 				<Menu>
-					<MenuButton as={Button}>{blockType}</MenuButton>
+					<MenuButton
+						as={IconButton}
+						icon={<img src={`/icons/${blockType}.svg`} />}
+					>
+						{blockType}
+					</MenuButton>
 					<MenuList>
 						<MenuItem onClick={formatHeading("h1")}>H1</MenuItem>
 						<MenuItem onClick={formatHeading("h2")}>H2</MenuItem>
@@ -306,16 +321,8 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 					Save
 				</Button>
 				<Box sx={{ flexGrow: 1 }} />
-				<Button
-					onClick={() =>
-						editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
-					}
-				>
-					Last
-				</Button>
-				<Button>Blocks</Button>
 			</ButtonGroup>
-		</div>
+		</Box>
 	);
 };
 
