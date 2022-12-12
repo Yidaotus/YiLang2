@@ -96,6 +96,7 @@ export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
 
 type EditorProps = {
 	id?: string;
+	scrollAnchor?: HTMLElement;
 };
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
@@ -509,7 +510,7 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 	);
 };
 
-export default function Editor({ id }: EditorProps) {
+export default function Editor({ id, scrollAnchor }: EditorProps) {
 	const initialConfig = {
 		namespace: "MyEditor",
 		theme: YiLangTheme,
@@ -520,15 +521,6 @@ export default function Editor({ id }: EditorProps) {
 
 	const [floatingAnchorElem, setFloatingAnchorElem] =
 		useState<HTMLDivElement | null>(null);
-	const [rootAnchorElem, setRootAnchorElem] = useState<HTMLDivElement | null>(
-		null
-	);
-
-	const onRootRef = (_rootAnchorElem: HTMLDivElement) => {
-		if (_rootAnchorElem !== null) {
-			setRootAnchorElem(_rootAnchorElem);
-		}
-	};
 	const onFloatingRef = (_floatingAnchorElem: HTMLDivElement) => {
 		if (_floatingAnchorElem !== null) {
 			setFloatingAnchorElem(_floatingAnchorElem);
@@ -539,42 +531,27 @@ export default function Editor({ id }: EditorProps) {
 		<Box>
 			<Box
 				sx={{
-					w: "100%",
-					py: 8,
-					px: 4,
 					display: "flex",
 					justifyContent: "center",
-					height: "95vh",
-					overflow: "auto",
-					pos: "relative",
 				}}
-				ref={onRootRef}
 			>
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
 						<ToolbarPlugin documentId={id} />
 						<RichTextPlugin
 							contentEditable={
-								<Prose>
-									<Box
-										sx={{
-											pos: "relative",
-											display: "flex",
-											justifyContent: "center",
-											py: 4,
-											pr: 2,
+								<Box
+									sx={{
+										pos: "relative",
+									}}
+									ref={onFloatingRef}
+								>
+									<ContentEditable
+										style={{
+											outline: "none",
 										}}
-										ref={onFloatingRef}
-									>
-										<ContentEditable
-											style={{
-												outline: "none",
-												maxWidth: "700px",
-												minHeight: "100px",
-											}}
-										/>
-									</Box>
-								</Prose>
+									/>
+								</Box>
 							}
 							placeholder={<div>Enter some text...</div>}
 							ErrorBoundary={ErrorBoundary}
@@ -587,7 +564,7 @@ export default function Editor({ id }: EditorProps) {
 						<ListPlugin />
 						<ImagesPlugin />
 						<>
-							{rootAnchorElem && <MinimapPlugin anchorElem={rootAnchorElem} />}
+							{scrollAnchor && <MinimapPlugin anchorElem={scrollAnchor} />}
 							{floatingAnchorElem && (
 								<>
 									<FloatingTextFormatToolbarPlugin

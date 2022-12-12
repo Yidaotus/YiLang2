@@ -13,6 +13,8 @@
 	text-align: right;
 }
 .PlaygroundEditorTheme__paragraph {
+	font-size: 20px;
+	line-height: 1.5em;
 	margin: 0;
 }
 .PlaygroundEditorTheme__quote {
@@ -26,12 +28,15 @@
 	border-left-style: solid;
 	padding-left: 16px;
 }
+
 .PlaygroundEditorTheme__h1 {
-	font-size: 24px;
+	font-size: 36px;
 	color: rgb(5, 5, 5);
+	line-height: 1.5em;
 	font-weight: 400;
 	margin: 0;
 }
+
 .PlaygroundEditorTheme__h2 {
 	font-size: 15px;
 	color: rgb(101, 103, 107);
