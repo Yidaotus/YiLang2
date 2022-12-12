@@ -32,7 +32,7 @@ const MainDesign = () => {
 				alignItems="center"
 				borderRight="1px solid #E7E7E7"
 				boxShadow="0px 0px 2px 2px rgba(0, 0, 0, 0.10);"
-				zIndex="10"
+				zIndex="30"
 			>
 				<Box fontSize="60" fontWeight="600" color="#344966" userSelect="none">
 					Y
@@ -113,9 +113,8 @@ const MainDesign = () => {
 				ref={onRootRef}
 			>
 				<Box
-					h="100px"
 					bg="rgba(255, 255, 255, 0.9)"
-					py={4}
+					py={6}
 					px={16}
 					top="0"
 					zIndex="20"
@@ -197,7 +196,7 @@ const MainDesign = () => {
 					alignItems="center"
 					flexDir="column"
 				>
-					<Box w="800px">
+					<Box w="800px" pt="20px" fontFamily="'Source Sans 3'">
 						<Editor scrollAnchor={rootAnchorElem || undefined} />
 					</Box>
 				</Box>
