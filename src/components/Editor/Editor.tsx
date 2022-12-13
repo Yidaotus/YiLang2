@@ -320,7 +320,6 @@ const WordListPlugin = () => {
 	useEffect(() => {
 		/*
 			editor.registerDecoratorListener<any>((decorators) => {
-				console.debug({ decorators });
 				setWordStore(
 					Object.entries(decorators)
 						.filter(([key, value]) => value?.props?.word)
@@ -334,7 +333,6 @@ const WordListPlugin = () => {
 		// Fixed in 0.6.5 see https://github.com/facebook/lexical/issues/3490
 		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
 			for (const [nodeKey, mutation] of mutatedNodes) {
-				console.debug({ nodeKey, mutation });
 				if (mutation === "created") {
 					editor.getEditorState().read(() => {
 						const wordNode = $getNodeByKey(nodeKey) as WordNode;
@@ -513,8 +511,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	const height = 200;
 	const width = 100;
 
-	console.debug({ dragParams });
-
 	const indexEditorToOutline = useCallback(() => {
 		editor.getEditorState().read(() => {
 			const editorOutline: Array<MinimapItem> = [];
@@ -682,8 +678,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 		const contentHeight = anchorElem.scrollHeight;
 		const clientHeight = anchorElem.offsetHeight;
 
-		console.debug({ contentHeight, clientHeight });
-
 		const scrollerHeight = (clientHeight / contentHeight) * height;
 
 		const scrollTop = anchorElem.scrollTop;
@@ -698,21 +692,30 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			scrollerElem.style.height = `${scrollerHeight}px`;
 			scrollerElem.style.width = "100%";
 		}
+
 		const scrollBackgroundElem = scrollBackgroundRef.current;
 		const scrollIndicatorElem = scrollIndicatorRef.current;
-		const scrollContainerElem = scrollContainerRef.current;
-		if (scrollBackgroundElem && scrollIndicatorElem && scrollContainerElem) {
-			const topDiff =
-				scrollIndicatorElem.getBoundingClientRect().top -
-				scrollContainerElem.getBoundingClientRect().top;
+		if (scrollBackgroundElem && scrollIndicatorElem) {
+			const anchorScrollTop = anchorElem.scrollTop;
+			const anchorScrollHeight = anchorElem.scrollHeight;
+			const anchorDeltaScroll =
+				anchorScrollTop / (anchorScrollHeight - anchorElem.clientHeight);
 
-			const topDiffDelta =
-				topDiff /
-				(height - scrollIndicatorElem.getBoundingClientRect().height / 2);
+			const scrollerScrollTop = scrollBackgroundElem.scrollTop;
+			const scrollerScrollHeight = scrollBackgroundElem.scrollHeight;
+			const scrollerClientHeight = scrollBackgroundElem.clientHeight;
+			const scrollerDelta = Math.round(
+				anchorDeltaScroll *
+					(scrollerScrollHeight - scrollBackgroundElem.clientHeight)
+			);
 
-			scrollBackgroundElem.scrollTo({
-				top: topDiffDelta * scrollBackgroundElem.scrollHeight,
+			console.debug({
+				scrollerScrollTop,
+				scrollerScrollHeight,
+				scrollerClientHeight,
+				scrollerDelta,
 			});
+			scrollBackgroundElem.scrollTop = scrollerDelta;
 		}
 	}, [anchorElem]);
 
@@ -751,24 +754,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			const yMoveDiff = clientY - startY;
 
 			const relativeMove = yMoveDiff / height;
-			console.debug({ relativeMove });
 			const windowMove = relativeMove * anchorElem.scrollHeight;
-
-			const scrollBackgroundElem = scrollBackgroundRef.current;
-			const scrollIndicatorElem = scrollIndicatorRef.current;
-			if (scrollBackgroundElem && scrollIndicatorElem) {
-				const topDiff =
-					scrollIndicatorElem.getBoundingClientRect().top -
-					scrollContainerRef.current.getBoundingClientRect().top;
-
-				const topDiffDelta =
-					topDiff /
-					(height - scrollIndicatorElem.getBoundingClientRect().height / 2);
-
-				scrollBackgroundElem.scrollTo({
-					top: topDiffDelta * scrollBackgroundElem.scrollHeight,
-				});
-			}
 			anchorElem.scrollTo({ top: anchorTop + windowMove });
 		},
 		[anchorElem]
