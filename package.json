@@ -32,6 +32,7 @@
     "classnames": "^2.3.2",
     "daisyui": "^2.39.1",
     "framer-motion": "^7.6.12",
+    "html2canvas": "^1.4.1",
     "lexical": "^0.7.1",
     "next": "13.0.1",
     "next-auth": "^4.15.0",

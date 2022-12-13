@@ -25,6 +25,8 @@ import {
 
 import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 
+import html2canvas from "html2canvas";
+
 import React, {
 	useCallback,
 	useEffect,
@@ -508,7 +510,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 		anchorTop: 0,
 		backgroundTop: 0,
 	});
-	const height = 150;
+	const height = 200;
 	const width = 100;
 
 	console.debug({ dragParams });
@@ -518,15 +520,35 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			const editorOutline: Array<MinimapItem> = [];
 			const root = $getRoot();
 			const children = root.getChildren();
+
+			let canvasHeight = 0;
+			const drawPadding = 2;
+			const x = 0;
+			const drawWidth = width - 10;
+			const drawHeight = 3;
+			const linePadding = 2;
+			const headingHeight = drawHeight * 2;
+			let y = 0;
+
 			for (const topLevelChild of children) {
 				if ($isParagraphNode(topLevelChild)) {
+					const linesToDraw = Math.ceil(
+						topLevelChild.getTextContentSize() / 50
+					);
+
+					for (let i = 0; i < linesToDraw; i++) {
+						canvasHeight += drawHeight + linePadding;
+					}
+
 					editorOutline.push({
 						type: "paragraph",
 						contentLength: topLevelChild.getTextContentSize(),
 					});
 				} else if ($isImageNode(topLevelChild)) {
+					canvasHeight += 22;
 					editorOutline.push({ type: "image" });
 				} else if ($isHeadingNode(topLevelChild)) {
+					canvasHeight += headingHeight;
 					const level = topLevelChild.getTag();
 					if (level === "h1") {
 						editorOutline.push({ type: "h1" });
@@ -535,8 +557,114 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 					}
 				} else if ($isQuoteNode(topLevelChild)) {
 					editorOutline.push({ type: "quote" });
+					canvasHeight += drawHeight;
 				}
+				canvasHeight += drawPadding;
 			}
+
+			const canvas = document.createElement("canvas");
+			const ctx = canvas.getContext("2d");
+
+			if (!ctx) {
+				return;
+			}
+
+			canvas.height = canvasHeight;
+
+			y = 0;
+			for (const topLevelChild of children) {
+				if ($isParagraphNode(topLevelChild)) {
+					ctx.fillStyle = "#A9AfC0";
+					const linesToDraw = Math.ceil(
+						topLevelChild.getTextContentSize() / 50
+					);
+
+					for (let i = 0; i < linesToDraw; i++) {
+						const lineWidth = i + 1 >= linesToDraw ? drawWidth - 10 : drawWidth;
+						ctx.fillRect(x, y, lineWidth, drawHeight);
+						y += drawHeight + linePadding;
+					}
+
+					editorOutline.push({
+						type: "paragraph",
+						contentLength: topLevelChild.getTextContentSize(),
+					});
+				} else if ($isImageNode(topLevelChild)) {
+					const containerHeight = 20;
+					const containerWidth = 60;
+					const containerPadding = 16;
+
+					ctx.strokeStyle = "#A9AfC0";
+					ctx.strokeRect(
+						x + containerPadding,
+						y + 1,
+						containerWidth,
+						containerHeight
+					);
+					ctx.beginPath();
+					ctx.moveTo(containerPadding + x + 0, y + containerHeight);
+					ctx.lineTo(
+						containerPadding + x + containerWidth / 4,
+						y + containerHeight / 3
+					);
+					ctx.lineTo(
+						containerPadding + x + (containerWidth / 4) * 2,
+						y + containerHeight
+					);
+					ctx.lineTo(
+						containerPadding + x + (containerWidth / 4) * 3,
+						y + containerHeight / 2
+					);
+					ctx.lineTo(
+						containerPadding + x + (containerWidth / 4) * 4,
+						y + containerHeight
+					);
+					ctx.stroke();
+
+					ctx.beginPath();
+					ctx.arc(
+						containerPadding + x + containerWidth / 2 - 2,
+						y + containerHeight / 2 - 2,
+						3,
+						0,
+						2 * Math.PI
+					);
+					ctx.stroke();
+
+					y += containerHeight + 2;
+					editorOutline.push({ type: "image" });
+				} else if ($isHeadingNode(topLevelChild)) {
+					ctx.fillStyle = "#80858f";
+					ctx.fillRect(x, y, drawWidth, headingHeight);
+
+					y += headingHeight;
+					const level = topLevelChild.getTag();
+					if (level === "h1") {
+						editorOutline.push({ type: "h1" });
+					} else {
+						editorOutline.push({ type: "h2" });
+					}
+				} else if ($isQuoteNode(topLevelChild)) {
+					ctx.fillStyle = "#c1c6cd";
+					ctx.fillRect(x + 5, y, 4, drawHeight * 2 + linePadding);
+
+					ctx.fillStyle = "#b9bfd0";
+					ctx.fillRect(x + 5 + 6, y, drawWidth - 25, drawHeight);
+					ctx.fillRect(
+						x + 5 + 6,
+						y + linePadding + drawHeight,
+						drawWidth - 35,
+						drawHeight
+					);
+
+					editorOutline.push({ type: "quote" });
+					y += drawHeight * 2 + linePadding + 2;
+				}
+				y += drawPadding;
+			}
+
+			scrollBackgroundRef.current?.replaceChildren(canvas);
+
 			setMinimapOutline(editorOutline);
 		});
 	}, [editor]);
@@ -590,9 +718,10 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 
 	const dragStart = useCallback(
 		(e: MouseEvent | TouchEvent) => {
-			if (e instanceof TouchEvent) {
+			// window.TouchEvent to work in ff
+			if (window.TouchEvent && e instanceof TouchEvent) {
 				dragParams.current.startY = e.touches[0]?.clientY || 0;
-			} else {
+			} else if (e instanceof MouseEvent) {
 				dragParams.current.startY = e.clientY;
 			}
 			dragParams.current.anchorTop = anchorElem.scrollTop;
@@ -612,10 +741,12 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			}
 			const { startY, anchorTop } = dragParams.current;
 			let clientY;
-			if (e instanceof TouchEvent) {
+			if (window.TouchEvent && e instanceof TouchEvent) {
 				clientY = e.touches[0]?.clientY || 0;
-			} else {
+			} else if (e instanceof MouseEvent) {
 				clientY = e.clientY;
+			} else {
+				return;
 			}
 			const yMoveDiff = clientY - startY;
 
@@ -695,11 +826,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 				px="5px"
 				py="5px"
 				ref={scrollBackgroundRef}
-			>
-				{minimapOutline.map((bT, index) => (
-					<div key={index}>{bT.type}</div>
-				))}
-			</Box>
+			/>
 			<Box
 				h={`${height}px`}
 				w={`${width}px`}
