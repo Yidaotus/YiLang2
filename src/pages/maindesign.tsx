@@ -196,7 +196,7 @@ const MainDesign = () => {
 							</Box>
 							<IconButton
 								aria-label="Add a tag"
-								icon={<IoAdd />}
+								icon={<span>+</span>}
 								w="26px"
 								minW="0px"
 								h="26px"

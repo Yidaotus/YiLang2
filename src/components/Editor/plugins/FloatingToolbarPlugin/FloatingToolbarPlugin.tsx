@@ -10,7 +10,17 @@ import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
-import { Button, Box, ButtonGroup, IconButton } from "@chakra-ui/react";
+import {
+	Button,
+	Box,
+	ButtonGroup,
+	IconButton,
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuList,
+	Divider,
+} from "@chakra-ui/react";
 import type { LexicalEditor } from "lexical";
 import {
 	$getSelection,
@@ -26,6 +36,9 @@ import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
+import { RxFontBold, RxArrowDown, RxText } from "react-icons/rx";
+import { RiParagraph } from "react-icons/ri";
+import { IoEllipsisVertical, IoChevronDown, IoSearch } from "react-icons/io5";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -175,12 +188,10 @@ function TextFormatFloatingToolbar({
 				pos: "absolute",
 				zIndex: 10,
 				display: "flex",
-				borderRadius: "3px",
+				borderRadius: "8px",
 				bg: "white",
-				border: "1px gray",
-				boxShadow:
-					"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-				overflow: "hidden",
+				border: "1px solid #E0E5EC",
+				boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.10)",
 			}}
 		>
 			<ButtonGroup
@@ -195,20 +206,85 @@ function TextFormatFloatingToolbar({
 				}}
 			>
 				<Button
-					onClick={() => {
-						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
-					}}
-					aria-label="Format text as bold"
+					as={Button}
+					rightIcon={<IoChevronDown color="#696F80" />}
+					border="none"
 				>
-					B
+					<RiParagraph
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
 				</Button>
-				<Button onClick={insertComment} aria-label="Insert comment">
-					C
-				</Button>
+				<Divider orientation="vertical" mt="2px" h="30px" />
 				<IconButton
+					icon={
+						<RxFontBold
+							color="#696F80"
+							style={{
+								height: "24px",
+								width: "24px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+				/>
+				<IconButton
+					icon={
+						<RxFontBold
+							color="#696F80"
+							style={{
+								height: "24px",
+								width: "24px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+				/>
+				<IconButton
+					icon={
+						<RxFontBold
+							color="#696F80"
+							style={{
+								height: "24px",
+								width: "24px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+				/>
+				<IconButton
+					icon={
+						<IoSearch
+							color="#696F80"
+							style={{
+								height: "20px",
+								width: "20px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
 					onClick={showWordEditor}
-					icon={<span>L</span>}
-					aria-label="Open Word Modal"
+				/>
+				<Divider orientation="vertical" mt="2px" h="30px" />
+				<IconButton
+					icon={
+						<IoEllipsisVertical
+							color="#696F80"
+							style={{
+								height: "24px",
+								width: "24px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
 				/>
 			</ButtonGroup>
 		</Box>

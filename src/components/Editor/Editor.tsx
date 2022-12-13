@@ -1,11 +1,14 @@
 import {
 	$getNodeByKey,
+	$getRoot,
 	$isDecoratorNode,
 	$isElementNode,
+	$isParagraphNode,
 	$isRangeSelection,
 	$isRootOrShadowRoot,
 	COMMAND_PRIORITY_CRITICAL,
 	DecoratorNode,
+	EditorState,
 	ElementNode,
 	Klass,
 	LexicalCommand,
@@ -20,16 +23,19 @@ import {
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 
+import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
+
 import React, {
 	useCallback,
 	useEffect,
 	useLayoutEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
 import { createCommand } from "lexical";
 
-import { Box, SkeletonText } from "@chakra-ui/react";
+import { Box, Divider, IconButton, SkeletonText } from "@chakra-ui/react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -57,11 +63,14 @@ import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChan
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { createPortal } from "react-dom";
 import { setFloatingElemPosition } from "./utils/setFloatingPosition";
-import { ImageNode } from "./nodes/ImageNode";
+import { $isImageNode, ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import { trpc } from "@utils/trpc";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
+
+import { IoSaveOutline } from "react-icons/io5";
+import { RxFontBold, RxPencil1 } from "react-icons/rx";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -373,12 +382,115 @@ type SidebarPluginProps = {
 };
 const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 	return createPortal(
-		<Box h="100px" w="100px" bg="#EBEDF1" borderRadius={3} pos="relative">
-			Im the toolbar!
+		<Box
+			w="100%"
+			pos="relative"
+			display="grid"
+			gridTemplateColumns="1fr 1fr"
+			gap="4px"
+			pt="1rem"
+		>
+			<Divider
+				gridColumn="span 2"
+				borderWidth="2px"
+				borderRadius="3px"
+				mb="0.5rem"
+			/>
+			<IconButton
+				icon={
+					<RxFontBold
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
+				}
+				aria-label="Bold"
+				variant="ghost"
+			/>
+			<IconButton
+				icon={
+					<RxFontBold
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
+				}
+				aria-label="Bold"
+				variant="ghost"
+			/>
+			<IconButton
+				icon={
+					<RxFontBold
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
+				}
+				aria-label="Bold"
+				variant="ghost"
+			/>
+			<IconButton
+				icon={
+					<RxFontBold
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
+				}
+				aria-label="Bold"
+				variant="ghost"
+			/>
+			<IconButton
+				icon={
+					<RxFontBold
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
+				}
+				aria-label="Bold"
+				variant="ghost"
+			/>
+			<Divider
+				gridColumn="span 2"
+				borderWidth="2px"
+				borderRadius="3px"
+				mb="0.5rem"
+			/>
+			<IconButton
+				icon={
+					<IoSaveOutline
+						color="#696F80"
+						style={{
+							height: "24px",
+							width: "24px",
+						}}
+					/>
+				}
+				aria-label="Bold"
+				variant="ghost"
+			/>
 		</Box>,
 		sidebarPortal
 	);
 };
+
+type MinimapItem =
+	| { type: "h1" }
+	| { type: "h2" }
+	| { type: "quote" }
+	| { type: "image" }
+	| { type: "paragraph"; contentLength: number };
 
 type MinimapPluginProps = {
 	anchorElem: HTMLElement;
@@ -387,11 +499,51 @@ type MinimapPluginProps = {
 const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	const scrollIndicatorRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
-	const dragParams = useRef({ dragging: false, startY: 0, anchorTop: 0 });
+	const scrollBackgroundRef = useRef<HTMLDivElement>(null);
+	const [minimapOutline, setMinimapOutline] = useState<Array<MinimapItem>>([]);
+	const [editor] = useLexicalComposerContext();
+	const dragParams = useRef({
+		dragging: false,
+		startY: 0,
+		anchorTop: 0,
+		backgroundTop: 0,
+	});
 	const height = 150;
 	const width = 100;
 
 	console.debug({ dragParams });
+
+	const indexEditorToOutline = useCallback(() => {
+		editor.getEditorState().read(() => {
+			const editorOutline: Array<MinimapItem> = [];
+			const root = $getRoot();
+			const children = root.getChildren();
+			for (const topLevelChild of children) {
+				if ($isParagraphNode(topLevelChild)) {
+					editorOutline.push({
+						type: "paragraph",
+						contentLength: topLevelChild.getTextContentSize(),
+					});
+				} else if ($isImageNode(topLevelChild)) {
+					editorOutline.push({ type: "image" });
+				} else if ($isHeadingNode(topLevelChild)) {
+					const level = topLevelChild.getTag();
+					if (level === "h1") {
+						editorOutline.push({ type: "h1" });
+					} else {
+						editorOutline.push({ type: "h2" });
+					}
+				} else if ($isQuoteNode(topLevelChild)) {
+					editorOutline.push({ type: "quote" });
+				}
+			}
+			setMinimapOutline(editorOutline);
+		});
+	}, [editor]);
+
+	useEffect(() => {
+		return editor.registerUpdateListener(indexEditorToOutline);
+	}, [editor, indexEditorToOutline]);
 
 	const updateMinimap = useCallback(() => {
 		const scrollerElem = scrollIndicatorRef.current;
@@ -418,6 +570,22 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			scrollerElem.style.height = `${scrollerHeight}px`;
 			scrollerElem.style.width = "100%";
 		}
+		const scrollBackgroundElem = scrollBackgroundRef.current;
+		const scrollIndicatorElem = scrollIndicatorRef.current;
+		const scrollContainerElem = scrollContainerRef.current;
+		if (scrollBackgroundElem && scrollIndicatorElem && scrollContainerElem) {
+			const topDiff =
+				scrollIndicatorElem.getBoundingClientRect().top -
+				scrollContainerElem.getBoundingClientRect().top;
+
+			const topDiffDelta =
+				topDiff /
+				(height - scrollIndicatorElem.getBoundingClientRect().height / 2);
+
+			scrollBackgroundElem.scrollTo({
+				top: topDiffDelta * scrollBackgroundElem.scrollHeight,
+			});
+		}
 	}, [anchorElem]);
 
 	const dragStart = useCallback(
@@ -442,18 +610,34 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			if (!scrollContainerRef.current || !dragParams.current.dragging) {
 				return;
 			}
-			const dragStartPos = dragParams.current.startY;
-			const anchorTop = dragParams.current.anchorTop;
+			const { startY, anchorTop } = dragParams.current;
 			let clientY;
 			if (e instanceof TouchEvent) {
 				clientY = e.touches[0]?.clientY || 0;
 			} else {
 				clientY = e.clientY;
 			}
-			const yMoveDiff = clientY - dragStartPos;
+			const yMoveDiff = clientY - startY;
+
 			const relativeMove = yMoveDiff / height;
+			console.debug({ relativeMove });
 			const windowMove = relativeMove * anchorElem.scrollHeight;
 
+			const scrollBackgroundElem = scrollBackgroundRef.current;
+			const scrollIndicatorElem = scrollIndicatorRef.current;
+			if (scrollBackgroundElem && scrollIndicatorElem) {
+				const topDiff =
+					scrollIndicatorElem.getBoundingClientRect().top -
+					scrollContainerRef.current.getBoundingClientRect().top;
+
+				const topDiffDelta =
+					topDiff /
+					(height - scrollIndicatorElem.getBoundingClientRect().height / 2);
+
+				scrollBackgroundElem.scrollTo({
+					top: topDiffDelta * scrollBackgroundElem.scrollHeight,
+				});
+			}
 			anchorElem.scrollTo({ top: anchorTop + windowMove });
 		},
 		[anchorElem]
@@ -499,24 +683,41 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	}, [drag, dragEnd, dragStart, updateMinimap, scrollIndicatorRef, anchorElem]);
 
 	return createPortal(
-		<Box
-			h={`${height}px`}
-			w={`${width}px`}
-			bg="#EBEDF1"
-			borderRadius={3}
-			bgImage='url("/images/scrollBg.png")'
-			bgRepeat="repeat-y"
-			ref={scrollContainerRef}
-			pos="relative"
-		>
+		<Box pos="relative" h={`${height}px`} w={`${width}px`}>
 			<Box
-				userSelect="none"
-				borderRadius={3}
-				ref={scrollIndicatorRef}
 				pos="absolute"
-				bg="rgba(52, 73, 102, 0.3)"
-				cursor="grab"
-			/>
+				overflow="hidden"
+				h={`${height}px`}
+				w={`${width}px`}
+				userSelect="none"
+				borderRadius="3px"
+				bg="#EBEDF1"
+				px="5px"
+				py="5px"
+				ref={scrollBackgroundRef}
+			>
+				{minimapOutline.map((bT, index) => (
+					<div key={index}>{bT.type}</div>
+				))}
+			</Box>
+			<Box
+				h={`${height}px`}
+				w={`${width}px`}
+				borderRadius={3}
+				ref={scrollContainerRef}
+				pos="absolute"
+				overflow="hidden"
+				boxShadow="inset 0px 11px 8px -10px #CCCCCC, inset 0px -11px 8px -10px #CCCCCC"
+			>
+				<Box
+					userSelect="none"
+					borderRadius={3}
+					ref={scrollIndicatorRef}
+					pos="absolute"
+					bg="rgba(52, 73, 102, 0.3)"
+					cursor="grab"
+				/>
+			</Box>
 		</Box>,
 		sidebarPortal
 	);

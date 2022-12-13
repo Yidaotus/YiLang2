@@ -413,13 +413,7 @@ const CommentInputBox = React.forwardRef<
 								container.appendChild(elem);
 							}
 							const color = "255, 212, 0";
-							const style = `position:absolute;top:${
-								selectionRect.top + window.scrollY
-							}px;left:${selectionRect.left}px;height:${
-								selectionRect.height
-							}px;width:${
-								selectionRect.width + window.scrollX
-							}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
+							const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
 							elem.style.cssText = style;
 						}
 					}
@@ -445,7 +439,7 @@ const CommentInputBox = React.forwardRef<
 			return () => {
 				window.removeEventListener("resize", updateLocation);
 			};
-		}, [updateLocation]);
+		}, [anchorElem, updateLocation]);
 
 		const onEscape = (event: KeyboardEvent): boolean => {
 			event.preventDefault();
