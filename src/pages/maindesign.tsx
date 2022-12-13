@@ -11,10 +11,17 @@ import {
 } from "react-icons/io5";
 
 const MainDesign = () => {
+	const [sidebarPortalElem, setSidebarPortalElem] =
+		useState<HTMLDivElement | null>(null);
 	const [rootAnchorElem, setRootAnchorElem] = useState<HTMLDivElement | null>(
 		null
 	);
 
+	const onSidebarPortalRef = (_sidebarElem: HTMLDivElement) => {
+		if (_sidebarElem !== null) {
+			setSidebarPortalElem(_sidebarElem);
+		}
+	};
 	const onRootRef = (_rootAnchorElem: HTMLDivElement) => {
 		if (_rootAnchorElem !== null) {
 			setRootAnchorElem(_rootAnchorElem);
@@ -26,7 +33,7 @@ const MainDesign = () => {
 			<Box
 				height="100vh"
 				bg="#fafaf9"
-				w="72px"
+				w="62px"
 				display="flex"
 				flexDir="column"
 				alignItems="center"
@@ -40,8 +47,8 @@ const MainDesign = () => {
 				<Button
 					bg="#344966"
 					color="#FFFFFF"
-					w="58px"
-					h="52px"
+					w="52px"
+					h="48px"
 					fontSize="36"
 					fontWeight="500"
 					borderRadius={3}
@@ -56,51 +63,53 @@ const MainDesign = () => {
 					+
 				</Button>
 				<Box h="24px" />
-				<IconButton
-					w="58px"
-					h="56px"
-					icon={
-						<IoHomeOutline
-							color="#344966"
-							style={{
-								width: "26px",
-								height: "26px",
-							}}
-						/>
-					}
-					variant="ghost"
-					aria-label="home"
-				/>
-				<IconButton
-					w="58px"
-					h="56px"
-					icon={
-						<IoLibraryOutline
-							color="#8F93A3"
-							style={{
-								width: "26px",
-								height: "26px",
-							}}
-						/>
-					}
-					variant="ghost"
-					aria-label="home"
-				/>
-				<IconButton
-					w="58px"
-					h="56px"
-					icon={
-						<IoLanguageOutline
-							color="#8F93A3"
-							style={{
-								width: "26px",
-								height: "26px",
-							}}
-						/>
-					}
-					variant="ghost"
-					aria-label="home"
-				/>
+				<Box display="flex" flexDir="column" gap="4px">
+					<IconButton
+						w="52px"
+						h="48px"
+						icon={
+							<IoHomeOutline
+								color="#344966"
+								style={{
+									width: "22px",
+									height: "22px",
+								}}
+							/>
+						}
+						variant="ghost"
+						aria-label="home"
+					/>
+					<IconButton
+						w="52px"
+						h="48px"
+						icon={
+							<IoLibraryOutline
+								color="#8F93A3"
+								style={{
+									width: "22px",
+									height: "22px",
+								}}
+							/>
+						}
+						variant="ghost"
+						aria-label="home"
+					/>
+					<IconButton
+						w="52px"
+						h="48px"
+						icon={
+							<IoLanguageOutline
+								color="#8F93A3"
+								style={{
+									width: "22px",
+									height: "22px",
+								}}
+							/>
+						}
+						variant="ghost"
+						aria-label="home"
+					/>
+				</Box>
 			</Box>
 			<Box
 				w="100%"
@@ -110,12 +119,21 @@ const MainDesign = () => {
 				flexDir="column"
 				maxH="100vh"
 				overflow="auto"
+				pos="relative"
 				ref={onRootRef}
+				sx={{
+					"-ms-overflow-style": "none" /* for Internet Explorer, Edge */,
+					"scrollbar-width": "none" /* for Firefox */,
+					"overflow-y": "scroll",
+					"&::-webkit-scrollbar": {
+						display: "none",
+					},
+				}}
 			>
 				<Box
 					bg="rgba(255, 255, 255, 0.9)"
 					py={6}
-					px={16}
+					px={{ sm: 4, md: 16 }}
 					top="0"
 					zIndex="20"
 					pos="sticky"
@@ -125,7 +143,7 @@ const MainDesign = () => {
 					<Box display="flex" gap="12px" fontSize="20px" alignItems="center">
 						<IoDocumentOutline
 							color="#696F80"
-							style={{ width: "24px", height: "24px" }}
+							style={{ minWidth: "22px", height: "22px" }}
 						/>
 						<Box as="span" color="#696F80">
 							Japanese
@@ -146,7 +164,7 @@ const MainDesign = () => {
 					>
 						<IoPricetagsOutline
 							color="#696F80"
-							style={{ width: "20px", height: "20px" }}
+							style={{ minWidth: "20px", height: "20px" }}
 						/>
 						<Box display="flex" gap="12px">
 							<Box
@@ -190,25 +208,42 @@ const MainDesign = () => {
 						</Box>
 					</Box>
 				</Box>
-				<Box
-					display="flex"
-					justifyContent="center"
-					alignItems="center"
-					flexDir="column"
-				>
-					<Box w="800px" pt="20px" fontFamily="'Source Sans 3'">
-						<Editor scrollAnchor={rootAnchorElem || undefined} />
+				<Box display="flex" alignItems="center" justifyContent="center">
+					<Box
+						w="800px"
+						pt="2rem"
+						pb="4rem"
+						fontFamily="'Source Sans 3', 'Noto Sans JP'"
+					>
+						<Editor
+							scrollAnchor={rootAnchorElem || undefined}
+							sidebarPortal={sidebarPortalElem || undefined}
+						/>
 					</Box>
 				</Box>
 			</Box>
-			<Box
-				w="100px"
-				h="100px"
-				pos="absolute"
-				bg="red"
-				right="100px"
-				top="100px"
-			/>
+			<Box display="flex" pl="60px" pos="absolute" w="100%">
+				<Box flexGrow="1" bg="yellow.100" flexShrink="0" />
+				<Box w="800px" />
+				<Box
+					flexGrow="1"
+					bg="yellow.100"
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+				>
+					<Box
+						w="100px"
+						h="100px"
+						pos="absolute"
+						mt="400px"
+						mr={{
+							base: "0rem",
+						}}
+						ref={onSidebarPortalRef}
+					/>
+				</Box>
+			</Box>
 		</Box>
 	);
 };

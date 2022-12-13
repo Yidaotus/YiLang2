@@ -13,17 +13,20 @@
 	text-align: right;
 }
 .PlaygroundEditorTheme__paragraph {
-	font-size: 20px;
-	line-height: 1.5em;
+	font-size: 18px;
+	font-weight: 400;
+	line-height: 1.55em;
+	color: #40454f;
 	margin: 0;
 }
 .PlaygroundEditorTheme__quote {
 	margin: 0;
 	margin-left: 20px;
-	margin-bottom: 10px;
-	font-size: 15px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	font-size: 16px;
 	color: rgb(101, 103, 107);
-	border-left-color: rgb(206, 208, 212);
+	border-left-color: "#ebedf1";
 	border-left-width: 4px;
 	border-left-style: solid;
 	padding-left: 16px;
@@ -31,18 +34,20 @@
 
 .PlaygroundEditorTheme__h1 {
 	font-size: 36px;
-	color: rgb(5, 5, 5);
+	color: #40454f;
+	font-weight: 600;
 	line-height: 1.5em;
-	font-weight: 400;
 	margin: 0;
 }
 
 .PlaygroundEditorTheme__h2 {
-	font-size: 15px;
-	color: rgb(101, 103, 107);
-	font-weight: 700;
-	margin: 0;
-	text-transform: uppercase;
+	padding-top: 0.8rem;
+	padding-bottom: 0.4rem;
+	font-style: normal;
+	font-weight: 600;
+	font-size: 26px;
+
+	color: #696f80;
 }
 .PlaygroundEditorTheme__h3 {
 	font-size: 12px;

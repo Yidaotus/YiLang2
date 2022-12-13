@@ -20,7 +20,7 @@ import {
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 
-import {
+import React, {
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -61,7 +61,6 @@ import { ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import { trpc } from "@utils/trpc";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-import { Prose } from "@nikolovlazar/chakra-ui-prose";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
@@ -97,6 +96,7 @@ export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
 type EditorProps = {
 	id?: string;
 	scrollAnchor?: HTMLElement;
+	sidebarPortal?: HTMLElement;
 };
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
@@ -368,15 +368,28 @@ const WordListPlugin = () => {
 	);
 };
 
+type SidebarPluginProps = {
+	sidebarPortal: HTMLElement;
+};
+const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
+	return createPortal(
+		<Box h="100px" w="100px" bg="#EBEDF1" borderRadius={3} pos="relative">
+			Im the toolbar!
+		</Box>,
+		sidebarPortal
+	);
+};
+
 type MinimapPluginProps = {
 	anchorElem: HTMLElement;
+	sidebarPortal: HTMLElement;
 };
-const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
+const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	const scrollIndicatorRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const dragParams = useRef({ dragging: false, startY: 0, anchorTop: 0 });
-	const height = 250;
-	const width = 70;
+	const height = 150;
+	const width = 100;
 
 	console.debug({ dragParams });
 
@@ -403,6 +416,7 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 		} else {
 			scrollerElem.style.transform = `translateY(${pos * height}px)`;
 			scrollerElem.style.height = `${scrollerHeight}px`;
+			scrollerElem.style.width = "100%";
 		}
 	}, [anchorElem]);
 
@@ -484,33 +498,35 @@ const MinimapPlugin = ({ anchorElem }: MinimapPluginProps) => {
 		};
 	}, [drag, dragEnd, dragStart, updateMinimap, scrollIndicatorRef, anchorElem]);
 
-	return (
+	return createPortal(
 		<Box
 			h={`${height}px`}
-			pos="absolute"
 			w={`${width}px`}
-			bg="rgba(0, 0, 0, 0.2)"
-			top="20px"
-			right={{ sm: 10, md: 10, lg: 10, xl: 10 }}
+			bg="#EBEDF1"
 			borderRadius={3}
 			bgImage='url("/images/scrollBg.png")'
 			bgRepeat="repeat-y"
 			ref={scrollContainerRef}
+			pos="relative"
 		>
 			<Box
 				userSelect="none"
 				borderRadius={3}
 				ref={scrollIndicatorRef}
 				pos="absolute"
-				bg="rgba(13, 43, 48, 0.3)"
-				w="100%"
+				bg="rgba(52, 73, 102, 0.3)"
 				cursor="grab"
 			/>
-		</Box>
+		</Box>,
+		sidebarPortal
 	);
 };
 
-export default function Editor({ id, scrollAnchor }: EditorProps) {
+export default function Editor({
+	id,
+	scrollAnchor,
+	sidebarPortal,
+}: EditorProps) {
 	const initialConfig = {
 		namespace: "MyEditor",
 		theme: YiLangTheme,
@@ -564,7 +580,15 @@ export default function Editor({ id, scrollAnchor }: EditorProps) {
 						<ListPlugin />
 						<ImagesPlugin />
 						<>
-							{scrollAnchor && <MinimapPlugin anchorElem={scrollAnchor} />}
+							{scrollAnchor && sidebarPortal && (
+								<>
+									<MinimapPlugin
+										anchorElem={scrollAnchor}
+										sidebarPortal={sidebarPortal}
+									/>
+									<SidebarPlugin sidebarPortal={sidebarPortal} />
+								</>
+							)}
 							{floatingAnchorElem && (
 								<>
 									<FloatingTextFormatToolbarPlugin
