@@ -33,8 +33,9 @@ export function setFloatingElemPosition({
 
 	// Center bottom
 
+	console.debug({ targetRect });
 	if (center) {
-		left += targetRect.width / 2;
+		left += Math.abs(targetRect.right - targetRect.left) / 2;
 	}
 
 	if (pos === "bottom") {

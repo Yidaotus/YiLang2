@@ -19,6 +19,25 @@ const theme = extendTheme(
 			body: `'Outfit', 'Noto Sans JP', sans-serif`,
 			button: `'Outfit', sans-serif`,
 		},
+		colors: {
+			brand: {
+				100: "#5374A2",
+				200: "#4C6A94",
+				300: "#456187",
+				400: "#3E5779",
+				500: "#344966",
+				600: "#31445E",
+				700: "#2A3A50",
+				800: "#2A3A50",
+			},
+			text: {
+				100: "#E0E5EC",
+				200: "#B5C1CF",
+				300: "#8F93A3",
+				400: "#696F80",
+				500: "#40454F",
+			},
+		},
 	},
 	withProse()
 );

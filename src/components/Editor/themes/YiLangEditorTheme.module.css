@@ -15,7 +15,7 @@
 .PlaygroundEditorTheme__paragraph {
 	font-size: 18px;
 	font-weight: 400;
-	line-height: 1.55em;
+	line-height: 1.6em;
 	color: #40454f;
 	padding-top: 0.5em;
 	padding-bottom: 0.5em;
@@ -284,11 +284,23 @@
 	display: inline;
 	background-color: #ffbbbb !important;
 }
+.PlaygroundEditorTheme__ol1 > li::marker {
+	color: #696f80;
+	font-weight: 500;
+	font-size: 1.15em;
+}
+
+.PlaygroundEditorTheme__ol1 > li > *{
+	margin-left: 0.5em;
+}
+
 .PlaygroundEditorTheme__ol1 {
-	padding: 0;
+	padding-top: 0.5em;
+	padding-bottom: 1em;
 	margin: 0;
 	margin-left: 16px;
 	list-style-position: inside;
+	font-size: 1.1em;
 }
 .PlaygroundEditorTheme__ol2 {
 	padding: 0;
@@ -319,12 +331,20 @@
 	list-style-position: inside;
 }
 .PlaygroundEditorTheme__ul {
-	padding: 0;
+	padding-top: 1em;
+	padding-bottom: 1em;
 	margin: 0;
 	margin-left: 16px;
 	list-style-position: inside;
+	font-size: 1.1em;
+}
+.PlaygroundEditorTheme__ul > li::marker {
+	color: #696f80;
+	font-weight: 500;
+	font-size: 1.15em;
 }
 .PlaygroundEditorTheme__listItem {
+	padding-top: 0.5em;
 	margin: 0 32px;
 }
 .PlaygroundEditorTheme__listItemChecked,

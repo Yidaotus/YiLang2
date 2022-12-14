@@ -32,10 +32,30 @@ import {
 	FormControl,
 	FormErrorMessage,
 	FormLabel,
+	Textarea,
+	IconButton,
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
+import {
+	RiSafeLine,
+	RiSave2Fill,
+	RiSave2Line,
+	RiSave3Line,
+	RiSaveFill,
+	RiSaveLine,
+	RiStopCircleFill,
+	RiStopLine,
+} from "react-icons/ri";
+import {
+	IoDiscOutline,
+	IoExit,
+	IoSave,
+	IoSaveOutline,
+	IoSaveSharp,
+} from "react-icons/io5";
+import { RxExit, RxStop, RxTrash } from "react-icons/rx";
 
 type TagOption = EditorTag;
 
@@ -43,6 +63,7 @@ type WordFormType = {
 	word: string;
 	translations: Array<string>;
 	spelling?: string;
+	comment?: string;
 	tags: Array<TagOption>;
 };
 
@@ -93,10 +114,23 @@ const TagForm = ({
 		<div>
 			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
 				<Stack>
-					<FormControl isInvalid={!!errors.name}>
-						<FormLabel htmlFor="name">Name</FormLabel>
+					<FormControl isInvalid={!!errors.name} pb={2}>
+						<FormLabel
+							htmlFor="spelling"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Name
+						</FormLabel>
 						<Input
+							sx={{
+								"&::placeholder": {
+									color: "text.200",
+								},
+							}}
 							id="name"
+							borderWidth={2}
 							placeholder="Name"
 							{...register("name", {
 								required: "Please enter a name",
@@ -108,9 +142,22 @@ const TagForm = ({
 						</FormErrorMessage>
 					</FormControl>
 					<FormControl isInvalid={!!errors.color}>
-						<FormLabel htmlFor="spelling">Color</FormLabel>
+						<FormLabel
+							htmlFor="spelling"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Color
+						</FormLabel>
 						<Input
+							sx={{
+								"&::placeholder": {
+									color: "text.200",
+								},
+							}}
 							id="color"
+							borderWidth={2}
 							placeholder="Color"
 							{...register("color", {
 								required: "Please enter a color",
@@ -121,23 +168,32 @@ const TagForm = ({
 							{errors.color && errors.color.message}
 						</FormErrorMessage>
 					</FormControl>
-					<ButtonGroup
-						isAttached
+					<Box
 						sx={{
 							pt: 2,
 							w: "100%",
-							"&>button": {
-								flexGrow: 1,
-							},
 						}}
+						display="flex"
+						justifyContent="space-between"
 					>
 						<Button variant="outline" onClick={cancel}>
 							Cancel
 						</Button>
-						<Button variant="solid" type="submit">
+						<Button
+							bg="brand.500"
+							color="#FFFFFF"
+							variant="solid"
+							type="submit"
+							rightIcon={<IoSave />}
+							sx={{
+								"&:hover": {
+									bg: "brand.700",
+								},
+							}}
+						>
 							Submit
 						</Button>
-					</ButtonGroup>
+					</Box>
 				</Stack>
 			</form>
 		</div>
@@ -168,6 +224,7 @@ const WordForm = ({
 			translations: [],
 			spelling: "",
 			tags: [],
+			comment: "",
 		},
 	});
 
@@ -200,12 +257,25 @@ const WordForm = ({
 			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
 				<Stack>
 					<FormControl isInvalid={!!errors.translations}>
-						<FormLabel htmlFor="translation">Translation</FormLabel>
+						<FormLabel
+							display="none"
+							htmlFor="translations"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Translation(s)
+						</FormLabel>
 						<Controller
 							control={control}
 							name="translations"
+							rules={{
+								required: "Please enter at least one translation",
+								min: "Please enter at least one translation",
+							}}
 							render={({ field: { onChange, value, ref } }) => (
 								<YiSimpleCreatableSelect
+									autoFocus
 									ref={ref}
 									value={value}
 									onChange={(val) => onChange(val)}
@@ -218,94 +288,201 @@ const WordForm = ({
 						</FormErrorMessage>
 					</FormControl>
 					<FormControl isInvalid={!!errors.spelling}>
-						<FormLabel htmlFor="spelling">Spelling</FormLabel>
+						<FormLabel
+							display="none"
+							htmlFor="spelling"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Spelling
+						</FormLabel>
+
 						<Input
+							sx={{
+								"&::placeholder": {
+									color: "text.200",
+								},
+								bg: "#fafaf9",
+							}}
 							id="spelling"
+							size="md"
 							placeholder="Spelling"
-							{...register("spelling", {
-								required: "Please enter a spelling",
-								minLength: { value: 2, message: "Minimum length should be 4" },
-							})}
+							{...register("spelling")}
 						/>
 						<FormErrorMessage>
 							{errors.spelling && errors.spelling.message}
 						</FormErrorMessage>
 					</FormControl>
-					<Controller
-						control={control}
-						name="tags"
-						render={({ field: { onChange, value, ref } }) => (
-							<CreatableSelect
-								ref={ref}
-								size="sm"
-								value={value}
-								onChange={(val) => onChange(val)}
-								noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
-								placeholder="Tags"
-								isMulti
-								options={tagOptions}
-								getOptionValue={(o) => o.name}
-								getOptionLabel={(o) => o.name}
-								getNewOptionData={(input, label) => ({
-									name: `Create ${input} tag...`,
-									color: "",
-								})}
-								onCreateOption={async (newOpt) => {
-									const newTag = await createNewTag(newOpt);
-									if (newTag) {
-										setTagOptions([...value, ...tagOptions, newTag]);
-										onChange([...value, newTag]);
-									}
-								}}
-								components={{
-									Option: ({ children, data, innerProps }) => (
-										<Box
-											as="div"
-											sx={{
-												display: "flex",
-												alignItems: "center",
-												cursor: "pointer",
-												w: "100%",
-												"&:hover": {
-													bg: "#f4f4f4",
-												},
-											}}
-											{...innerProps}
-										>
+					<FormControl isInvalid={!!errors.tags}>
+						<FormLabel
+							display="none"
+							htmlFor="tags"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Tags
+						</FormLabel>
+						<Controller
+							control={control}
+							name="tags"
+							render={({ field: { onChange, value, ref } }) => (
+								<CreatableSelect
+									ref={ref}
+									size="md"
+									value={value}
+									onChange={(val) => onChange(val)}
+									noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
+									chakraStyles={{
+										container: (prev) => ({
+											...prev,
+											borderRadius: "5px",
+											bg: "#fafaf9",
+										}),
+										multiValue: (prev, state) => ({
+											...prev,
+											justifyContent: "center",
+											alignItems: "center",
+											borderColor: "text.100",
+											bg: "#F5F5F5",
+											borderWidth: "1px",
+											"&::before": {
+												content: '""',
+												bg: state.data.color,
+												h: "10px",
+												w: "5px",
+												pr: 2,
+												mr: 2,
+												borderRadius: "1em",
+												border: `1px solid ${state.data.color}`,
+											},
+										}),
+										indicatorSeparator: (prev) => ({
+											...prev,
+											borderLeft: "1px solid text.100",
+											height: "60%",
+										}),
+										dropdownIndicator: (prev) => ({
+											...prev,
+											w: "10px",
+											bg: "#FCFCFB",
+										}),
+										placeholder: (prev) => ({
+											...prev,
+											color: "text.200",
+										}),
+									}}
+									placeholder="Tags"
+									isMulti
+									options={tagOptions}
+									getOptionValue={(o) => o.name}
+									getOptionLabel={(o) => o.name}
+									getNewOptionData={(input, label) => ({
+										name: `Create ${input} tag...`,
+										color: "",
+									})}
+									onCreateOption={async (newOpt) => {
+										const newTag = await createNewTag(newOpt);
+										if (newTag) {
+											setTagOptions([...value, ...tagOptions, newTag]);
+											onChange([...value, newTag]);
+										}
+									}}
+									components={{
+										Option: ({ children, data, innerProps }) => (
 											<Box
+												as="div"
 												sx={{
-													w: "2px",
-													h: "15px",
-													ml: 1,
-													mr: 2,
-													borderRadius: "3px",
-													border: `2px solid ${data.color}`,
+													color: "text.400",
+													display: "flex",
+													alignItems: "center",
+													cursor: "pointer",
+													py: 1,
+													fontSize: "16px",
+													w: "100%",
+													"&:hover": {
+														bg: "#f4f4f4",
+													},
 												}}
-											/>
-											{children}
-										</Box>
-									),
-								}}
-							/>
-						)}
-					/>
-					<ButtonGroup
-						isAttached
+												{...innerProps}
+											>
+												<Box
+													sx={{
+														w: "12px",
+														h: "12px",
+														ml: 1,
+														mr: 2,
+														borderRadius: "4px",
+														border: `2px solid ${data.color}`,
+														bg: data.color,
+													}}
+												/>
+												{children}
+											</Box>
+										),
+									}}
+								/>
+							)}
+						/>
+						<FormErrorMessage>
+							{errors.spelling && errors.spelling.message}
+						</FormErrorMessage>
+					</FormControl>
+					<FormControl isInvalid={!!errors.comment}>
+						<FormLabel
+							display="none"
+							htmlFor="comment"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Comment
+						</FormLabel>
+						<Textarea
+							sx={{
+								"&::placeholder": {
+									color: "text.200",
+								},
+								bg: "#fafaf9",
+							}}
+							id="comment"
+							size="md"
+							placeholder="Comment"
+							{...register("comment")}
+						/>
+						<FormErrorMessage>
+							{errors.comment && errors.comment.message}
+						</FormErrorMessage>
+					</FormControl>
+					<Box
 						sx={{
 							pt: 2,
 							w: "100%",
-							"&>button": {
-								flexGrow: 1,
-							},
 						}}
+						display="flex"
+						justifyContent="space-between"
 					>
-						<Button variant="outline" onClick={cancel}>
-							Cancel
-						</Button>
-						<Button variant="solid" type="submit">
+						<IconButton
+							aria-label="cancel"
+							icon={<RxTrash />}
+							onClick={cancel}
+						/>
+						<Button
+							bg="brand.500"
+							color="#FFFFFF"
+							variant="solid"
+							type="submit"
+							rightIcon={<IoSave />}
+							sx={{
+								"&:hover": {
+									bg: "brand.700",
+								},
+							}}
+						>
 							Submit
 						</Button>
-					</ButtonGroup>
+					</Box>
 				</Stack>
 			</form>
 		</div>
@@ -501,9 +678,7 @@ const CommentInputBox = React.forwardRef<
 			[cancel, createWord, submitWord]
 		);
 
-		const dbTags = trpc.dictionary.getAllTags.useQuery(undefined, {
-			enabled: show,
-		});
+		const dbTags = trpc.dictionary.getAllTags.useQuery(undefined);
 
 		return (
 			<Box
@@ -513,15 +688,16 @@ const CommentInputBox = React.forwardRef<
 					left: 0,
 					zIndex: 20,
 					p: 4,
-					w: "300px",
-					borderRadius: "3px",
-					border: "1px solid #f4f4f4",
+					w: "350px",
+					borderRadius: "5px",
+					border: "1px solid #e2e8f0",
 					bg: "white",
-					boxShadow:
-						"0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+					boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.05)",
 					display: "grid",
 					gridTemplateRows: "1fr",
 					gridTemplateColumns: "1fr",
+					transformOrigin: "center left",
+					transition: "50ms transform ease-out, 50ms opacity ease-out",
 				}}
 				ref={(r) => {
 					boxRef.current = r;
@@ -535,33 +711,44 @@ const CommentInputBox = React.forwardRef<
 					}
 				}}
 			>
-				{show && dbTags.isFetched && (
-					<>
-						<Box
-							sx={{
-								gridColumnStart: 1,
-								gridRowStart: 1,
-								display: move ? "none" : "block",
-							}}
-						>
-							<WordForm
-								showTagEditor={getNewTag}
-								resolveWord={resolveWord}
-								word={word}
-								dbTags={dbTags.data || []}
-							/>
-						</Box>
-						<Box
-							sx={{
-								gridColumnStart: 1,
-								gridRowStart: 1,
-								display: move ? "block" : "none",
-							}}
-						>
-							<TagForm resolveTag={resolveNewTag} name={tagName} />
-						</Box>
-					</>
-				)}
+				<Box
+					pos="absolute"
+					zIndex={50}
+					w="10px"
+					h="10px"
+					left="50%"
+					top="-6px"
+					transform="scale(1.4, 0.8) translate(-50%) rotate(45deg)"
+					borderTop="1px solid #e2e8f0"
+					borderLeft="1px solid #e2e8f0"
+					bg="#FFFFFF"
+				/>
+				<Box
+					sx={{
+						gridColumnStart: 1,
+						gridRowStart: 1,
+						display: move ? "none" : "block",
+					}}
+				>
+					{dbTags.isLoading && <Box>Loading</Box>}
+					{dbTags.data && (
+						<WordForm
+							showTagEditor={getNewTag}
+							resolveWord={resolveWord}
+							word={word}
+							dbTags={dbTags.data}
+						/>
+					)}
+				</Box>
+				<Box
+					sx={{
+						gridColumnStart: 1,
+						gridRowStart: 1,
+						display: move ? "block" : "none",
+					}}
+				>
+					<TagForm resolveTag={resolveNewTag} name={tagName} />
+				</Box>
 			</Box>
 		);
 	}

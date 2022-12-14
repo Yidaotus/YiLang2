@@ -154,7 +154,13 @@ const MainDesign = () => {
 						<Box as="span" color="#BDBDBD" userSelect="none">
 							/
 						</Box>
-						<Box as="span" color="#696F80">
+						<Box
+							as="span"
+							color="#696F80"
+							textOverflow="ellipsis"
+							whiteSpace="nowrap"
+							overflow="hidden"
+						>
 							{documentTitle}
 						</Box>
 					</Box>

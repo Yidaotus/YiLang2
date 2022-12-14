@@ -108,7 +108,8 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 						cursor: "default",
 						borderRadius: "4px",
 						px: "2px",
-						bg: isSelected ? "#CCCCCC" : "#DDDDDD",
+						bg: isSelected ? "#CCCCCC" : "text.100",
+						borderBottom: "5px",
 					}}
 				>
 					{word}
@@ -122,7 +123,25 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 						cursor: "default",
 						borderRadius: "4px",
 						px: "2px",
-						bg: isSelected ? "#CCCCCC" : "#DDDDDD",
+						bg: isSelected ? "text.200" : "text.100",
+						pos: "relative",
+						"&::after": {
+							content: '""',
+							pos: "absolute",
+							bottom: 0,
+							left: 0,
+							width: "100%",
+							borderRadius: "0px 0px 4px 4px",
+							h: "2px",
+							bg: `linear-gradient(to right, ${dbWord.data.tags
+								.map(
+									(t, i, tags) =>
+										`${t.tag.color} ${(i / tags.length) * 100}%, ${
+											t.tag.color
+										} ${((i + 1) / tags.length) * 100}%`
+								)
+								.join(",")})`,
+						},
 					}}
 				>
 					{dbWord.data.word}

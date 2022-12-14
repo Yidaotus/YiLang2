@@ -1,4 +1,8 @@
-import type { ForwardRefRenderFunction, KeyboardEventHandler } from "react";
+import {
+	ForwardRefRenderFunction,
+	KeyboardEventHandler,
+	useCallback,
+} from "react";
 import type { RefCallBack } from "react-hook-form";
 
 import { useState } from "react";
@@ -14,12 +18,13 @@ type YiSimpleCreatableSelectProps = {
 	onChange: (newValue: Array<string>) => void;
 	placeholder: string;
 	ref: RefCallBack;
+	autoFocus?: boolean;
 };
 
 const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 	any,
 	YiSimpleCreatableSelectProps
-> = ({ value, onChange, placeholder }, ref) => {
+> = ({ value, onChange, placeholder, autoFocus }, ref) => {
 	const [inputValue, setInputValue] = useState("");
 
 	const handleKeyDown: KeyboardEventHandler = (event) => {
@@ -33,20 +38,37 @@ const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 		}
 	};
 
+	const onBlurHandler = useCallback(() => {
+		onChange([...value, inputValue]);
+	}, [inputValue, onChange, value]);
+
 	return (
 		<CreatableSelect
+			chakraStyles={{
+				container: (prev) => ({
+					...prev,
+					borderRadius: "5px",
+					bg: "#fafaf9",
+				}),
+				placeholder: (prev) => ({
+					...prev,
+					color: "text.200",
+				}),
+			}}
 			ref={ref}
 			components={components}
+			autoFocus={autoFocus}
 			inputValue={inputValue}
 			isClearable
-			size="sm"
+			size="md"
 			isMulti
 			options={[] as Array<string>}
 			menuIsOpen={false}
 			getOptionLabel={(option) => option}
 			getOptionValue={(option) => option}
-			onChange={(newValue) => onChange([...value, newValue.toString()])}
+			onChange={(newValue) => onChange(newValue.map((v) => v))}
 			onInputChange={(newValue) => setInputValue(newValue)}
+			onBlur={onBlurHandler}
 			onKeyDown={handleKeyDown}
 			placeholder={placeholder}
 			value={value}

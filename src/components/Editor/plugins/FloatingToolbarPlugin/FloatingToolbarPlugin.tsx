@@ -20,6 +20,13 @@ import {
 	MenuItem,
 	MenuList,
 	Divider,
+	Popover,
+	PopoverArrow,
+	PopoverBody,
+	PopoverCloseButton,
+	PopoverContent,
+	PopoverHeader,
+	PopoverTrigger,
 } from "@chakra-ui/react";
 import {
 	$createParagraphNode,
@@ -417,11 +424,9 @@ function TextFormatFloatingToolbar({
 	return (
 		<Box
 			ref={popupCharStylesEditorRef}
-			style={{
-				transition:
-					"50ms transform ease-in-out, 50ms opacity ease-in-out, 0ms left linear",
-			}}
 			sx={{
+				transition:
+					"50ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
 				pos: "absolute",
 				transformOrigin: "center left",
 				zIndex: 10,
@@ -531,7 +536,7 @@ function TextFormatFloatingToolbar({
 					onClick={showWordEditor}
 				/>
 				<Divider orientation="vertical" h="60%" alignSelf="center" />
-				<Menu>
+				<Menu placement="bottom-start">
 					<MenuButton
 						as={IconButton}
 						icon={
