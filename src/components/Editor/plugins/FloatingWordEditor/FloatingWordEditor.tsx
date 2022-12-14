@@ -412,6 +412,7 @@ const CommentInputBox = React.forwardRef<
 								elements[i] = elem;
 								container.appendChild(elem);
 							}
+							//@TODO: Factor out! This is ugly as f
 							const color = "255, 212, 0";
 							const style = `position:absolute;top:${
 								selectionRect.top - anchorElem.getBoundingClientRect().top
@@ -419,7 +420,7 @@ const CommentInputBox = React.forwardRef<
 								selectionRect.left - anchorElem.getBoundingClientRect().left
 							}px;height:${selectionRect.height}px;width:${
 								selectionRect.width
-							}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
+							}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;border-radius:3px`;
 							elem.style.cssText = style;
 						}
 					}

@@ -49,7 +49,6 @@ export function setFloatingElemPosition({
 			targetRect.height + floatingElem.getBoundingClientRect().height * 1.3;
 	}
 
-	console.debug({ top, clipsAtTop, targetRect, floatingElem, anchorElem });
 	floatingElem.style.opacity = "1";
 	floatingElem.style.scale = "1";
 	floatingElem.style.left = `${left}px`;

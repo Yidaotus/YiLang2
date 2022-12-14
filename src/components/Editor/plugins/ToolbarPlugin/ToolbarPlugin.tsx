@@ -14,14 +14,15 @@ import {
 	Box,
 	IconButton,
 } from "@chakra-ui/react";
-
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
+	$isListNode,
 	INSERT_CHECK_LIST_COMMAND,
 	INSERT_ORDERED_LIST_COMMAND,
 	INSERT_UNORDERED_LIST_COMMAND,
+	ListNode,
 	REMOVE_LIST_COMMAND,
 } from "@lexical/list";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import {
 	$getSelection,
@@ -34,7 +35,11 @@ import {
 	$createNodeSelection,
 	$setSelection,
 } from "lexical";
-import { $findMatchingParent, mergeRegister } from "@lexical/utils";
+import {
+	$findMatchingParent,
+	$getNearestNodeOfType,
+	mergeRegister,
+} from "@lexical/utils";
 import {
 	$createHeadingNode,
 	$isHeadingNode,
@@ -145,11 +150,22 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 			const elementDOM = editor.getElementByKey(elementKey);
 
 			if (elementDOM !== null) {
-				const type = $isHeadingNode(element)
-					? element.getTag()
-					: element.getType();
-				if (type in blockTypeToBlockName) {
-					setBlockType(type as keyof typeof blockTypeToBlockName);
+				if ($isListNode(element)) {
+					const parentList = $getNearestNodeOfType<ListNode>(
+						anchorNode,
+						ListNode
+					);
+					const type = parentList
+						? parentList.getListType()
+						: element.getListType();
+					setBlockType(type);
+				} else {
+					const type = $isHeadingNode(element)
+						? element.getTag()
+						: element.getType();
+					if (type in blockTypeToBlockName) {
+						setBlockType(type as keyof typeof blockTypeToBlockName);
+					}
 				}
 			}
 		}

@@ -21,7 +21,21 @@ import {
 	MenuList,
 	Divider,
 } from "@chakra-ui/react";
-import type { LexicalEditor } from "lexical";
+import {
+	$createParagraphNode,
+	$isNodeSelection,
+	$isRootOrShadowRoot,
+	LexicalEditor,
+} from "lexical";
+import { $wrapNodes } from "@lexical/selection";
+import {
+	$isListNode,
+	INSERT_CHECK_LIST_COMMAND,
+	INSERT_ORDERED_LIST_COMMAND,
+	INSERT_UNORDERED_LIST_COMMAND,
+	ListNode,
+	REMOVE_LIST_COMMAND,
+} from "@lexical/list";
 import {
 	$getSelection,
 	$isRangeSelection,
@@ -30,14 +44,35 @@ import {
 	FORMAT_TEXT_COMMAND,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
+import {
+	$createHeadingNode,
+	$isHeadingNode,
+	$createQuoteNode,
+	HeadingTagType,
+} from "@lexical/rich-text";
+import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { RxFontBold, RxArrowDown, RxText } from "react-icons/rx";
-import { RiParagraph } from "react-icons/ri";
+import {
+	RxFontBold,
+	RxArrowDown,
+	RxText,
+	RxListBullet,
+	RxHalf1,
+} from "react-icons/rx";
+import {
+	RiChatQuoteFill,
+	RiDoubleQuotesL,
+	RiH1,
+	RiH2,
+	RiListOrdered,
+	RiListUnordered,
+	RiParagraph,
+} from "react-icons/ri";
 import { IoEllipsisVertical, IoChevronDown, IoSearch } from "react-icons/io5";
 
 export function getDOMRangeRect(
@@ -60,6 +95,123 @@ export function getDOMRangeRect(
 
 	return rect;
 }
+
+type FormatterParams = {
+	editor: LexicalEditor;
+	currentBlockType: string;
+};
+const formatHeading = ({
+	editor,
+	headingSize,
+	currentBlockType,
+}: FormatterParams & {
+	headingSize: HeadingTagType;
+}) => {
+	editor.update(() => {
+		const selection = $getSelection();
+
+		if ($isRangeSelection(selection)) {
+			if (currentBlockType === headingSize) {
+				$wrapNodes(selection, () => $createParagraphNode());
+			} else {
+				$wrapNodes(selection, () => $createHeadingNode(headingSize));
+			}
+		}
+	});
+};
+
+const formatParagraph = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "paragraph") {
+		editor.update(() => {
+			const selection = $getSelection();
+
+			if ($isRangeSelection(selection)) {
+				$wrapNodes(selection, () => $createParagraphNode());
+			}
+		});
+	}
+};
+
+const formatBulletList = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "bullet") {
+		editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+	} else {
+		editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+	}
+};
+
+const formatCheckList = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "check") {
+		editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
+	} else {
+		editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+	}
+};
+
+const formatNumberedList = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "number") {
+		editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+	} else {
+		editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+	}
+};
+
+const formatQuote = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "quote") {
+		editor.update(() => {
+			const selection = $getSelection();
+
+			if ($isRangeSelection(selection)) {
+				$wrapNodes(selection, () => $createQuoteNode());
+			}
+		});
+	}
+};
+
+const blockTypes = {
+	paragraph: {
+		type: "Paragraph",
+		icon: <RiParagraph size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatParagraph({ editor, currentBlockType }),
+	},
+	h1: {
+		type: "Title",
+		icon: <RiH1 size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatHeading({ editor, currentBlockType, headingSize: "h1" }),
+	},
+	h2: {
+		type: "Subtitle",
+		icon: <RiH2 size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatHeading({ editor, currentBlockType, headingSize: "h2" }),
+	},
+	number: {
+		type: "Numbered list",
+		icon: <RiListOrdered size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatNumberedList({ editor, currentBlockType }),
+	},
+	check: {
+		type: "Check list",
+		icon: <RiListUnordered size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatCheckList({ editor, currentBlockType }),
+	},
+	bullet: {
+		type: "Bullet List",
+		icon: <RiListUnordered size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatBulletList({ editor, currentBlockType }),
+	},
+	quote: {
+		type: "Quote",
+		icon: <RiDoubleQuotesL size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatQuote({ editor, currentBlockType }),
+	},
+};
 
 function TextFormatFloatingToolbar({
 	editor,
@@ -85,6 +237,9 @@ function TextFormatFloatingToolbar({
 	isUnderline: boolean;
 }): JSX.Element {
 	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
+
+	const [currentBlockType, setCurrentBlockType] =
+		useState<keyof typeof blockTypes>("paragraph");
 
 	const insertLink = useCallback(() => {
 		if (!isLink) {
@@ -126,6 +281,72 @@ function TextFormatFloatingToolbar({
 				verticalOffset: -45,
 				pos: "top",
 			});
+		}
+		if ($isRangeSelection(selection)) {
+			const anchorNode = selection.anchor.getNode();
+			let element =
+				anchorNode.getKey() === "root"
+					? anchorNode
+					: $findMatchingParent(anchorNode, (e) => {
+							const parent = e.getParent();
+							return parent !== null && $isRootOrShadowRoot(parent);
+					  });
+
+			if (element === null) {
+				element = anchorNode.getTopLevelElementOrThrow();
+			}
+
+			const elementKey = element.getKey();
+			const elementDOM = editor.getElementByKey(elementKey);
+
+			if (elementDOM !== null) {
+				if ($isListNode(element)) {
+					const parentList = $getNearestNodeOfType<ListNode>(
+						anchorNode,
+						ListNode
+					);
+					const type = parentList
+						? parentList.getListType()
+						: element.getListType();
+					setCurrentBlockType(type);
+				} else {
+					const type = $isHeadingNode(element)
+						? element.getTag()
+						: element.getType();
+					if (type in blockTypes) {
+						setCurrentBlockType(type as keyof typeof blockTypes);
+					}
+				}
+			}
+		}
+		if ($isNodeSelection(selection)) {
+			const anchorNode = selection.getNodes()[0];
+			if (!anchorNode) {
+				return;
+			}
+			let element =
+				anchorNode.getKey() === "root"
+					? anchorNode
+					: $findMatchingParent(anchorNode, (e) => {
+							const parent = e.getParent();
+							return parent !== null && $isRootOrShadowRoot(parent);
+					  });
+
+			if (element === null) {
+				element = anchorNode.getTopLevelElementOrThrow();
+			}
+
+			const elementKey = element.getKey();
+			const elementDOM = editor.getElementByKey(elementKey);
+
+			if (elementDOM !== null) {
+				const type = $isHeadingNode(element)
+					? element.getTag()
+					: element.getType();
+				if (type in blockTypes) {
+					setCurrentBlockType(type as keyof typeof blockTypes);
+				}
+			}
 		}
 	}, [editor, anchorElem]);
 
@@ -178,6 +399,8 @@ function TextFormatFloatingToolbar({
 		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
 	}, [editor]);
 
+	console.debug({ blockType: currentBlockType });
+
 	return (
 		<Box
 			ref={popupCharStylesEditorRef}
@@ -190,8 +413,8 @@ function TextFormatFloatingToolbar({
 				display: "flex",
 				borderRadius: "8px",
 				bg: "white",
-				border: "1px solid #E0E5EC",
-				boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.10)",
+				border: "1px solid #e2e8f0",
+				boxShadow: "0px 0px 4px 4px rgba(0, 0, 0, 0.05)",
 			}}
 		>
 			<ButtonGroup
@@ -205,19 +428,39 @@ function TextFormatFloatingToolbar({
 					},
 				}}
 			>
-				<Button
-					as={Button}
-					rightIcon={<IoChevronDown color="#696F80" />}
-					border="none"
-				>
-					<RiParagraph
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				</Button>
+				<Menu>
+					<MenuButton as={Button} rightIcon={<IoChevronDown />} border="none">
+						<Box w="18" h="18" color="#696F80">
+							{blockTypes[currentBlockType]?.icon || (
+								<RiParagraph
+									color="#696F80"
+									style={{
+										height: "24px",
+										width: "24px",
+									}}
+								/>
+							)}
+						</Box>
+					</MenuButton>
+					<MenuList>
+						{Object.entries(blockTypes)
+							.filter(([key]) => key !== currentBlockType)
+							.map(([key, block]) => (
+								<MenuItem
+									key={key}
+									icon={
+										<Box w="18" h="18" color="#696F80">
+											{block.icon}
+										</Box>
+									}
+									color="#40454f"
+									onClick={() => block.formatter({ editor, currentBlockType })}
+								>
+									{block.type}
+								</MenuItem>
+							))}
+					</MenuList>
+				</Menu>
 				<Divider orientation="vertical" mt="2px" h="30px" />
 				<IconButton
 					icon={
