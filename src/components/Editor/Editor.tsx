@@ -14,6 +14,16 @@ import {
 	LexicalCommand,
 	LexicalNode,
 } from "lexical";
+import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
+import {
+	$isListNode,
+	INSERT_CHECK_LIST_COMMAND,
+	INSERT_ORDERED_LIST_COMMAND,
+	INSERT_UNORDERED_LIST_COMMAND,
+	ListNode,
+	ListItemNode,
+	REMOVE_LIST_COMMAND,
+} from "@lexical/list";
 import {
 	$createNodeSelection,
 	$getSelection,
@@ -47,7 +57,6 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
-import { ListItemNode, ListNode } from "@lexical/list";
 import { MarkNode } from "@lexical/mark";
 import { OverflowNode } from "@lexical/overflow";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
@@ -542,6 +551,10 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 				} else if ($isImageNode(topLevelChild)) {
 					canvasHeight += 22;
 					editorOutline.push({ type: "image" });
+				} else if ($isListNode(topLevelChild)) {
+					const childrenSize = topLevelChild.getChildrenSize();
+					canvasHeight +=
+						drawHeight * childrenSize + linePadding * childrenSize + 2;
 				} else if ($isHeadingNode(topLevelChild)) {
 					canvasHeight += headingHeight;
 					const level = topLevelChild.getTag();
@@ -628,6 +641,29 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 
 					y += containerHeight + 2;
 					editorOutline.push({ type: "image" });
+				} else if ($isListNode(topLevelChild)) {
+					const childrenSize = topLevelChild.getChildrenSize();
+					for (let i = 0; i < childrenSize; i++) {
+						const listPaddingLeft = 10;
+						ctx.fillStyle = "#5e6169";
+						ctx.fillRect(
+							x + listPaddingLeft,
+							y + i * drawHeight + i * linePadding,
+							4,
+							drawHeight
+						);
+						ctx.fillStyle = "#a9afc0";
+						ctx.fillRect(
+							x + listPaddingLeft + 6,
+							y + drawHeight * i + linePadding * i,
+							drawWidth - 35,
+							drawHeight
+						);
+					}
+					y +=
+						drawHeight * childrenSize +
+						linePadding * Math.max(childrenSize - 1, 0) +
+						2;
 				} else if ($isHeadingNode(topLevelChild)) {
 					ctx.fillStyle = "#80858f";
 					ctx.fillRect(x, y, drawWidth * 0.8, headingHeight);
