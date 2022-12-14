@@ -414,7 +414,7 @@ function TextFormatFloatingToolbar({
 			ref={popupCharStylesEditorRef}
 			style={{
 				transition:
-					"50ms transform ease-in-out, 50ms opacity ease-in-out, 100ms left linear",
+					"50ms transform ease-in-out, 50ms opacity ease-in-out, 50ms left linear",
 			}}
 			sx={{
 				pos: "absolute",
@@ -440,7 +440,7 @@ function TextFormatFloatingToolbar({
 			>
 				<Menu>
 					<MenuButton as={Button} rightIcon={<IoChevronDown />} border="none">
-						<Box w="18" h="18" color="#696F80">
+						<Box minW="18" minH="18" w="18" h="18" color="#696F80">
 							{blockTypes[currentBlockType]?.icon || (
 								<RiParagraph
 									color="#696F80"
