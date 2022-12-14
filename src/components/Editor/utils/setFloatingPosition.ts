@@ -17,8 +17,7 @@ export function setFloatingElemPosition({
 }): void {
 	if (targetRect === null) {
 		floatingElem.style.opacity = "0";
-		floatingElem.style.scale = "0";
-		// floatingElem.style.transform = "translate(0px, 0px)";
+		floatingElem.style.transform = `scale(0) ${center && "translateX(-50%)"}`;
 		return;
 	}
 
@@ -36,7 +35,6 @@ export function setFloatingElemPosition({
 
 	if (center) {
 		left += targetRect.width / 2;
-		floatingElem.style.transform = "translateX(-50%)";
 	}
 
 	if (pos === "bottom") {
@@ -50,7 +48,7 @@ export function setFloatingElemPosition({
 	}
 
 	floatingElem.style.opacity = "1";
-	floatingElem.style.scale = "1";
+	floatingElem.style.transform = `scale(1) ${center && "translateX(-50%)"}`;
 	floatingElem.style.left = `${left}px`;
 	floatingElem.style.top = `${top}px`;
 

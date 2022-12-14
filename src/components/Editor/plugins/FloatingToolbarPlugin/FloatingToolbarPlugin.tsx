@@ -281,6 +281,14 @@ function TextFormatFloatingToolbar({
 				verticalOffset: -45,
 				pos: "top",
 			});
+		} else {
+			setFloatingElemPosition({
+				targetRect: null,
+				floatingElem: popupCharStylesEditorElem,
+				anchorElem,
+				verticalOffset: -45,
+				pos: "top",
+			});
 		}
 		if ($isRangeSelection(selection)) {
 			const anchorNode = selection.anchor.getNode();
@@ -405,10 +413,12 @@ function TextFormatFloatingToolbar({
 		<Box
 			ref={popupCharStylesEditorRef}
 			style={{
-				transition: "150ms opacity ease-in-out, 30ms left linear",
+				transition:
+					"50ms transform ease-in-out, 50ms opacity ease-in-out, 100ms left linear",
 			}}
 			sx={{
 				pos: "absolute",
+				transformOrigin: "center left",
 				zIndex: 10,
 				display: "flex",
 				borderRadius: "8px",
@@ -461,7 +471,7 @@ function TextFormatFloatingToolbar({
 							))}
 					</MenuList>
 				</Menu>
-				<Divider orientation="vertical" mt="2px" h="30px" />
+				<Divider orientation="vertical" h="60%" alignSelf="center" />
 				<IconButton
 					icon={
 						<RxFontBold
@@ -515,7 +525,7 @@ function TextFormatFloatingToolbar({
 					variant="ghost"
 					onClick={showWordEditor}
 				/>
-				<Divider orientation="vertical" mt="2px" h="30px" />
+				<Divider orientation="vertical" h="60%" alignSelf="center" />
 				<IconButton
 					icon={
 						<IoEllipsisVertical
@@ -621,10 +631,6 @@ function useFloatingTextFormatToolbar(
 			})
 		);
 	}, [editor, updatePopup]);
-
-	if (!isText || isLink) {
-		return null;
-	}
 
 	return createPortal(
 		<TextFormatFloatingToolbar
