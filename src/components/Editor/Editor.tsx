@@ -500,7 +500,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	const scrollIndicatorRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const scrollBackgroundRef = useRef<HTMLDivElement>(null);
-	const [minimapOutline, setMinimapOutline] = useState<Array<MinimapItem>>([]);
 	const [editor] = useLexicalComposerContext();
 	const dragParams = useRef({
 		dragging: false,
@@ -518,7 +517,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			const children = root.getChildren();
 
 			let canvasHeight = 0;
-			const drawPadding = 2;
+			const drawPadding = 4;
 			const x = 0;
 			const drawWidth = width - 10;
 			const drawHeight = 3;
@@ -631,7 +630,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 					editorOutline.push({ type: "image" });
 				} else if ($isHeadingNode(topLevelChild)) {
 					ctx.fillStyle = "#80858f";
-					ctx.fillRect(x, y, drawWidth, headingHeight);
+					ctx.fillRect(x, y, drawWidth * 0.8, headingHeight);
 
 					y += headingHeight;
 					const level = topLevelChild.getTag();
@@ -641,13 +640,19 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 						editorOutline.push({ type: "h2" });
 					}
 				} else if ($isQuoteNode(topLevelChild)) {
+					const quotePaddingLeft = 10;
 					ctx.fillStyle = "#c1c6cd";
-					ctx.fillRect(x + 5, y, 4, drawHeight * 2 + linePadding);
+					ctx.fillRect(
+						x + quotePaddingLeft,
+						y,
+						4,
+						drawHeight * 2 + linePadding
+					);
 
 					ctx.fillStyle = "#b9bfd0";
-					ctx.fillRect(x + 5 + 6, y, drawWidth - 25, drawHeight);
+					ctx.fillRect(x + quotePaddingLeft + 6, y, drawWidth - 25, drawHeight);
 					ctx.fillRect(
-						x + 5 + 6,
+						x + quotePaddingLeft + 6,
 						y + linePadding + drawHeight,
 						drawWidth - 35,
 						drawHeight
@@ -660,8 +665,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			}
 
 			scrollBackgroundRef.current?.replaceChildren(canvas);
-
-			setMinimapOutline(editorOutline);
 		});
 	}, [editor]);
 
@@ -701,21 +704,17 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			const anchorDeltaScroll =
 				anchorScrollTop / (anchorScrollHeight - anchorElem.clientHeight);
 
-			const scrollerScrollTop = scrollBackgroundElem.scrollTop;
 			const scrollerScrollHeight = scrollBackgroundElem.scrollHeight;
-			const scrollerClientHeight = scrollBackgroundElem.clientHeight;
+			const scrollTreshhold = scrollIndicatorElem.clientHeight / 4;
 			const scrollerDelta = Math.round(
 				anchorDeltaScroll *
-					(scrollerScrollHeight - scrollBackgroundElem.clientHeight)
+					(scrollerScrollHeight -
+						scrollBackgroundElem.clientHeight +
+						scrollTreshhold * 2) -
+					scrollTreshhold
 			);
 
-			console.debug({
-				scrollerScrollTop,
-				scrollerScrollHeight,
-				scrollerClientHeight,
-				scrollerDelta,
-			});
-			scrollBackgroundElem.scrollTop = scrollerDelta;
+			scrollBackgroundElem.scrollTo({ top: scrollerDelta });
 		}
 	}, [anchorElem]);
 
@@ -827,7 +826,8 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 					borderRadius={3}
 					ref={scrollIndicatorRef}
 					pos="absolute"
-					bg="rgba(52, 73, 102, 0.3)"
+					border="1px solid #999fa0"
+					bg="rgba(52, 73, 102, 0.4)"
 					cursor="grab"
 				/>
 			</Box>

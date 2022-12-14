@@ -413,7 +413,13 @@ const CommentInputBox = React.forwardRef<
 								container.appendChild(elem);
 							}
 							const color = "255, 212, 0";
-							const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
+							const style = `position:absolute;top:${
+								selectionRect.top - anchorElem.getBoundingClientRect().top
+							}px;left:${
+								selectionRect.left - anchorElem.getBoundingClientRect().left
+							}px;height:${selectionRect.height}px;width:${
+								selectionRect.width
+							}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
 							elem.style.cssText = style;
 						}
 					}
@@ -424,14 +430,14 @@ const CommentInputBox = React.forwardRef<
 		useLayoutEffect(() => {
 			updateLocation();
 			const container = selectionState.container;
-			const body = document.body;
-			if (body !== null) {
-				body.appendChild(container);
+			const targetElem = anchorElem;
+			if (targetElem !== null) {
+				targetElem.appendChild(container);
 				return () => {
-					body.removeChild(container);
+					targetElem.removeChild(container);
 				};
 			}
-		}, [selectionState.container, updateLocation]);
+		}, [anchorElem, selectionState.container, updateLocation]);
 
 		useEffect(() => {
 			window.addEventListener("resize", updateLocation);
