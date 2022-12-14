@@ -117,6 +117,7 @@ type EditorProps = {
 	id?: string;
 	scrollAnchor?: HTMLElement;
 	sidebarPortal?: HTMLElement;
+	setDocumentTitle: (title: string) => void;
 };
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
@@ -320,6 +321,33 @@ const BlockEditorPlugin = ({ anchorElem }: BlockEditorProps) => {
 			bg="gray.700"
 		/>
 	) : null;
+};
+
+const GetDocumentTitlePlugin = ({
+	setDocumentTitle,
+}: {
+	setDocumentTitle: (title: string) => void;
+}) => {
+	const [editor] = useLexicalComposerContext();
+
+	const getTitleFromDocument = useCallback(() => {
+		editor.getEditorState().read(() => {
+			const root = $getRoot();
+			const rootElements = root.getChildren();
+			for (const node of rootElements) {
+				if ($isHeadingNode(node)) {
+					setDocumentTitle(node.getTextContent());
+					break;
+				}
+			}
+		});
+	}, [editor, setDocumentTitle]);
+
+	useEffect(() => {
+		return editor.registerUpdateListener(getTitleFromDocument);
+	}, [editor, getTitleFromDocument]);
+
+	return null;
 };
 
 const WordListPlugin = () => {
@@ -876,6 +904,7 @@ export default function Editor({
 	id,
 	scrollAnchor,
 	sidebarPortal,
+	setDocumentTitle,
 }: EditorProps) {
 	const initialConfig = {
 		namespace: "MyEditor",
@@ -927,6 +956,7 @@ export default function Editor({
 						<FetchDocumentPlugin id={id as string} />
 						<ListMaxIndentLevelPlugin maxDepth={4} />
 						<WordListPlugin />
+						<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
 						<ListPlugin />
 						<ImagesPlugin />
 						<>

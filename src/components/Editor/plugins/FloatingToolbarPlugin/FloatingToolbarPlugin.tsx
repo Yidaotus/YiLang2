@@ -73,7 +73,12 @@ import {
 	RiListUnordered,
 	RiParagraph,
 } from "react-icons/ri";
-import { IoEllipsisVertical, IoChevronDown, IoSearch } from "react-icons/io5";
+import {
+	IoEllipsisVertical,
+	IoChevronDown,
+	IoSearch,
+	IoLanguage,
+} from "react-icons/io5";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -414,7 +419,7 @@ function TextFormatFloatingToolbar({
 			ref={popupCharStylesEditorRef}
 			style={{
 				transition:
-					"50ms transform ease-in-out, 50ms opacity ease-in-out, 50ms left linear",
+					"50ms transform ease-in-out, 50ms opacity ease-in-out, 0ms left linear",
 			}}
 			sx={{
 				pos: "absolute",
@@ -513,7 +518,7 @@ function TextFormatFloatingToolbar({
 				/>
 				<IconButton
 					icon={
-						<IoSearch
+						<IoLanguage
 							color="#696F80"
 							style={{
 								height: "20px",
@@ -526,19 +531,45 @@ function TextFormatFloatingToolbar({
 					onClick={showWordEditor}
 				/>
 				<Divider orientation="vertical" h="60%" alignSelf="center" />
-				<IconButton
-					icon={
-						<IoEllipsisVertical
-							color="#696F80"
-							style={{
-								height: "24px",
-								width: "24px",
+				<Menu>
+					<MenuButton
+						as={IconButton}
+						icon={
+							<IoSearch
+								color="#696F80"
+								style={{
+									height: "20px",
+									width: "20px",
+								}}
+							/>
+						}
+						border="none"
+					/>
+					<MenuList>
+						<MenuItem
+							color="#40454f"
+							onClick={() => {
+								editor.getEditorState().read(() => {
+									const selection = $getSelection();
+									const text = selection?.getTextContent();
+									if (text && window) {
+										window
+											.open(
+												`https://wadoku.de/search/${encodeURIComponent(text)}`,
+												"_blank"
+											)
+											?.focus();
+									}
+								});
 							}}
-						/>
-					}
-					aria-label="Bold"
-					variant="ghost"
-				/>
+						>
+							Wadoku
+						</MenuItem>
+						<MenuItem color="#40454f">Jisho</MenuItem>
+						<MenuItem color="#40454f">Google</MenuItem>
+						<MenuItem color="#40454f">Baidu</MenuItem>
+					</MenuList>
+				</Menu>
 			</ButtonGroup>
 		</Box>
 	);

@@ -1,6 +1,7 @@
 import { Box, Button, IconButton } from "@chakra-ui/react";
 import Editor from "@components/Editor/Editor";
-import { useState } from "react";
+import { $isHeadingNode } from "@lexical/rich-text";
+import { useCallback, useEffect, useState } from "react";
 import {
 	IoHomeOutline,
 	IoLibraryOutline,
@@ -9,6 +10,8 @@ import {
 	IoPricetagsOutline,
 	IoAdd,
 } from "react-icons/io5";
+import { $getRoot } from "lexical";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
 const MainDesign = () => {
 	const [sidebarPortalElem, setSidebarPortalElem] =
@@ -16,7 +19,7 @@ const MainDesign = () => {
 	const [rootAnchorElem, setRootAnchorElem] = useState<HTMLDivElement | null>(
 		null
 	);
-
+	const [documentTitle, setDocumentTitle] = useState("");
 	const onSidebarPortalRef = (_sidebarElem: HTMLDivElement) => {
 		if (_sidebarElem !== null) {
 			setSidebarPortalElem(_sidebarElem);
@@ -152,7 +155,7 @@ const MainDesign = () => {
 							/
 						</Box>
 						<Box as="span" color="#696F80">
-							ノーベル平和賞 授賞式始まる 平和や人権へのメッセージに注目
+							{documentTitle}
 						</Box>
 					</Box>
 					<Box
@@ -218,6 +221,7 @@ const MainDesign = () => {
 						<Editor
 							scrollAnchor={rootAnchorElem || undefined}
 							sidebarPortal={sidebarPortalElem || undefined}
+							setDocumentTitle={setDocumentTitle}
 						/>
 					</Box>
 				</Box>
