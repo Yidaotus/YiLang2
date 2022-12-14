@@ -39,7 +39,9 @@ const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 	};
 
 	const onBlurHandler = useCallback(() => {
-		onChange([...value, inputValue]);
+		if (inputValue.trim()) {
+			onChange([...value, inputValue.trim()]);
+		}
 	}, [inputValue, onChange, value]);
 
 	return (

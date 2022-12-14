@@ -14,6 +14,7 @@ import {
 } from "lexical";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { IoChatbox, IoChatboxEllipses, IoChatboxEllipsesOutline } from "react-icons/io5";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const elem = useRef<HTMLDivElement | null>(null);
@@ -102,7 +103,6 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 				left: 0,
 				zIndex: 30,
 				borderRadius: "5px",
-				p: 2,
 				bg: "white",
 				border: "1px solid #e2e8f0",
 				boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.05)",
@@ -121,7 +121,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 				bg="#FFFFFF"
 			/>
 			{dbWord.data && (
-				<Box sx={{ display: "flex", flexDir: "column" }}>
+				<Box sx={{ display: "flex", flexDir: "column" }} p={2}>
 					<Box fontSize="1.4em" color="text.500">
 						{dbWord.data.word}
 					</Box>
@@ -141,6 +141,20 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 					</Box>
 				</Box>
 			)}
+			<Box
+				bg="text.100"
+				color="text.400"
+				pl={4}
+				pr={2}
+				py={1}
+				borderRadius="0px 0px 4px 4px"
+				fontSize="0.9em"
+				alignItems="center"
+				gap={2}
+				display="flex"
+			>
+				<IoChatboxEllipses color="text.400" size="18" /> Also written in Kanji: 様々な.
+			</Box>
 		</Box>,
 		anchorElem
 	);
