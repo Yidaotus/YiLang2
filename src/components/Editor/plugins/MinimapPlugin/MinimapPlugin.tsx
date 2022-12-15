@@ -426,7 +426,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			>
 				<Box
 					pos="absolute"
-					bg="rgba(52, 73, 102, 0.39)"
+					bg="rgba(52, 73, 102, 0.15)"
 					borderRadius="3px 3px 0px 0px"
 					top="0px"
 					w="100%"
@@ -437,19 +437,18 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 					userSelect="none"
 					ref={scrollIndicatorRef}
 					pos="absolute"
-					borderColor="text.200"
+					borderColor="text.100"
 					borderWidth="1px"
-					bg="rgba(52, 73, 102, 0)"
 					sx={{
 						"&:hover": {
-							bg: "rgba(52, 73, 102, 0.15)",
+							bg: "rgba(52, 73, 102, 0.45)",
 						},
 					}}
 					cursor="grab"
 				/>
 				<Box
 					pos="absolute"
-					bg="rgba(52, 73, 102, 0.39)"
+					bg="rgba(52, 73, 102, 0.15)"
 					borderRadius="0px 0px 3px 3px"
 					bottom="0px"
 					w="100%"

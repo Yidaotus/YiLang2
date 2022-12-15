@@ -1,14 +1,87 @@
-import { Divider, IconButton } from "@chakra-ui/react";
+import {
+	Button,
+	Checkbox,
+	Divider,
+	IconButton,
+	Popover,
+	PopoverArrow,
+	PopoverBody,
+	PopoverCloseButton,
+	PopoverContent,
+	PopoverHeader,
+	PopoverTrigger,
+	Slider,
+	SliderFilledTrack,
+	SliderMark,
+	SliderThumb,
+	SliderTrack,
+	Text,
+} from "@chakra-ui/react";
 import { Box } from "@chakra-ui/react";
 import { $isHeadingNode } from "@lexical/rich-text";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { $getRoot } from "lexical";
 import { useRouter } from "next/router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { IoSaveOutline } from "react-icons/io5";
-import { RxFontBold } from "react-icons/rx";
+import {
+	IoGrid,
+	IoGridOutline,
+	IoImage,
+	IoImageOutline,
+	IoSaveOutline,
+	IoSettings,
+} from "react-icons/io5";
+import { RxFontBold, RxFontSize, RxOpacity, RxTransform } from "react-icons/rx";
+import { RiFontSize, RiFontSize2, RiLineHeight } from "react-icons/ri";
+
+const SettingsSlider = () => {
+	const [value, setValue] = useState(0);
+	const maxValue = 100;
+	const steps = [...new Array(5)].map((_, i) => i);
+
+	return (
+		<Box
+			borderColor="text.100"
+			borderWidth="1px"
+			borderRadius="5px"
+			py={2}
+			px={3}
+			display="flex"
+			alignItems="center"
+		>
+			<Slider
+				defaultValue={0}
+				min={0}
+				max={80}
+				step={20}
+				onChange={setValue}
+				value={value}
+			>
+				{steps.map((step) => {
+					const markValue = step * (maxValue / steps.length);
+					console.debug({ value, markValue });
+					return (
+						<SliderMark
+							key={step}
+							value={markValue}
+							borderColor={value >= markValue ? "brand.500" : "text.300"}
+							borderWidth="4px"
+							borderRadius="100%"
+							transform="translate(-50%, -50%)"
+						/>
+					);
+				})}
+				<SliderTrack bg="text.300">
+					<Box position="relative" right={10} />
+					<SliderFilledTrack bg="brand.500" />
+				</SliderTrack>
+				<SliderThumb boxSize={4} borderColor="text.100" border="1px" />
+			</Slider>
+		</Box>
+	);
+};
 
 type SidebarPluginProps = {
 	documentId?: string;
@@ -146,6 +219,75 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				variant="ghost"
 				onClick={saveDocument}
 			/>
+			<Divider
+				gridColumn="span 2"
+				borderWidth="2px"
+				borderRadius="3px"
+				mb="0.5rem"
+			/>
+			<Popover placement="left">
+				<PopoverTrigger>
+					<IconButton
+						gridColumn="span 2"
+						icon={<IoSettings size={20} />}
+						color="text.500"
+						variant="ghost"
+						aria-label="Appereance"
+					/>
+				</PopoverTrigger>
+				<PopoverContent w="230px" mr={2}>
+					<PopoverArrow />
+					<PopoverBody>
+						<Box
+							display="flex"
+							justifyContent="space-between"
+							alignItems="center"
+							pr={2}
+							pb={1}
+						>
+							<Text color="text.300">Font size</Text>
+							<RiFontSize2 size={18} />
+						</Box>
+						<SettingsSlider />
+						<Box
+							display="flex"
+							justifyContent="space-between"
+							alignItems="flex-end"
+							pr={2}
+							pt={2}
+							pb={1}
+						>
+							<Text color="text.300">Line height</Text>
+							<RiLineHeight size={18} />
+						</Box>
+						<SettingsSlider />
+						<Box
+							display="flex"
+							justifyContent="space-between"
+							alignItems="flex-end"
+							pr={2}
+							pt={2}
+							pb={1}
+						>
+							<Text color="text.300">Background opacity</Text>
+							<IoGridOutline size={18} />
+						</Box>
+						<SettingsSlider />
+						<Divider h={4} />
+						<Checkbox
+							pt={2}
+							defaultChecked
+							flexDirection="row-reverse"
+							justifyContent="space-between"
+							w="100%"
+							colorScheme="brand"
+							color="text.400"
+						>
+							Show spelling
+						</Checkbox>
+					</PopoverBody>
+				</PopoverContent>
+			</Popover>
 		</Box>,
 		sidebarPortal
 	);
