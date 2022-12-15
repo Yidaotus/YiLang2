@@ -421,8 +421,6 @@ function TextFormatFloatingToolbar({
 		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
 	}, [editor]);
 
-	console.debug({ blockType: currentBlockType });
-
 	return (
 		<Box
 			ref={popupCharStylesEditorRef}

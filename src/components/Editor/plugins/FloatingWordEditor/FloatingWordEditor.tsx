@@ -696,7 +696,6 @@ const WordEditorPopup = React.forwardRef<
 						comment: word.comment,
 					});
 					submitWord(newWord);
-					console.debug(newWord);
 				} else {
 					cancel();
 				}
@@ -793,7 +792,6 @@ const FloatingWordEditorPlugin = ({
 
 	useOnClickOutside(inputRef, () => {
 		if (showInput && inputRef.current) {
-			console.debug("CLICK OUTSIDE");
 			setShowInput(false);
 		}
 	});
@@ -801,7 +799,6 @@ const FloatingWordEditorPlugin = ({
 	const insertWord = useCallback(
 		(newWord: EditorWord) => {
 			editor.update(() => {
-				console.debug({ selection });
 				if (!selection) return;
 
 				if ($isRangeSelection(selection)) {

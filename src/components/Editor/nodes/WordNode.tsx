@@ -37,6 +37,7 @@ import React, { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { Box } from "@chakra-ui/react";
+import useBearStore from "@store/store";
 
 export type SerializedWordNode = Spread<
 	{
@@ -54,6 +55,7 @@ type WordComponentProps = {
 	id?: string;
 };
 const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
+	const { editorShowSpelling } = useBearStore();
 	const [editor] = useLexicalComposerContext();
 	const dbWord = trpc.dictionary.getWord.useQuery(id || "", { enabled: !!id });
 	const wordRef = useRef(null);
@@ -117,34 +119,51 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 				</Box>
 			)}
 			{dbWord.data && (
-				<Box
-					ref={wordRef}
-					sx={{
-						mx: "2px",
-						cursor: "default",
-						borderRadius: "4px",
-						px: "2px",
-						bg: isSelected ? "text.100" : "#FAFAF9",
-						pos: "relative",
-						"&::after": {
-							content: '""',
-							pos: "absolute",
-							bottom: 1,
-							left: 0,
-							width: "100%",
-							h: "2px",
-							bg: `linear-gradient(to right, ${dbWord.data.tags
-								.map(
-									(t, i, tags) =>
-										`${t.tag.color} ${(i / tags.length) * 100}%, ${
-											t.tag.color
-										} ${((i + 1) / tags.length) * 100}%`
-								)
-								.join(",")})`,
-						},
-					}}
-				>
-					{dbWord.data.word}
+				<Box pos="relative">
+					<Box
+						ref={wordRef}
+						sx={{
+							mx: "2px",
+							cursor: "default",
+							borderRadius: "4px",
+							px: "2px",
+							bg: isSelected ? "text.100" : "#FAFAF9",
+							pos: "relative",
+							"&::after": {
+								content: '""',
+								pos: "absolute",
+								bottom: "0.2em",
+								left: 0,
+								width: "100%",
+								h: "2px",
+								bg: `linear-gradient(to right, ${dbWord.data.tags
+									.map(
+										(t, i, tags) =>
+											`${t.tag.color} ${(i / tags.length) * 100}%, ${
+												t.tag.color
+											} ${((i + 1) / tags.length) * 100}%`
+									)
+									.join(",")})`,
+							},
+						}}
+					>
+						{dbWord.data.word}
+					</Box>
+					{editorShowSpelling && !!dbWord.data.spelling && (
+						<Box
+							pos="absolute"
+							top="-1.5em"
+							fontSize="0.7em"
+							userSelect="none"
+							width="100%"
+							display="flex"
+							justifyContent="center"
+							overflow="visible"
+							whiteSpace="nowrap"
+						>
+							{dbWord.data.spelling}
+						</Box>
+					)}
 				</Box>
 			)}
 		</>

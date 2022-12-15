@@ -16,7 +16,7 @@ const FetchDocumentPlugin = ({ id }: { id?: string }) => {
 	}, [id]);
 
 	useEffect(() => {
-		if (editorDocument.data) {
+		if (editorDocument.data && shouldFetch) {
 			setShouldFetch(false);
 			const savedEditorState = editor.parseEditorState(
 				editorDocument.data.serializedDocument

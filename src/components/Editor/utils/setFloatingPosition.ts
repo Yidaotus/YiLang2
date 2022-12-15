@@ -33,7 +33,6 @@ export function setFloatingElemPosition({
 
 	// Center bottom
 
-	console.debug({ targetRect });
 	if (center) {
 		left += Math.abs(targetRect.right - targetRect.left) / 2;
 	}

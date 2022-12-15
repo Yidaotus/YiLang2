@@ -40,6 +40,7 @@ import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocumentTitlePlugin";
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
+import useBearStore from "@store/store";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -154,6 +155,8 @@ export default React.memo(function Editor({
 	sidebarPortal,
 	setDocumentTitle,
 }: EditorProps) {
+	const { editorFontSize, editorLineHeight, editorShowSpelling } = useBearStore();
+
 	const initialConfig = {
 		namespace: "MyEditor",
 		theme: YiLangTheme,
@@ -169,6 +172,12 @@ export default React.memo(function Editor({
 			setFloatingAnchorElem(_floatingAnchorElem);
 		}
 	};
+
+	const fontSize = ((editorFontSize + 20) / 100) * 8 + 14;
+	let lineHeight = ((editorLineHeight + 20) / 100) * 1 + 1.0;
+	if(editorShowSpelling) {
+		lineHeight += 0.9;
+	}
 
 	return (
 		<Box>
@@ -194,7 +203,10 @@ export default React.memo(function Editor({
 								>
 									<ContentEditable
 										style={{
+											transition: "200ms font-size ease-out",
 											outline: "none",
+											fontSize: `${fontSize}px`,
+											lineHeight: `${lineHeight}em`,
 										}}
 									/>
 								</Box>

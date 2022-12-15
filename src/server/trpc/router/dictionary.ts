@@ -58,7 +58,6 @@ export const dictionaryRouter = router({
 						tags: true,
 					},
 				});
-				console.debug({ tags: dbWord.tags });
 				const wordWithDeserializedTranslations = {
 					...dbWord,
 					//@TODO WHAT?

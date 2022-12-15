@@ -10,8 +10,6 @@ const Layout = ({ children }: LayoutProps) => {
 	const router = useRouter();
 	const activeRoute = router.pathname.split("/").pop();
 
-	console.debug(activeRoute);
-
 	return (
 		<>
 			<Head>

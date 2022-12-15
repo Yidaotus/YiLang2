@@ -192,7 +192,6 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 	const formatHeading = (headingSize: HeadingTagType) => () => {
 		editor.update(() => {
 			const selection = $getSelection();
-			console.debug({ selection });
 
 			if ($isRangeSelection(selection)) {
 				if (blockType === headingSize) {
@@ -231,8 +230,6 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 	};
 
 	const formatBulletList = () => {
-		console.debug("Format B List");
-		console.debug({ blockType });
 		if (blockType !== "bullet") {
 			editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
 		} else {

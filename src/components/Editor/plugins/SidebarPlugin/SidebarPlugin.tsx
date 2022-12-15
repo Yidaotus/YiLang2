@@ -36,9 +36,13 @@ import {
 } from "react-icons/io5";
 import { RxFontBold, RxFontSize, RxOpacity, RxTransform } from "react-icons/rx";
 import { RiFontSize, RiFontSize2, RiLineHeight } from "react-icons/ri";
+import useBearStore from "@store/store";
 
-const SettingsSlider = () => {
-	const [value, setValue] = useState(0);
+type SettingsSliderProps = {
+	value: number;
+	onChange: (newValue: number) => void;
+};
+const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 	const maxValue = 100;
 	const steps = [...new Array(5)].map((_, i) => i);
 
@@ -58,12 +62,11 @@ const SettingsSlider = () => {
 				min={0}
 				max={80}
 				step={20}
-				onChange={setValue}
+				onChange={onChange}
 				value={value}
 			>
 				{steps.map((step) => {
 					const markValue = step * (maxValue / steps.length);
-					console.debug({ value, markValue });
 					return (
 						<SliderMark
 							key={step}
@@ -85,11 +88,39 @@ const SettingsSlider = () => {
 	);
 };
 
+type StepOptionArray<T> = Array<{ step: 0 | 20 | 40 | 60 | 80; option: T }>;
+
+const EditorFontSizeOptions: StepOptionArray<number> = [
+	{ step: 0, option: 16 },
+	{ step: 20, option: 18 },
+	{ step: 40, option: 20 },
+	{ step: 60, option: 22 },
+	{ step: 80, option: 24 },
+];
+
+const EditorLineHeightOptions: StepOptionArray<string> = [
+	{ step: 0, option: "0.5em" },
+	{ step: 20, option: "0.8em" },
+	{ step: 40, option: "1.0em" },
+	{ step: 60, option: "1.1em" },
+	{ step: 80, option: "1.2em" },
+];
+
 type SidebarPluginProps = {
 	documentId?: string;
 	sidebarPortal: HTMLElement;
 };
 const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
+	const {
+		setEditorLineHeight,
+		setEditorFontSize,
+		setEditorBackgroundOpacity,
+		setEditorShowSpelling,
+		editorShowSpelling,
+		editorFontSize,
+		editorBackgroundOpacity,
+		editorLineHeight,
+	} = useBearStore();
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 
@@ -250,7 +281,10 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 							<Text color="text.300">Font size</Text>
 							<RiFontSize2 size={18} />
 						</Box>
-						<SettingsSlider />
+						<SettingsSlider
+							value={editorFontSize}
+							onChange={setEditorFontSize}
+						/>
 						<Box
 							display="flex"
 							justifyContent="space-between"
@@ -262,7 +296,10 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 							<Text color="text.300">Line height</Text>
 							<RiLineHeight size={18} />
 						</Box>
-						<SettingsSlider />
+						<SettingsSlider
+							value={editorLineHeight}
+							onChange={setEditorLineHeight}
+						/>
 						<Box
 							display="flex"
 							justifyContent="space-between"
@@ -274,12 +311,17 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 							<Text color="text.300">Background opacity</Text>
 							<IoGridOutline size={18} />
 						</Box>
-						<SettingsSlider />
+						<SettingsSlider
+							value={editorBackgroundOpacity}
+							onChange={setEditorBackgroundOpacity}
+						/>
 						<Divider h={4} />
 						<Checkbox
 							mt={4}
 							py={1}
 							px={2}
+							checked={editorShowSpelling}
+							onChange={(e) => setEditorShowSpelling(e.target.checked)}
 							defaultChecked
 							flexDirection="row-reverse"
 							justifyContent="space-between"

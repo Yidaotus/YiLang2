@@ -11,12 +11,14 @@ const Editor = dynamic(() => import("../../../components/Editor/Editor"), {
 import { useState } from "react";
 import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
 import Layout from "@components/Layout";
+import useBearStore from "@store/store";
 
 const EditorPage = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
-	console.debug({ id, routerId });
+
+	const { editorBackgroundOpacity } = useBearStore();
 
 	const [sidebarPortalElem, setSidebarPortalElem] =
 		useState<HTMLDivElement | null>(null);
@@ -35,12 +37,14 @@ const EditorPage = () => {
 		}
 	};
 
+	const bgOpacity = ((editorBackgroundOpacity + 20) / 100) * 0.05;
+
 	return (
 		<Box display="flex">
 			<Box
 				w="100%"
 				bgSize="20px 20px"
-				bgImage="linear-gradient(to right, rgba(52, 73, 102, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(52, 73, 102, 0.02) 1px, transparent 1px);"
+				bgImage={`linear-gradient(to right, rgba(52, 73, 102, ${bgOpacity}) 1px, transparent 1px), linear-gradient(to bottom, rgba(52, 73, 102, ${bgOpacity}) 1px, transparent 1px); `}
 				display="flex"
 				flexDir="column"
 				maxH="100vh"
