@@ -218,6 +218,10 @@ export default function ImagesPlugin({
 						cleanFormat = "left";
 					} else if (formatType === "justify") {
 						cleanFormat = "center";
+					} else if (formatType === "start") {
+						cleanFormat = "left";
+					} else if (formatType === "end") {
+						cleanFormat = "right";
 					} else {
 						cleanFormat = formatType;
 					}
