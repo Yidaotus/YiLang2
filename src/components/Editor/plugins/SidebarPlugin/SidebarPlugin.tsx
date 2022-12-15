@@ -30,6 +30,7 @@ import {
 	IoGridOutline,
 	IoImage,
 	IoImageOutline,
+	IoLanguageOutline,
 	IoSaveOutline,
 	IoSettings,
 } from "react-icons/io5";
@@ -50,6 +51,7 @@ const SettingsSlider = () => {
 			px={3}
 			display="flex"
 			alignItems="center"
+			bg="#fafaf9"
 		>
 			<Slider
 				defaultValue={0}
@@ -275,15 +277,24 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 						<SettingsSlider />
 						<Divider h={4} />
 						<Checkbox
-							pt={2}
+							mt={4}
+							py={1}
+							px={2}
 							defaultChecked
 							flexDirection="row-reverse"
 							justifyContent="space-between"
 							w="100%"
 							colorScheme="brand"
 							color="text.400"
+							bg="#fafaf9"
+							borderColor="text.100"
+							borderWidth="1px"
+							borderRadius="5px"
 						>
-							Show spelling
+							<Box display="flex" alignItems="center" gap={1}>
+								<IoLanguageOutline size={18} />
+								Show spelling
+							</Box>
 						</Checkbox>
 					</PopoverBody>
 				</PopoverContent>
