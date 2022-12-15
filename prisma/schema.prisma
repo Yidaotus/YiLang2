@@ -82,15 +82,16 @@ model Word {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   sourceDocument Document?     @relation(fields: [documentId], references: [id])
+  comment        String?
   documentId     String?
   tags           TagsOnWords[]
 }
 
 model TagsOnWords {
   tag        Tag      @relation(fields: [tagId], references: [id])
-  tagId      String 
+  tagId      String
   word       Word     @relation(fields: [wordId], references: [id])
-  wordId     String 
+  wordId     String
   assignedAt DateTime @default(now())
 
   @@id([tagId, wordId])

@@ -14,7 +14,7 @@ import {
 } from "lexical";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { IoChatbox, IoChatboxEllipses, IoChatboxEllipsesOutline } from "react-icons/io5";
+import { IoChatboxEllipses, IoLanguageOutline } from "react-icons/io5";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const elem = useRef<HTMLDivElement | null>(null);
@@ -94,9 +94,10 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			ref={elem}
 			sx={{
 				minW: "150px",
+				maxW: "400px",
 				pos: "absolute",
 				transition:
-					"50ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
+					"60ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
 				transformOrigin: "center left",
 				display: !!wordNode ? "block" : "none",
 				top: 0,
@@ -125,11 +126,16 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 					<Box fontSize="1.4em" color="text.500">
 						{dbWord.data.word}
 					</Box>
+					{dbWord.data.spelling && (
+						<Box fontSize="0.8em" color="text.300" flexGrow="1">
+							{dbWord.data.spelling}
+						</Box>
+					)}
 					<Box display="flex" alignItems="center">
 						<Box fontSize="1em" color="text.400" flexGrow="1">
 							{dbWord.data.translations.join(", ")}
 						</Box>
-						<Box display="flex" pl={4} gap={1}>
+						<Box display="flex" pl={6} gap={1}>
 							{dbWord.data.tags.map((t) => (
 								<Box
 									key={t.tagId}
@@ -141,20 +147,25 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 					</Box>
 				</Box>
 			)}
-			<Box
-				bg="text.100"
-				color="text.400"
-				pl={4}
-				pr={2}
-				py={1}
-				borderRadius="0px 0px 4px 4px"
-				fontSize="0.9em"
-				alignItems="center"
-				gap={2}
-				display="flex"
-			>
-				<IoChatboxEllipses color="text.400" size="18" /> Also written in Kanji: 様々な.
-			</Box>
+			{dbWord.data?.comment && (
+				<Box
+					bg="text.100"
+					color="text.400"
+					pl={4}
+					pr={2}
+					py={1}
+					borderRadius="0px 0px 4px 4px"
+					fontSize="0.9em"
+					alignItems="center"
+					gap={2}
+					display="flex"
+					borderColor="text.100"
+					borderWidth="1px 0px 0px 0px"
+				>
+					<IoChatboxEllipses color="text.400" size="18" />
+					{dbWord.data.comment}
+				</Box>
+			)}
 		</Box>,
 		anchorElem
 	);

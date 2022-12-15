@@ -275,7 +275,6 @@ const WordForm = ({
 							}}
 							render={({ field: { onChange, value, ref } }) => (
 								<YiSimpleCreatableSelect
-									autoFocus
 									ref={ref}
 									value={value}
 									onChange={(val) => onChange(val)}
@@ -499,7 +498,7 @@ type CommentInputBoxProps = {
 };
 
 // eslint-disable-next-line react/display-name
-const CommentInputBox = React.forwardRef<
+const WordEditorPopup = React.forwardRef<
 	HTMLDivElement | null,
 	CommentInputBoxProps
 >(
@@ -668,6 +667,7 @@ const CommentInputBox = React.forwardRef<
 						translations: word.translations,
 						spelling: word.spelling,
 						tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
+						comment: word.comment,
 					});
 					submitWord(newWord);
 					console.debug(newWord);
@@ -819,7 +819,7 @@ const FloatingWordEditorPlugin = ({
 	}, []);
 
 	return createPortal(
-		<CommentInputBox
+		<WordEditorPopup
 			word={word}
 			ref={inputRef}
 			show={showInput}

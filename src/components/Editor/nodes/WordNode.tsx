@@ -18,6 +18,7 @@ export type EditorWord = {
 	spelling?: string;
 	translations: Array<string>;
 	tags: Array<string>;
+	comment?: string;
 	documentId?: string;
 };
 
@@ -108,7 +109,7 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 						cursor: "default",
 						borderRadius: "4px",
 						px: "2px",
-						bg: isSelected ? "#CCCCCC" : "text.100",
+						bg: isSelected ? "#CCCCCC" : "#FAFAF9",
 						borderBottom: "5px",
 					}}
 				>
@@ -123,15 +124,14 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 						cursor: "default",
 						borderRadius: "4px",
 						px: "2px",
-						bg: isSelected ? "text.200" : "text.100",
+						bg: isSelected ? "text.100" : "#FAFAF9",
 						pos: "relative",
 						"&::after": {
 							content: '""',
 							pos: "absolute",
-							bottom: 0,
+							bottom: 1,
 							left: 0,
 							width: "100%",
-							borderRadius: "0px 0px 4px 4px",
 							h: "2px",
 							bg: `linear-gradient(to right, ${dbWord.data.tags
 								.map(

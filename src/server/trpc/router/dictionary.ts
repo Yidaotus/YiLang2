@@ -16,6 +16,7 @@ export const dictionaryRouter = router({
 				word: z.string(),
 				translations: z.array(z.string()),
 				spelling: z.string().optional(),
+				comment: z.string().optional(),
 				tags: z.array(
 					z.union([
 						z.string(),
@@ -31,13 +32,13 @@ export const dictionaryRouter = router({
 		.mutation(
 			async ({
 				ctx,
-				input: { translations, spelling, word, tags, documentId },
+				input: { translations, spelling, word, tags, documentId, comment },
 			}) => {
 				const dbWord = await ctx.prisma.word.create({
 					data: {
 						translation: translations.join(";"),
-						spelling: spelling,
-						word: word,
+						spelling,
+						word,
 						sourceDocument: documentId
 							? {
 									connect: { id: documentId },
@@ -51,6 +52,7 @@ export const dictionaryRouter = router({
 										: { create: { name: tag.name, color: tag.color } },
 							})),
 						},
+						comment,
 					},
 					include: {
 						tags: true,
@@ -59,6 +61,8 @@ export const dictionaryRouter = router({
 				console.debug({ tags: dbWord.tags });
 				const wordWithDeserializedTranslations = {
 					...dbWord,
+					//@TODO WHAT?
+					comment: dbWord.comment || undefined,
 					spelling: dbWord.spelling || undefined,
 					translations: dbWord.translation.split(";"),
 					documentId: dbWord.documentId || undefined,

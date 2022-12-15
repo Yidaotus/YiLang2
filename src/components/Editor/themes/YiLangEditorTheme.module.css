@@ -290,7 +290,7 @@
 	font-size: 1.15em;
 }
 
-.PlaygroundEditorTheme__ol1 > li > *{
+.PlaygroundEditorTheme__ol1 > li > * {
 	margin-left: 0.5em;
 }
 
@@ -416,6 +416,7 @@
 .PlaygroundEditorTheme__tokenComment {
 	color: slategray;
 }
+
 .PlaygroundEditorTheme__tokenPunctuation {
 	color: #999;
 }

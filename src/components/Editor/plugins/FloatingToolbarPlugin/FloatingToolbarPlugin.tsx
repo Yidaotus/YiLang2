@@ -27,6 +27,7 @@ import {
 	PopoverContent,
 	PopoverHeader,
 	PopoverTrigger,
+	useToken,
 } from "@chakra-ui/react";
 import {
 	$createParagraphNode,
@@ -249,6 +250,7 @@ function TextFormatFloatingToolbar({
 	isUnderline: boolean;
 }): JSX.Element {
 	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
+	const [text400, text300] = useToken("colors", ["text.400", "text.300"]);
 
 	const [currentBlockType, setCurrentBlockType] =
 		useState<keyof typeof blockTypes>("paragraph");
@@ -449,7 +451,11 @@ function TextFormatFloatingToolbar({
 				}}
 			>
 				<Menu>
-					<MenuButton as={Button} rightIcon={<IoChevronDown />} border="none">
+					<MenuButton
+						as={Button}
+						rightIcon={<IoChevronDown color={text400} />}
+						border="none"
+					>
 						<Box minW="18" minH="18" w="18" h="18" color="#696F80">
 							{blockTypes[currentBlockType]?.icon || (
 								<RiParagraph

@@ -1,15 +1,23 @@
-import { Box, Button, IconButton } from "@chakra-ui/react";
-import Editor from "@components/Editor/Editor";
-import { useState } from "react";
-import {
-	IoHomeOutline,
-	IoLibraryOutline,
-	IoLanguageOutline,
-	IoDocumentOutline,
-	IoPricetagsOutline,
-} from "react-icons/io5";
+import type { ReactElement } from "react";
 
-const MainDesign = () => {
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
+import { Box, IconButton } from "@chakra-ui/react";
+
+const Editor = dynamic(() => import("../../../components/Editor/Editor"), {
+	ssr: false,
+});
+
+import { useState } from "react";
+import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
+import Layout from "@components/Layout";
+
+const EditorPage = () => {
+	const router = useRouter();
+	const { id: routerId } = router.query;
+	const id = Array.isArray(routerId) ? routerId[0] : routerId;
+	console.debug({ id, routerId });
+
 	const [sidebarPortalElem, setSidebarPortalElem] =
 		useState<HTMLDivElement | null>(null);
 	const [rootAnchorElem, setRootAnchorElem] = useState<HTMLDivElement | null>(
@@ -28,88 +36,7 @@ const MainDesign = () => {
 	};
 
 	return (
-		<Box display="flex" overflow="hidden" pos="relative">
-			<Box
-				height="100vh"
-				bg="#fafaf9"
-				w="62px"
-				display="flex"
-				flexDir="column"
-				alignItems="center"
-				borderRight="1px solid #E7E7E7"
-				boxShadow="0px 0px 2px 2px rgba(0, 0, 0, 0.10);"
-				zIndex="30"
-			>
-				<Box fontSize="60" fontWeight="600" color="#344966" userSelect="none">
-					Y
-				</Box>
-				<Button
-					bg="#344966"
-					color="#FFFFFF"
-					w="52px"
-					h="48px"
-					fontSize="36"
-					fontWeight="500"
-					borderRadius={3}
-					boxShadow="0px 2px 4px rgba(0, 0, 0, 0.25);"
-					sx={{
-						"&:hover": {
-							bg: "#2A3A51",
-							color: "#FFFFFF",
-						},
-					}}
-				>
-					+
-				</Button>
-				<Box h="24px" />
-				<Box display="flex" flexDir="column" gap="4px">
-					<IconButton
-						w="52px"
-						h="48px"
-						icon={
-							<IoHomeOutline
-								color="#344966"
-								style={{
-									width: "22px",
-									height: "22px",
-								}}
-							/>
-						}
-						variant="ghost"
-						aria-label="home"
-					/>
-					<IconButton
-						w="52px"
-						h="48px"
-						icon={
-							<IoLibraryOutline
-								color="#8F93A3"
-								style={{
-									width: "22px",
-									height: "22px",
-								}}
-							/>
-						}
-						variant="ghost"
-						aria-label="home"
-					/>
-					<IconButton
-						w="52px"
-						h="48px"
-						icon={
-							<IoLanguageOutline
-								color="#8F93A3"
-								style={{
-									width: "22px",
-									height: "22px",
-								}}
-							/>
-						}
-						variant="ghost"
-						aria-label="home"
-					/>
-				</Box>
-			</Box>
+		<Box display="flex">
 			<Box
 				w="100%"
 				bgSize="20px 20px"
@@ -121,8 +48,8 @@ const MainDesign = () => {
 				pos="relative"
 				ref={onRootRef}
 				sx={{
-					"-ms-overflow-style": "none" /* for Internet Explorer, Edge */,
-					"scrollbar-width": "none" /* for Firefox */,
+					"-ms-overflow-style": "none",
+					"scrollbar-width": "none",
 					"overflow-y": "scroll",
 					"&::-webkit-scrollbar": {
 						display: "none",
@@ -224,6 +151,7 @@ const MainDesign = () => {
 							scrollAnchor={rootAnchorElem || undefined}
 							sidebarPortal={sidebarPortalElem || undefined}
 							setDocumentTitle={setDocumentTitle}
+							documentId={id}
 						/>
 					</Box>
 				</Box>
@@ -254,4 +182,8 @@ const MainDesign = () => {
 	);
 };
 
-export default MainDesign;
+EditorPage.getLayout = function getLayout(page: ReactElement) {
+	return <Layout>{page}</Layout>;
+};
+
+export default EditorPage;

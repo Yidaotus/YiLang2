@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 
-const FetchDocumentPlugin = ({ id }: { id: string }) => {
+const FetchDocumentPlugin = ({ id }: { id?: string }) => {
 	const [editor] = useLexicalComposerContext();
 	const [shouldFetch, setShouldFetch] = useState(false);
-	const editorDocument = trpc.document.getById.useQuery(id, {
-		enabled: shouldFetch,
+	const editorDocument = trpc.document.getById.useQuery(id || "", {
+		enabled: !!id && shouldFetch,
 	});
 
 	useEffect(() => {

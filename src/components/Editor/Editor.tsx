@@ -7,7 +7,7 @@ import { $createNodeSelection, $setSelection } from "lexical";
 import React, { useCallback, useEffect, useState } from "react";
 import { createCommand } from "lexical";
 
-import { Box, Divider, IconButton } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
@@ -29,20 +29,17 @@ import { WordNode } from "./nodes/WordNode";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/FloatingToolbarPlugin";
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
-import ToolbarPlugin from "./plugins/ToolbarPlugin/ToolbarPlugin";
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { createPortal } from "react-dom";
 import { ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
 
-import { IoSaveOutline } from "react-icons/io5";
-import { RxFontBold } from "react-icons/rx";
 import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocumentTitlePlugin";
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
+import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -145,122 +142,14 @@ const WordListPlugin = () => {
 	);
 };
 
-type SidebarPluginProps = {
-	sidebarPortal: HTMLElement;
-};
-const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
-	return createPortal(
-		<Box
-			w="100%"
-			pos="relative"
-			display="grid"
-			gridTemplateColumns="1fr 1fr"
-			gap="4px"
-			pt="1rem"
-		>
-			<Divider
-				gridColumn="span 2"
-				borderWidth="2px"
-				borderRadius="3px"
-				mb="0.5rem"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<Divider
-				gridColumn="span 2"
-				borderWidth="2px"
-				borderRadius="3px"
-				mb="0.5rem"
-			/>
-			<IconButton
-				icon={
-					<IoSaveOutline
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-		</Box>,
-		sidebarPortal
-	);
-};
-
 type EditorProps = {
-	id?: string;
+	documentId?: string;
 	scrollAnchor?: HTMLElement;
 	sidebarPortal?: HTMLElement;
 	setDocumentTitle: (title: string) => void;
 };
-export default function Editor({
-	id,
+export default React.memo(function Editor({
+	documentId,
 	scrollAnchor,
 	sidebarPortal,
 	setDocumentTitle,
@@ -291,12 +180,15 @@ export default function Editor({
 			>
 				<div>
 					<LexicalComposer initialConfig={initialConfig}>
-						<ToolbarPlugin documentId={id} />
 						<RichTextPlugin
 							contentEditable={
 								<Box
 									sx={{
 										pos: "relative",
+										"*::selection": {
+											bg: "text.100",
+											borderRadius: "5px",
+										},
 									}}
 									ref={onFloatingRef}
 								>
@@ -312,7 +204,7 @@ export default function Editor({
 						/>
 						<HistoryPlugin />
 						<PersistStateOnPageChangePlugion />
-						<FetchDocumentPlugin id={id as string} />
+						<FetchDocumentPlugin id={documentId} />
 						<TabIndentationPlugin />
 						<ListMaxIndentLevelPlugin maxDepth={4} />
 						<WordListPlugin />
@@ -326,7 +218,10 @@ export default function Editor({
 										anchorElem={scrollAnchor}
 										sidebarPortal={sidebarPortal}
 									/>
-									<SidebarPlugin sidebarPortal={sidebarPortal} />
+									<SidebarPlugin
+										sidebarPortal={sidebarPortal}
+										documentId={documentId}
+									/>
 								</>
 							)}
 							{floatingAnchorElem && (
@@ -344,4 +239,4 @@ export default function Editor({
 			</Box>
 		</Box>
 	);
-}
+});

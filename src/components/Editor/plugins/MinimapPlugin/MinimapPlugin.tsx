@@ -3,7 +3,17 @@ import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Box } from "@chakra-ui/react";
-import { $getRoot, $isParagraphNode } from "lexical";
+import {
+	$getRoot,
+	$getSelection,
+	$isParagraphNode,
+	COMMAND_PRIORITY_NORMAL,
+	SELECTION_CHANGE_COMMAND,
+} from "lexical";
+import {
+	mergeRegister,
+	$getNearestBlockElementAncestorOrThrow,
+} from "@lexical/utils";
 import { useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -20,6 +30,8 @@ type MinimapPluginProps = {
 };
 const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+	const scrollIndicatorTopRef = useRef<HTMLDivElement>(null);
+	const scrollIndicatorBottomRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const scrollBackgroundRef = useRef<HTMLDivElement>(null);
 	const [editor] = useLexicalComposerContext();
@@ -92,10 +104,32 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 
 			canvas.height = canvasHeight;
 
+			const selection = $getSelection();
+			let selectedKeys: Array<string> = [];
+			if (selection) {
+				const selectedNodes = selection.getNodes();
+				selectedKeys = selectedNodes.map((selectionNode) => {
+					let parentNode = selectionNode.getParent();
+					let currentNode = selectionNode;
+					const rootNode = $getRoot();
+					while (parentNode && parentNode !== rootNode) {
+						currentNode = parentNode;
+						parentNode = parentNode.getParent();
+					}
+					return currentNode?.getKey() || "";
+				});
+			}
+
 			y = 0;
 			for (const topLevelChild of children) {
-				if ($isParagraphNode(topLevelChild)) {
+				if (selectedKeys.includes(topLevelChild.getKey())) {
+					ctx.fillStyle = "#188B7D";
+					ctx.strokeStyle = "#188B7D";
+				} else {
 					ctx.fillStyle = "#A9AfC0";
+					ctx.strokeStyle = "#A9AfC0";
+				}
+				if ($isParagraphNode(topLevelChild)) {
 					const linesToDraw = Math.ceil(
 						topLevelChild.getTextContentSize() / 50
 					);
@@ -115,7 +149,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 					const containerWidth = 60;
 					const containerPadding = 16;
 
-					ctx.strokeStyle = "#A9AfC0";
 					ctx.strokeRect(
 						x + containerPadding,
 						y + 1,
@@ -178,7 +211,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 						linePadding * Math.max(childrenSize - 1, 0) +
 						2;
 				} else if ($isHeadingNode(topLevelChild)) {
-					ctx.fillStyle = "#80858f";
 					ctx.fillRect(x, y, drawWidth * 0.8, headingHeight);
 
 					y += headingHeight;
@@ -190,7 +222,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 					}
 				} else if ($isQuoteNode(topLevelChild)) {
 					const quotePaddingLeft = 10;
-					ctx.fillStyle = "#c1c6cd";
 					ctx.fillRect(
 						x + quotePaddingLeft,
 						y,
@@ -198,7 +229,6 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 						drawHeight * 2 + linePadding
 					);
 
-					ctx.fillStyle = "#b9bfd0";
 					ctx.fillRect(x + quotePaddingLeft + 6, y, drawWidth - 25, drawHeight);
 					ctx.fillRect(
 						x + quotePaddingLeft + 6,
@@ -218,7 +248,18 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	}, [editor]);
 
 	useEffect(() => {
-		return editor.registerUpdateListener(indexEditorToOutline);
+		return mergeRegister(
+			editor.registerUpdateListener(indexEditorToOutline),
+
+			editor.registerCommand(
+				SELECTION_CHANGE_COMMAND,
+				() => {
+					indexEditorToOutline();
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			)
+		);
 	}, [editor, indexEditorToOutline]);
 
 	const updateMinimap = useCallback(() => {
@@ -243,6 +284,17 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			scrollerElem.style.transform = `translateY(${pos * height}px)`;
 			scrollerElem.style.height = `${scrollerHeight}px`;
 			scrollerElem.style.width = "100%";
+		}
+
+		const scrollerTopHeight = pos * height;
+
+		const scrollerBottomHeight = height - scrollerTopHeight - scrollerHeight;
+
+		if (scrollIndicatorTopRef.current) {
+			scrollIndicatorTopRef.current.style.height = `${scrollerTopHeight}px`;
+		}
+		if (scrollIndicatorBottomRef.current) {
+			scrollIndicatorBottomRef.current.style.height = `${scrollerBottomHeight}px`;
 		}
 
 		const scrollBackgroundElem = scrollBackgroundRef.current;
@@ -370,16 +422,38 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 				ref={scrollContainerRef}
 				pos="absolute"
 				overflow="hidden"
-				boxShadow="inset 0px 11px 8px -10px #CCCCCC, inset 0px -11px 8px -10px #CCCCCC"
+				boxShadow="inset 0px 11px 8px -10px #DDDDDD, inset 0px -11px 8px -10px #DDDDDD"
 			>
 				<Box
+					pos="absolute"
+					bg="rgba(52, 73, 102, 0.39)"
+					borderRadius="3px 3px 0px 0px"
+					top="0px"
+					w="100%"
+					ref={scrollIndicatorTopRef}
+				/>
+				<Box
+					transition="200ms background-color ease-out"
 					userSelect="none"
-					borderRadius={3}
 					ref={scrollIndicatorRef}
 					pos="absolute"
-					border="1px solid #999fa0"
-					bg="rgba(52, 73, 102, 0.4)"
+					borderColor="text.200"
+					borderWidth="1px"
+					bg="rgba(52, 73, 102, 0)"
+					sx={{
+						"&:hover": {
+							bg: "rgba(52, 73, 102, 0.15)",
+						},
+					}}
 					cursor="grab"
+				/>
+				<Box
+					pos="absolute"
+					bg="rgba(52, 73, 102, 0.39)"
+					borderRadius="0px 0px 3px 3px"
+					bottom="0px"
+					w="100%"
+					ref={scrollIndicatorBottomRef}
 				/>
 			</Box>
 		</Box>,
