@@ -428,9 +428,9 @@ function TextFormatFloatingToolbar({
 			ref={popupCharStylesEditorRef}
 			sx={{
 				transition:
-					"50ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
+					"80ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
 				pos: "absolute",
-				transformOrigin: "center left",
+				transformOrigin: "bottom left",
 				zIndex: 10,
 				display: "flex",
 				borderRadius: "8px",

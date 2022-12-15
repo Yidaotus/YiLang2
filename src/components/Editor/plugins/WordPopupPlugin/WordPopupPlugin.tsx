@@ -97,8 +97,8 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 				maxW: "400px",
 				pos: "absolute",
 				transition:
-					"60ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
-				transformOrigin: "center left",
+					"80ms transform ease-out, 100ms opacity ease-out, 0ms left linear",
+				transformOrigin: "top left",
 				display: !!wordNode ? "block" : "none",
 				top: 0,
 				left: 0,

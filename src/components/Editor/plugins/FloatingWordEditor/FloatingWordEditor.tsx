@@ -38,6 +38,8 @@ import {
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
+import { CirclePicker } from "react-color";
+
 import {
 	RiSafeLine,
 	RiSave2Fill,
@@ -46,6 +48,7 @@ import {
 	RiSaveFill,
 	RiSaveLine,
 	RiStopCircleFill,
+	RiStopCircleLine,
 	RiStopLine,
 } from "react-icons/ri";
 import {
@@ -88,6 +91,7 @@ const TagForm = ({
 		register,
 		reset,
 		setValue,
+		control,
 		formState: { errors },
 	} = useForm<TagFormType>({
 		defaultValues: {
@@ -114,12 +118,13 @@ const TagForm = ({
 		<div>
 			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
 				<Stack>
-					<FormControl isInvalid={!!errors.name} pb={2}>
+					<FormControl isInvalid={!!errors.name}>
 						<FormLabel
 							htmlFor="spelling"
 							color="text.400"
 							fontSize="0.9em"
 							mb="0px"
+							display="none"
 						>
 							Name
 						</FormLabel>
@@ -134,35 +139,47 @@ const TagForm = ({
 							placeholder="Name"
 							{...register("name", {
 								required: "Please enter a name",
-								minLength: { value: 2, message: "Minimum length should be 4" },
+								minLength: {
+									value: 2,
+									message: "Minimum length should be 4",
+								},
 							})}
 						/>
 						<FormErrorMessage>
 							{errors.name && errors.name.message}
 						</FormErrorMessage>
 					</FormControl>
-					<FormControl isInvalid={!!errors.color}>
+					<FormControl
+						isInvalid={!!errors.color}
+						p={2}
+						display="flex"
+						justifyContent="center"
+					>
 						<FormLabel
-							htmlFor="spelling"
+							htmlFor="color"
 							color="text.400"
 							fontSize="0.9em"
 							mb="0px"
+							display="none"
 						>
 							Color
 						</FormLabel>
-						<Input
-							sx={{
-								"&::placeholder": {
-									color: "text.200",
-								},
+						<Controller
+							control={control}
+							name="color"
+							rules={{
+								required: "Please enter at least one translation",
+								min: "Please enter at least one translation",
 							}}
-							id="color"
-							borderWidth={2}
-							placeholder="Color"
-							{...register("color", {
-								required: "Please enter a color",
-								minLength: { value: 7, message: "Minimum length should be 7" },
-							})}
+							render={({ field: { onChange, value, ref } }) => (
+								<CirclePicker
+									color={value}
+									onChange={(e) => onChange(e.hex)}
+									ref={ref}
+									circleSize={22}
+									width="100%"
+								/>
+							)}
 						/>
 						<FormErrorMessage>
 							{errors.color && errors.color.message}
@@ -176,9 +193,12 @@ const TagForm = ({
 						display="flex"
 						justifyContent="space-between"
 					>
-						<Button variant="outline" onClick={cancel}>
-							Cancel
-						</Button>
+						<IconButton
+							variant="ghost"
+							onClick={cancel}
+							aria-label="cancel"
+							icon={<RxExit />}
+						/>
 						<Button
 							bg="brand.500"
 							color="#FFFFFF"
@@ -191,7 +211,7 @@ const TagForm = ({
 								},
 							}}
 						>
-							Submit
+							Create
 						</Button>
 					</Box>
 				</Stack>
