@@ -135,6 +135,7 @@ const TagForm = ({
 								},
 							}}
 							id="name"
+							bg="#FAFAF9"
 							borderWidth={2}
 							placeholder="Name"
 							{...register("name", {
@@ -152,8 +153,13 @@ const TagForm = ({
 					<FormControl
 						isInvalid={!!errors.color}
 						p={2}
+						py={4}
 						display="flex"
 						justifyContent="center"
+						borderRadius="5px"
+						borderColor="text.100"
+						borderWidth="2px"
+						bg="#FAFAF9"
 					>
 						<FormLabel
 							htmlFor="color"
