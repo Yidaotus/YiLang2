@@ -1,7 +1,12 @@
 import {
+	Button,
 	Checkbox,
 	Divider,
 	IconButton,
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuList,
 	Popover,
 	PopoverArrow,
 	PopoverBody,
@@ -13,6 +18,7 @@ import {
 	SliderThumb,
 	SliderTrack,
 	Text,
+	useToken,
 } from "@chakra-ui/react";
 import { Box } from "@chakra-ui/react";
 import { $isHeadingNode } from "@lexical/rich-text";
@@ -23,15 +29,16 @@ import { useRouter } from "next/router";
 import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
+	IoChevronDown,
 	IoGridOutline,
 	IoLanguageOutline,
 	IoSaveOutline,
 	IoSettings,
 } from "react-icons/io5";
-import { RxFontBold } from "react-icons/rx";
-import { RiFontSize2, RiLineHeight } from "react-icons/ri";
+import { RiFontSize2, RiLineHeight, RiParagraph } from "react-icons/ri";
 import useBearStore from "@store/store";
 import shallow from "zustand/shallow";
+import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 
 type SettingsSliderProps = {
 	value: number;
@@ -50,7 +57,7 @@ const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 			px={3}
 			display="flex"
 			alignItems="center"
-			bg="#fafaf9"
+			bg="brand.50"
 		>
 			<Slider
 				defaultValue={0}
@@ -83,11 +90,58 @@ const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 	);
 };
 
-type SidebarPluginProps = {
-	documentId?: string;
-	sidebarPortal: HTMLElement;
+const FormatterMenu = () => {
+	const [text400] = useToken("colors", ["text.400"]);
+	const [editor] = useLexicalComposerContext();
+	const editorSelectedBlockType = useBearStore(
+		(state) => state.editorSelectedBlockType
+	);
+
+	return (
+		<Menu placement="left">
+			<MenuButton
+				variant="ghost"
+				as={Button}
+				rightIcon={<IoChevronDown color={text400} />}
+				gridColumn="span 2"
+			>
+				<Box minW="18" minH="18" w="18" h="18" color="text.400">
+					{blockTypes[editorSelectedBlockType]?.icon || (
+						<RiParagraph
+							color="#696F80"
+							style={{
+								height: "24px",
+								width: "24px",
+							}}
+						/>
+					)}
+				</Box>
+			</MenuButton>
+			<MenuList>
+				{Object.entries(blockTypes)
+					.filter(([key]) => key !== editorSelectedBlockType)
+					.map(([key, block]) => (
+						<MenuItem
+							key={key}
+							icon={
+								<Box w="18" h="18" color="#696F80">
+									{block.icon}
+								</Box>
+							}
+							color="#40454f"
+							onClick={() =>
+								block.formatter({ editor, editorSelectedBlockType })
+							}
+						>
+							{block.type}
+						</MenuItem>
+					))}
+			</MenuList>
+		</Menu>
+	);
 };
-const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
+
+const SettingsMenu = () => {
 	const {
 		setEditorLineHeight,
 		setEditorFontSize,
@@ -110,6 +164,94 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 		}),
 		shallow
 	);
+	const [text400] = useToken("colors", ["text.400"]);
+	return (
+		<Popover placement="left">
+			<PopoverTrigger>
+				<IconButton
+					icon={<IoSettings size={20} color={text400} />}
+					variant="ghost"
+					aria-label="Appereance"
+				/>
+			</PopoverTrigger>
+			<PopoverContent w="230px" mr={2}>
+				<PopoverArrow />
+				<PopoverBody>
+					<Box
+						display="flex"
+						justifyContent="space-between"
+						alignItems="center"
+						pr={2}
+						pb={1}
+					>
+						<Text color="text.300">Font size</Text>
+						<RiFontSize2 size={18} />
+					</Box>
+					<SettingsSlider value={editorFontSize} onChange={setEditorFontSize} />
+					<Box
+						display="flex"
+						justifyContent="space-between"
+						alignItems="flex-end"
+						pr={2}
+						pt={2}
+						pb={1}
+					>
+						<Text color="text.300">Line height</Text>
+						<RiLineHeight size={18} />
+					</Box>
+					<SettingsSlider
+						value={editorLineHeight}
+						onChange={setEditorLineHeight}
+					/>
+					<Box
+						display="flex"
+						justifyContent="space-between"
+						alignItems="flex-end"
+						pr={2}
+						pt={2}
+						pb={1}
+					>
+						<Text color="text.300">Background opacity</Text>
+						<IoGridOutline size={18} />
+					</Box>
+					<SettingsSlider
+						value={editorBackgroundOpacity}
+						onChange={setEditorBackgroundOpacity}
+					/>
+					<Divider h={4} />
+					<Checkbox
+						mt={4}
+						py={1}
+						px={2}
+						checked={editorShowSpelling}
+						onChange={(e) => setEditorShowSpelling(e.target.checked)}
+						flexDirection="row-reverse"
+						justifyContent="space-between"
+						w="100%"
+						colorScheme="brand"
+						color="text.400"
+						bg="brand.50"
+						borderColor="text.100"
+						borderWidth="1px"
+						borderRadius="5px"
+					>
+						<Box display="flex" alignItems="center" gap={1}>
+							<IoLanguageOutline size={18} />
+							Show spelling
+						</Box>
+					</Checkbox>
+				</PopoverBody>
+			</PopoverContent>
+		</Popover>
+	);
+};
+
+type SidebarPluginProps = {
+	documentId?: string;
+	sidebarPortal: HTMLElement;
+};
+const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
+	const [text400] = useToken("colors", ["text.400"]);
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 
@@ -151,184 +293,28 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 			pt="1rem"
 		>
 			<Divider
-				gridColumn="span 2"
 				borderWidth="2px"
 				borderRadius="3px"
 				mb="0.5rem"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<IconButton
-				icon={
-					<RxFontBold
-						color="#696F80"
-						style={{
-							height: "24px",
-							width: "24px",
-						}}
-					/>
-				}
-				aria-label="Bold"
-				variant="ghost"
-			/>
-			<Divider
 				gridColumn="span 2"
-				borderWidth="2px"
-				borderRadius="3px"
-				mb="0.5rem"
 			/>
+			<FormatterMenu />
+			<SettingsMenu />
 			<IconButton
 				icon={
 					<IoSaveOutline
-						color="#696F80"
+						color={text400}
 						style={{
 							height: "24px",
 							width: "24px",
 						}}
 					/>
 				}
-				aria-label="Bold"
 				variant="ghost"
+				color="text.500"
+				aria-label="Bold"
 				onClick={saveDocument}
 			/>
-			<Divider
-				gridColumn="span 2"
-				borderWidth="2px"
-				borderRadius="3px"
-				mb="0.5rem"
-			/>
-			<Popover placement="left">
-				<PopoverTrigger>
-					<IconButton
-						gridColumn="span 2"
-						icon={<IoSettings size={20} />}
-						color="text.500"
-						variant="ghost"
-						aria-label="Appereance"
-					/>
-				</PopoverTrigger>
-				<PopoverContent w="230px" mr={2}>
-					<PopoverArrow />
-					<PopoverBody>
-						<Box
-							display="flex"
-							justifyContent="space-between"
-							alignItems="center"
-							pr={2}
-							pb={1}
-						>
-							<Text color="text.300">Font size</Text>
-							<RiFontSize2 size={18} />
-						</Box>
-						<SettingsSlider
-							value={editorFontSize}
-							onChange={setEditorFontSize}
-						/>
-						<Box
-							display="flex"
-							justifyContent="space-between"
-							alignItems="flex-end"
-							pr={2}
-							pt={2}
-							pb={1}
-						>
-							<Text color="text.300">Line height</Text>
-							<RiLineHeight size={18} />
-						</Box>
-						<SettingsSlider
-							value={editorLineHeight}
-							onChange={setEditorLineHeight}
-						/>
-						<Box
-							display="flex"
-							justifyContent="space-between"
-							alignItems="flex-end"
-							pr={2}
-							pt={2}
-							pb={1}
-						>
-							<Text color="text.300">Background opacity</Text>
-							<IoGridOutline size={18} />
-						</Box>
-						<SettingsSlider
-							value={editorBackgroundOpacity}
-							onChange={setEditorBackgroundOpacity}
-						/>
-						<Divider h={4} />
-						<Checkbox
-							mt={4}
-							py={1}
-							px={2}
-							checked={editorShowSpelling}
-							onChange={(e) => setEditorShowSpelling(e.target.checked)}
-							flexDirection="row-reverse"
-							justifyContent="space-between"
-							w="100%"
-							colorScheme="brand"
-							color="text.400"
-							bg="#fafaf9"
-							borderColor="text.100"
-							borderWidth="1px"
-							borderRadius="5px"
-						>
-							<Box display="flex" alignItems="center" gap={1}>
-								<IoLanguageOutline size={18} />
-								Show spelling
-							</Box>
-						</Checkbox>
-					</PopoverBody>
-				</PopoverContent>
-			</Popover>
 		</Box>,
 		sidebarPortal
 	);

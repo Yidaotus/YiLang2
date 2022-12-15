@@ -426,7 +426,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			>
 				<Box
 					pos="absolute"
-					bg="rgba(52, 73, 102, 0.15)"
+					bg="rgba(52, 73, 102, 0.35)"
 					borderRadius="3px 3px 0px 0px"
 					top="0px"
 					w="100%"
@@ -448,7 +448,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 				/>
 				<Box
 					pos="absolute"
-					bg="rgba(52, 73, 102, 0.15)"
+					bg="rgba(52, 73, 102, 0.35)"
 					borderRadius="0px 0px 3px 3px"
 					bottom="0px"
 					w="100%"

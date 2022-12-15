@@ -119,7 +119,7 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 				</Box>
 			)}
 			{dbWord.data && (
-				<Box pos="relative">
+				<Box pos="relative" whiteSpace="normal">
 					<Box
 						ref={wordRef}
 						sx={{

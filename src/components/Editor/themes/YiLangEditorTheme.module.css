@@ -22,7 +22,6 @@
 }
 .PlaygroundEditorTheme__quote {
 	font-size: 1em;
-	line-height: 1.5em;
 	margin-top: 1em;
 	margin-left: 2em;
 	margin-bottom: 1em;
@@ -64,7 +63,7 @@
 	font-style: italic;
 }
 .PlaygroundEditorTheme__textUnderline {
-	text-decoration: underline;
+	text-decoration: underline #8f93a3 2px;
 }
 .PlaygroundEditorTheme__textStrikethrough {
 	text-decoration: line-through;
@@ -286,7 +285,7 @@
 .PlaygroundEditorTheme__ol1 > li::marker {
 	color: #696f80;
 	font-weight: 500;
-	font-size: 1.15em;
+	font-size: 1em;
 }
 
 .PlaygroundEditorTheme__ol1 > li > * {
@@ -294,7 +293,7 @@
 }
 
 .PlaygroundEditorTheme__ol1 {
-	padding-bottom: 2em;
+	padding-bottom: 1em;
 	margin: 0;
 	margin-left: 1em;
 	list-style-position: inside;
@@ -340,8 +339,8 @@
 	font-size: 1.15em;
 }
 .PlaygroundEditorTheme__listItem {
-	padding-top: 1em;
-	margin: 0 32px;
+	padding-top: 0.5em;
+	margin: 0 1em;
 }
 .PlaygroundEditorTheme__listItemChecked,
 .PlaygroundEditorTheme__listItemUnchecked {

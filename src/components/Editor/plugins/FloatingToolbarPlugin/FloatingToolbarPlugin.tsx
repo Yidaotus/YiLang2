@@ -9,6 +9,7 @@
 import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $wrapSelectionInMarkNode } from "@lexical/mark";
 import { mergeRegister } from "@lexical/utils";
 import {
 	Button,
@@ -22,21 +23,7 @@ import {
 	Divider,
 	useToken,
 } from "@chakra-ui/react";
-import type { LexicalEditor } from "lexical";
-import {
-	$createParagraphNode,
-	$isNodeSelection,
-	$isRootOrShadowRoot,
-} from "lexical";
-import { $wrapNodes } from "@lexical/selection";
-import {
-	$isListNode,
-	INSERT_CHECK_LIST_COMMAND,
-	INSERT_ORDERED_LIST_COMMAND,
-	INSERT_UNORDERED_LIST_COMMAND,
-	ListNode,
-	REMOVE_LIST_COMMAND,
-} from "@lexical/list";
+import { FORMAT_TEXT_COMMAND, LexicalEditor } from "lexical";
 import {
 	$getSelection,
 	$isRangeSelection,
@@ -44,31 +31,17 @@ import {
 	COMMAND_PRIORITY_LOW,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import type { HeadingTagType } from "@lexical/rich-text";
-import {
-	$createHeadingNode,
-	$isHeadingNode,
-	$createQuoteNode,
-} from "@lexical/rich-text";
-import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { RxFontBold } from "react-icons/rx";
-import {
-	RiDoubleQuotesL,
-	RiH1,
-	RiH2,
-	RiListOrdered,
-	RiListUnordered,
-	RiParagraph,
-} from "react-icons/ri";
-import { IoChevronDown, IoSearch, IoLanguage } from "react-icons/io5";
+import { RxBookmark, RxFontBold, RxFontItalic, RxPencil1, RxPencil2, RxUnderline } from "react-icons/rx";
+import { RiBold, RiItalic, RiMarkPenLine, RiParagraph, RiUnderline } from "react-icons/ri";
+import { IoChevronDown, IoSearch, IoLanguage, IoBookmark } from "react-icons/io5";
 import useBearStore from "@store/store";
-import { SelectedBlockType } from "../SelectedBlockTypePlugin/SelectedBlockTypePlugin";
+import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -90,123 +63,6 @@ export function getDOMRangeRect(
 
 	return rect;
 }
-
-type FormatterParams = {
-	editor: LexicalEditor;
-	currentBlockType: string;
-};
-const formatHeading = ({
-	editor,
-	headingSize,
-	currentBlockType,
-}: FormatterParams & {
-	headingSize: HeadingTagType;
-}) => {
-	editor.update(() => {
-		const selection = $getSelection();
-
-		if ($isRangeSelection(selection)) {
-			if (currentBlockType === headingSize) {
-				$wrapNodes(selection, () => $createParagraphNode());
-			} else {
-				$wrapNodes(selection, () => $createHeadingNode(headingSize));
-			}
-		}
-	});
-};
-
-const formatParagraph = ({ editor, currentBlockType }: FormatterParams) => {
-	if (currentBlockType !== "paragraph") {
-		editor.update(() => {
-			const selection = $getSelection();
-
-			if ($isRangeSelection(selection)) {
-				$wrapNodes(selection, () => $createParagraphNode());
-			}
-		});
-	}
-};
-
-const formatBulletList = ({ editor, currentBlockType }: FormatterParams) => {
-	if (currentBlockType !== "bullet") {
-		editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-	} else {
-		editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-	}
-};
-
-const formatCheckList = ({ editor, currentBlockType }: FormatterParams) => {
-	if (currentBlockType !== "check") {
-		editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
-	} else {
-		editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-	}
-};
-
-const formatNumberedList = ({ editor, currentBlockType }: FormatterParams) => {
-	if (currentBlockType !== "number") {
-		editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-	} else {
-		editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-	}
-};
-
-const formatQuote = ({ editor, currentBlockType }: FormatterParams) => {
-	if (currentBlockType !== "quote") {
-		editor.update(() => {
-			const selection = $getSelection();
-
-			if ($isRangeSelection(selection)) {
-				$wrapNodes(selection, () => $createQuoteNode());
-			}
-		});
-	}
-};
-
-const blockTypes: Partial<Record<SelectedBlockType, any>> = {
-	paragraph: {
-		type: "Paragraph",
-		icon: <RiParagraph size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatParagraph({ editor, currentBlockType }),
-	},
-	h1: {
-		type: "Title",
-		icon: <RiH1 size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatHeading({ editor, currentBlockType, headingSize: "h1" }),
-	},
-	h2: {
-		type: "Subtitle",
-		icon: <RiH2 size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatHeading({ editor, currentBlockType, headingSize: "h2" }),
-	},
-	number: {
-		type: "Numbered list",
-		icon: <RiListOrdered size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatNumberedList({ editor, currentBlockType }),
-	},
-	check: {
-		type: "Check list",
-		icon: <RiListUnordered size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatCheckList({ editor, currentBlockType }),
-	},
-	bullet: {
-		type: "Bullet List",
-		icon: <RiListUnordered size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatBulletList({ editor, currentBlockType }),
-	},
-	quote: {
-		type: "Quote",
-		icon: <RiDoubleQuotesL size="100%" />,
-		formatter: ({ editor, currentBlockType }: FormatterParams) =>
-			formatQuote({ editor, currentBlockType }),
-	},
-};
 
 function TextFormatFloatingToolbar({
 	editor,
@@ -232,7 +88,7 @@ function TextFormatFloatingToolbar({
 	isUnderline: boolean;
 }): JSX.Element {
 	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
-	const [text400, text300] = useToken("colors", ["text.400", "text.300"]);
+	const [text400, brand500] = useToken("colors", ["text.400", "brand.800"]);
 
 	const currentBlockType = useBearStore(
 		(state) => state.editorSelectedBlockType
@@ -270,7 +126,6 @@ function TextFormatFloatingToolbar({
 			rootElement.contains(nativeSelection.anchorNode)
 		) {
 			const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
-
 			setFloatingElemPosition({
 				targetRect: rangeRect,
 				floatingElem: popupCharStylesEditorElem,
@@ -402,45 +257,77 @@ function TextFormatFloatingToolbar({
 							))}
 					</MenuList>
 				</Menu>
-				<Divider orientation="vertical" h="60%" alignSelf="center" />
-				<IconButton
-					icon={
-						<RxFontBold
-							color="#696F80"
-							style={{
-								height: "24px",
-								width: "24px",
-							}}
-						/>
-					}
-					aria-label="Bold"
-					variant="ghost"
+				<Divider
+					orientation="vertical"
+					h="60%"
+					alignSelf="center"
+					bg="text.200"
 				/>
 				<IconButton
 					icon={
-						<RxFontBold
-							color="#696F80"
+						<RiBold
+							color={isBold ? brand500 : text400}
 							style={{
-								height: "24px",
-								width: "24px",
+								height: "22px",
+								width: "22px",
 							}}
 						/>
 					}
 					aria-label="Bold"
 					variant="ghost"
+					onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
 				/>
 				<IconButton
 					icon={
-						<RxFontBold
-							color="#696F80"
+						<RiItalic
+							color={isItalic ? brand500 : text400}
 							style={{
-								height: "24px",
-								width: "24px",
+								height: "22px",
+								width: "22px",
 							}}
 						/>
 					}
 					aria-label="Bold"
 					variant="ghost"
+					onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
+				/>
+				<IconButton
+					icon={
+						<RiUnderline
+							color={isUnderline ? brand500 : text400}
+							style={{
+								height: "22px",
+								width: "22px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={() =>
+						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
+					}
+				/>
+				<IconButton
+					icon={
+						<RiMarkPenLine
+							color={text400}
+							style={{
+								height: "22px",
+								width: "22px",
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={() =>
+						editor.update(() => {
+							const selection = $getSelection();
+							if ($isRangeSelection(selection)) {
+								const isBackward = selection.isBackward();
+								$wrapSelectionInMarkNode(selection, isBackward, 'test');
+							}
+						})
+					}
 				/>
 				<IconButton
 					icon={
@@ -456,7 +343,12 @@ function TextFormatFloatingToolbar({
 					variant="ghost"
 					onClick={showWordEditor}
 				/>
-				<Divider orientation="vertical" h="60%" alignSelf="center" />
+				<Divider
+					orientation="vertical"
+					h="60%"
+					alignSelf="center"
+					bg="text.200"
+				/>
 				<Menu placement="bottom-start">
 					<MenuButton
 						as={IconButton}
