@@ -55,7 +55,7 @@ type WordComponentProps = {
 	id?: string;
 };
 const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
-	const { editorShowSpelling } = useBearStore();
+	const editorShowSpelling = useBearStore((state) => state.editorShowSpelling);
 	const [editor] = useLexicalComposerContext();
 	const dbWord = trpc.dictionary.getWord.useQuery(id || "", { enabled: !!id });
 	const wordRef = useRef(null);
@@ -160,6 +160,7 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 							justifyContent="center"
 							overflow="visible"
 							whiteSpace="nowrap"
+							pointerEvents="none"
 						>
 							{dbWord.data.spelling}
 						</Box>

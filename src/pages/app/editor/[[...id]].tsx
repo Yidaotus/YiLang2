@@ -18,7 +18,9 @@ const EditorPage = () => {
 	const { id: routerId } = router.query;
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
 
-	const { editorBackgroundOpacity } = useBearStore();
+	const editorBackgroundOpacity = useBearStore(
+		(state) => state.editorBackgroundOpacity
+	);
 
 	const [sidebarPortalElem, setSidebarPortalElem] =
 		useState<HTMLDivElement | null>(null);

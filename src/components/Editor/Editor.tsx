@@ -1,4 +1,5 @@
 import type { Klass, LexicalCommand, LexicalNode } from "lexical";
+import { LineBreakNode } from "lexical";
 
 import { $getNodeByKey } from "lexical";
 import { ListNode, ListItemNode } from "@lexical/list";
@@ -41,6 +42,9 @@ import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocument
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
 import useBearStore from "@store/store";
+import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
+
+import shallow from "zustand/shallow";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -75,6 +79,12 @@ export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
 const WordListPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 	const [wordStore, setWordStore] = useState<Record<string, string>>({});
+
+	useEffect(() => {
+		return editor.registerNodeTransform(LineBreakNode, (node) => {
+			node.remove();
+		});
+	}, [editor]);
 
 	useEffect(() => {
 		/*
@@ -155,7 +165,20 @@ export default React.memo(function Editor({
 	sidebarPortal,
 	setDocumentTitle,
 }: EditorProps) {
-	const { editorFontSize, editorLineHeight, editorShowSpelling } = useBearStore();
+	const {
+		editorFontSize,
+		editorLineHeight,
+		editorShowSpelling,
+		setEditorSelectedBlockType,
+	} = useBearStore(
+		(state) => ({
+			editorFontSize: state.editorFontSize,
+			editorLineHeight: state.editorLineHeight,
+			editorShowSpelling: state.editorShowSpelling,
+			setEditorSelectedBlockType: state.setEditorSelectedBlockType,
+		}),
+		shallow
+	);
 
 	const initialConfig = {
 		namespace: "MyEditor",
@@ -175,7 +198,7 @@ export default React.memo(function Editor({
 
 	const fontSize = ((editorFontSize + 20) / 100) * 8 + 14;
 	let lineHeight = ((editorLineHeight + 20) / 100) * 1 + 1.0;
-	if(editorShowSpelling) {
+	if (editorShowSpelling) {
 		lineHeight += 0.9;
 	}
 
@@ -203,7 +226,8 @@ export default React.memo(function Editor({
 								>
 									<ContentEditable
 										style={{
-											transition: "200ms font-size ease-out",
+											transition:
+												"100ms font-size ease-out, 300ms line-height ease-out",
 											outline: "none",
 											fontSize: `${fontSize}px`,
 											lineHeight: `${lineHeight}em`,
@@ -223,6 +247,9 @@ export default React.memo(function Editor({
 						<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
 						<ListPlugin />
 						<ImagesPlugin />
+						<SelectedBlockTypePlugin
+							setSelectedBlockType={setEditorSelectedBlockType}
+						/>
 						<>
 							{scrollAnchor && sidebarPortal && (
 								<>

@@ -20,20 +20,13 @@ import {
 	MenuItem,
 	MenuList,
 	Divider,
-	Popover,
-	PopoverArrow,
-	PopoverBody,
-	PopoverCloseButton,
-	PopoverContent,
-	PopoverHeader,
-	PopoverTrigger,
 	useToken,
 } from "@chakra-ui/react";
+import type { LexicalEditor } from "lexical";
 import {
 	$createParagraphNode,
 	$isNodeSelection,
 	$isRootOrShadowRoot,
-	LexicalEditor,
 } from "lexical";
 import { $wrapNodes } from "@lexical/selection";
 import {
@@ -49,14 +42,13 @@ import {
 	$isRangeSelection,
 	$isTextNode,
 	COMMAND_PRIORITY_LOW,
-	FORMAT_TEXT_COMMAND,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
+import type { HeadingTagType } from "@lexical/rich-text";
 import {
 	$createHeadingNode,
 	$isHeadingNode,
 	$createQuoteNode,
-	HeadingTagType,
 } from "@lexical/rich-text";
 import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -65,15 +57,8 @@ import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
+import { RxFontBold } from "react-icons/rx";
 import {
-	RxFontBold,
-	RxArrowDown,
-	RxText,
-	RxListBullet,
-	RxHalf1,
-} from "react-icons/rx";
-import {
-	RiChatQuoteFill,
 	RiDoubleQuotesL,
 	RiH1,
 	RiH2,
@@ -81,12 +66,9 @@ import {
 	RiListUnordered,
 	RiParagraph,
 } from "react-icons/ri";
-import {
-	IoEllipsisVertical,
-	IoChevronDown,
-	IoSearch,
-	IoLanguage,
-} from "react-icons/io5";
+import { IoChevronDown, IoSearch, IoLanguage } from "react-icons/io5";
+import useBearStore from "@store/store";
+import { SelectedBlockType } from "../SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -181,7 +163,7 @@ const formatQuote = ({ editor, currentBlockType }: FormatterParams) => {
 	}
 };
 
-const blockTypes = {
+const blockTypes: Partial<Record<SelectedBlockType, any>> = {
 	paragraph: {
 		type: "Paragraph",
 		icon: <RiParagraph size="100%" />,
@@ -252,8 +234,9 @@ function TextFormatFloatingToolbar({
 	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
 	const [text400, text300] = useToken("colors", ["text.400", "text.300"]);
 
-	const [currentBlockType, setCurrentBlockType] =
-		useState<keyof typeof blockTypes>("paragraph");
+	const currentBlockType = useBearStore(
+		(state) => state.editorSelectedBlockType
+	);
 
 	const insertLink = useCallback(() => {
 		if (!isLink) {
@@ -303,72 +286,6 @@ function TextFormatFloatingToolbar({
 				verticalOffset: -45,
 				pos: "top",
 			});
-		}
-		if ($isRangeSelection(selection)) {
-			const anchorNode = selection.anchor.getNode();
-			let element =
-				anchorNode.getKey() === "root"
-					? anchorNode
-					: $findMatchingParent(anchorNode, (e) => {
-							const parent = e.getParent();
-							return parent !== null && $isRootOrShadowRoot(parent);
-					  });
-
-			if (element === null) {
-				element = anchorNode.getTopLevelElementOrThrow();
-			}
-
-			const elementKey = element.getKey();
-			const elementDOM = editor.getElementByKey(elementKey);
-
-			if (elementDOM !== null) {
-				if ($isListNode(element)) {
-					const parentList = $getNearestNodeOfType<ListNode>(
-						anchorNode,
-						ListNode
-					);
-					const type = parentList
-						? parentList.getListType()
-						: element.getListType();
-					setCurrentBlockType(type);
-				} else {
-					const type = $isHeadingNode(element)
-						? element.getTag()
-						: element.getType();
-					if (type in blockTypes) {
-						setCurrentBlockType(type as keyof typeof blockTypes);
-					}
-				}
-			}
-		}
-		if ($isNodeSelection(selection)) {
-			const anchorNode = selection.getNodes()[0];
-			if (!anchorNode) {
-				return;
-			}
-			let element =
-				anchorNode.getKey() === "root"
-					? anchorNode
-					: $findMatchingParent(anchorNode, (e) => {
-							const parent = e.getParent();
-							return parent !== null && $isRootOrShadowRoot(parent);
-					  });
-
-			if (element === null) {
-				element = anchorNode.getTopLevelElementOrThrow();
-			}
-
-			const elementKey = element.getKey();
-			const elementDOM = editor.getElementByKey(elementKey);
-
-			if (elementDOM !== null) {
-				const type = $isHeadingNode(element)
-					? element.getTag()
-					: element.getType();
-				if (type in blockTypes) {
-					setCurrentBlockType(type as keyof typeof blockTypes);
-				}
-			}
 		}
 	}, [editor, anchorElem]);
 

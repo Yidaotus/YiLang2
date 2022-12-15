@@ -1,14 +1,11 @@
 import {
-	Button,
 	Checkbox,
 	Divider,
 	IconButton,
 	Popover,
 	PopoverArrow,
 	PopoverBody,
-	PopoverCloseButton,
 	PopoverContent,
-	PopoverHeader,
 	PopoverTrigger,
 	Slider,
 	SliderFilledTrack,
@@ -23,20 +20,18 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { trpc } from "@utils/trpc";
 import { $getRoot } from "lexical";
 import { useRouter } from "next/router";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
-	IoGrid,
 	IoGridOutline,
-	IoImage,
-	IoImageOutline,
 	IoLanguageOutline,
 	IoSaveOutline,
 	IoSettings,
 } from "react-icons/io5";
-import { RxFontBold, RxFontSize, RxOpacity, RxTransform } from "react-icons/rx";
-import { RiFontSize, RiFontSize2, RiLineHeight } from "react-icons/ri";
+import { RxFontBold } from "react-icons/rx";
+import { RiFontSize2, RiLineHeight } from "react-icons/ri";
 import useBearStore from "@store/store";
+import shallow from "zustand/shallow";
 
 type SettingsSliderProps = {
 	value: number;
@@ -88,24 +83,6 @@ const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 	);
 };
 
-type StepOptionArray<T> = Array<{ step: 0 | 20 | 40 | 60 | 80; option: T }>;
-
-const EditorFontSizeOptions: StepOptionArray<number> = [
-	{ step: 0, option: 16 },
-	{ step: 20, option: 18 },
-	{ step: 40, option: 20 },
-	{ step: 60, option: 22 },
-	{ step: 80, option: 24 },
-];
-
-const EditorLineHeightOptions: StepOptionArray<string> = [
-	{ step: 0, option: "0.5em" },
-	{ step: 20, option: "0.8em" },
-	{ step: 40, option: "1.0em" },
-	{ step: 60, option: "1.1em" },
-	{ step: 80, option: "1.2em" },
-];
-
 type SidebarPluginProps = {
 	documentId?: string;
 	sidebarPortal: HTMLElement;
@@ -120,7 +97,19 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 		editorFontSize,
 		editorBackgroundOpacity,
 		editorLineHeight,
-	} = useBearStore();
+	} = useBearStore(
+		(state) => ({
+			setEditorLineHeight: state.setEditorLineHeight,
+			setEditorFontSize: state.setEditorFontSize,
+			setEditorBackgroundOpacity: state.setEditorBackgroundOpacity,
+			setEditorShowSpelling: state.setEditorShowSpelling,
+			editorShowSpelling: state.editorShowSpelling,
+			editorFontSize: state.editorFontSize,
+			editorBackgroundOpacity: state.editorBackgroundOpacity,
+			editorLineHeight: state.editorLineHeight,
+		}),
+		shallow
+	);
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 
@@ -322,7 +311,6 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 							px={2}
 							checked={editorShowSpelling}
 							onChange={(e) => setEditorShowSpelling(e.target.checked)}
-							defaultChecked
 							flexDirection="row-reverse"
 							justifyContent="space-between"
 							w="100%"
