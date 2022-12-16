@@ -1,10 +1,13 @@
-import { Box, Button, IconButton } from "@chakra-ui/react";
+import { Box, Button, IconButton, useToken } from "@chakra-ui/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { useCallback, useState } from "react";
 import {
 	IoHomeOutline,
 	IoLibraryOutline,
 	IoLanguageOutline,
+	IoChevronBack,
+	IoChevronForward,
 } from "react-icons/io5";
 
 type LayoutProps = {
@@ -13,6 +16,12 @@ type LayoutProps = {
 const Layout = ({ children }: LayoutProps) => {
 	const router = useRouter();
 	const activeRoute = router.pathname.split("/").pop();
+	const [text400, brand500] = useToken("colors", ["text.400", "brand.800"]);
+	const [sidebarOpen, setSidebarOpen] = useState(false);
+
+	const openNewDocument = useCallback(() => {
+		router.push("/app/editor/");
+	}, [router]);
 
 	return (
 		<>
@@ -23,26 +32,46 @@ const Layout = ({ children }: LayoutProps) => {
 			</Head>
 			<Box as="main" display="flex" overflow="hidden" pos="relative">
 				<Box
+					transition="150ms width ease-out"
 					height="100vh"
 					bg="#fafaf9"
-					w="62px"
+					w={sidebarOpen ? "300px" : "62px"}
 					display="flex"
 					flexDir="column"
-					alignItems="center"
 					borderRight="1px solid #E7E7E7"
 					boxShadow="0px 0px 2px 2px rgba(0, 0, 0, 0.10);"
 					zIndex="30"
+					pos="relative"
+					py={1}
+					px={sidebarOpen ? 3 : 1}
 				>
+					<IconButton
+						color={text400}
+						pos="absolute"
+						variant="link"
+						top="20px"
+						right={sidebarOpen ? "10px" : "-40px"}
+						zIndex={50}
+						icon={
+							sidebarOpen ? (
+								<IoChevronBack size={26} />
+							) : (
+								<IoChevronForward size={26} />
+							)
+						}
+						aria-label="Open Sidebar"
+						onClick={() => setSidebarOpen(!sidebarOpen)}
+					/>
 					<Box fontSize="60" fontWeight="600" color="#344966" userSelect="none">
 						Y
 					</Box>
 					<Button
 						bg="#344966"
 						color="#FFFFFF"
-						w="52px"
+						w="100%"
 						h="48px"
-						fontSize="36"
-						fontWeight="500"
+						fontSize={sidebarOpen ? 20 : 36}
+						fontWeight={sidebarOpen ? "400" : "500"}
 						borderRadius={3}
 						boxShadow="0px 2px 4px rgba(0, 0, 0, 0.25);"
 						sx={{
@@ -51,13 +80,14 @@ const Layout = ({ children }: LayoutProps) => {
 								color: "#FFFFFF",
 							},
 						}}
+						onClick={openNewDocument}
 					>
-						+
+						{sidebarOpen ? "New Document" : "+"}
 					</Button>
 					<Box h="24px" />
 					<Box display="flex" flexDir="column" gap="4px">
 						<IconButton
-							w="52px"
+							w="100%"
 							h="48px"
 							icon={
 								<IoHomeOutline
@@ -72,7 +102,7 @@ const Layout = ({ children }: LayoutProps) => {
 							aria-label="home"
 						/>
 						<IconButton
-							w="52px"
+							w="100%"
 							h="48px"
 							icon={
 								<IoLibraryOutline
@@ -87,7 +117,7 @@ const Layout = ({ children }: LayoutProps) => {
 							aria-label="home"
 						/>
 						<IconButton
-							w="52px"
+							w="100%"
 							h="48px"
 							icon={
 								<IoLanguageOutline

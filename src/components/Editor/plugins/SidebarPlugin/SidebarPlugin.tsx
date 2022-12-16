@@ -2,6 +2,8 @@ import {
 	Button,
 	Checkbox,
 	Divider,
+	FormControl,
+	FormLabel,
 	IconButton,
 	Menu,
 	MenuButton,
@@ -17,6 +19,7 @@ import {
 	SliderMark,
 	SliderThumb,
 	SliderTrack,
+	Switch,
 	Text,
 	useToken,
 } from "@chakra-ui/react";
@@ -50,14 +53,14 @@ const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 
 	return (
 		<Box
-			borderColor="text.100"
-			borderWidth="1px"
+			//borderColor="text.100"
+			//borderWidth="1px"
 			borderRadius="5px"
 			py={2}
 			px={3}
 			display="flex"
 			alignItems="center"
-			bg="brand.50"
+			//bg="brand.50"
 		>
 			<Slider
 				defaultValue={0}
@@ -181,22 +184,34 @@ const SettingsMenu = () => {
 						display="flex"
 						justifyContent="space-between"
 						alignItems="center"
-						pr={2}
 						pb={1}
 					>
-						<Text color="text.300">Font size</Text>
+						<Text
+							textTransform="uppercase"
+							fontWeight="500"
+							fontSize="14"
+							color="text.300"
+						>
+							Font size
+						</Text>
 						<RiFontSize2 size={18} />
 					</Box>
 					<SettingsSlider value={editorFontSize} onChange={setEditorFontSize} />
 					<Box
 						display="flex"
 						justifyContent="space-between"
-						alignItems="flex-end"
-						pr={2}
+						alignItems="center"
 						pt={2}
 						pb={1}
 					>
-						<Text color="text.300">Line height</Text>
+						<Text
+							textTransform="uppercase"
+							fontWeight="500"
+							fontSize="14"
+							color="text.300"
+						>
+							Line height
+						</Text>
 						<RiLineHeight size={18} />
 					</Box>
 					<SettingsSlider
@@ -206,12 +221,18 @@ const SettingsMenu = () => {
 					<Box
 						display="flex"
 						justifyContent="space-between"
-						alignItems="flex-end"
-						pr={2}
+						alignItems="center"
 						pt={2}
 						pb={1}
 					>
-						<Text color="text.300">Background opacity</Text>
+						<Text
+							textTransform="uppercase"
+							fontWeight="500"
+							fontSize="14"
+							color="text.300"
+						>
+							Background opacity
+						</Text>
 						<IoGridOutline size={18} />
 					</Box>
 					<SettingsSlider
@@ -219,27 +240,36 @@ const SettingsMenu = () => {
 						onChange={setEditorBackgroundOpacity}
 					/>
 					<Divider h={4} />
-					<Checkbox
-						mt={4}
-						py={1}
-						px={2}
-						checked={editorShowSpelling}
-						onChange={(e) => setEditorShowSpelling(e.target.checked)}
-						flexDirection="row-reverse"
+					<FormControl
+						display="flex"
+						alignItems="center"
+						my={4}
 						justifyContent="space-between"
-						w="100%"
-						colorScheme="brand"
-						color="text.400"
-						bg="brand.50"
-						borderColor="text.100"
-						borderWidth="1px"
-						borderRadius="5px"
 					>
-						<Box display="flex" alignItems="center" gap={1}>
-							<IoLanguageOutline size={18} />
-							Show spelling
-						</Box>
-					</Checkbox>
+						<FormLabel
+							htmlFor="show-spelling"
+							mb="0"
+							display="flex"
+							gap={2}
+							alignItems="center"
+						>
+							<IoLanguageOutline size={16} color={text400} />
+							<Text
+								textTransform="uppercase"
+								fontWeight="500"
+								fontSize="14"
+								color="text.300"
+							>
+								Show spelling
+							</Text>
+						</FormLabel>
+						<Switch
+							colorScheme="brand"
+							id="show-spelling"
+							checked={editorShowSpelling}
+							onChange={(e) => setEditorShowSpelling(e.target.checked)}
+						/>
+					</FormControl>
 				</PopoverBody>
 			</PopoverContent>
 		</Popover>

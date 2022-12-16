@@ -22,6 +22,7 @@ import {
 	MenuList,
 	Divider,
 	useToken,
+	MenuIcon,
 } from "@chakra-ui/react";
 import { FORMAT_TEXT_COMMAND, LexicalEditor } from "lexical";
 import {
@@ -37,9 +38,28 @@ import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { RxBookmark, RxFontBold, RxFontItalic, RxPencil1, RxPencil2, RxUnderline } from "react-icons/rx";
-import { RiBold, RiItalic, RiMarkPenLine, RiParagraph, RiUnderline } from "react-icons/ri";
-import { IoChevronDown, IoSearch, IoLanguage, IoBookmark } from "react-icons/io5";
+import {
+	RxBookmark,
+	RxFontBold,
+	RxFontItalic,
+	RxPencil1,
+	RxPencil2,
+	RxUnderline,
+} from "react-icons/rx";
+import {
+	RiBold,
+	RiItalic,
+	RiMarkPenLine,
+	RiParagraph,
+	RiUnderline,
+} from "react-icons/ri";
+import {
+	IoChevronDown,
+	IoSearch,
+	IoLanguage,
+	IoBookmark,
+	IoCheckmark,
+} from "react-icons/io5";
 import useBearStore from "@store/store";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 
@@ -88,7 +108,7 @@ function TextFormatFloatingToolbar({
 	isUnderline: boolean;
 }): JSX.Element {
 	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
-	const [text400, brand500] = useToken("colors", ["text.400", "brand.800"]);
+	const [text400, text500, brand500] = useToken("colors", ["text.400", "text.500", "brand.800"]);
 
 	const currentBlockType = useBearStore(
 		(state) => state.editorSelectedBlockType
@@ -193,6 +213,7 @@ function TextFormatFloatingToolbar({
 		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
 	}, [editor]);
 
+	const iconSize = "18px";
 	return (
 		<Box
 			ref={popupCharStylesEditorRef}
@@ -220,7 +241,7 @@ function TextFormatFloatingToolbar({
 					},
 				}}
 			>
-				<Menu>
+				<Menu placement="bottom">
 					<MenuButton
 						as={Button}
 						rightIcon={<IoChevronDown color={text400} />}
@@ -231,30 +252,36 @@ function TextFormatFloatingToolbar({
 								<RiParagraph
 									color="#696F80"
 									style={{
-										height: "24px",
-										width: "24px",
+										height: iconSize,
+										width: iconSize,
 									}}
 								/>
 							)}
 						</Box>
 					</MenuButton>
-					<MenuList>
-						{Object.entries(blockTypes)
-							.filter(([key]) => key !== currentBlockType)
-							.map(([key, block]) => (
-								<MenuItem
-									key={key}
-									icon={
-										<Box w="18" h="18" color="#696F80">
-											{block.icon}
-										</Box>
-									}
-									color="#40454f"
-									onClick={() => block.formatter({ editor, currentBlockType })}
+					<MenuList fontSize={16}>
+						{Object.entries(blockTypes).map(([key, block]) => (
+							<MenuItem
+								py={1}
+								key={key}
+								icon={
+									<Box w={iconSize} h={iconSize} color={text400}>
+										{block.icon}
+									</Box>
+								}
+								color={text500}
+								onClick={() => block.formatter({ editor, currentBlockType })}
+							>
+								<Box
+									display="flex"
+									justifyContent="space-between"
+									alignItems="center"
 								>
 									{block.type}
-								</MenuItem>
-							))}
+									{key === currentBlockType && <IoCheckmark color={brand500} />}
+								</Box>
+							</MenuItem>
+						))}
 					</MenuList>
 				</Menu>
 				<Divider
@@ -268,8 +295,8 @@ function TextFormatFloatingToolbar({
 						<RiBold
 							color={isBold ? brand500 : text400}
 							style={{
-								height: "22px",
-								width: "22px",
+								height: iconSize,
+								width: iconSize,
 							}}
 						/>
 					}
@@ -282,8 +309,8 @@ function TextFormatFloatingToolbar({
 						<RiItalic
 							color={isItalic ? brand500 : text400}
 							style={{
-								height: "22px",
-								width: "22px",
+								height: iconSize,
+								width: iconSize,
 							}}
 						/>
 					}
@@ -296,8 +323,8 @@ function TextFormatFloatingToolbar({
 						<RiUnderline
 							color={isUnderline ? brand500 : text400}
 							style={{
-								height: "22px",
-								width: "22px",
+								height: iconSize,
+								width: iconSize,
 							}}
 						/>
 					}
@@ -312,8 +339,8 @@ function TextFormatFloatingToolbar({
 						<RiMarkPenLine
 							color={text400}
 							style={{
-								height: "22px",
-								width: "22px",
+								height: iconSize,
+								width: iconSize,
 							}}
 						/>
 					}
@@ -324,7 +351,7 @@ function TextFormatFloatingToolbar({
 							const selection = $getSelection();
 							if ($isRangeSelection(selection)) {
 								const isBackward = selection.isBackward();
-								$wrapSelectionInMarkNode(selection, isBackward, 'test');
+								$wrapSelectionInMarkNode(selection, isBackward, "test");
 							}
 						})
 					}
@@ -334,8 +361,8 @@ function TextFormatFloatingToolbar({
 						<IoLanguage
 							color="#696F80"
 							style={{
-								height: "20px",
-								width: "20px",
+								height: iconSize,
+								width: iconSize,
 							}}
 						/>
 					}
@@ -349,22 +376,23 @@ function TextFormatFloatingToolbar({
 					alignSelf="center"
 					bg="text.200"
 				/>
-				<Menu placement="bottom-start">
+				<Menu placement="bottom" size="sm">
 					<MenuButton
 						as={IconButton}
 						icon={
 							<IoSearch
 								color="#696F80"
 								style={{
-									height: "20px",
-									width: "20px",
+									height: iconSize,
+									width: iconSize,
 								}}
 							/>
 						}
 						border="none"
 					/>
-					<MenuList>
+					<MenuList fontSize={16}>
 						<MenuItem
+							py={1}
 							color="#40454f"
 							onClick={() => {
 								editor.getEditorState().read(() => {
