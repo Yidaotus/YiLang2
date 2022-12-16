@@ -47,6 +47,7 @@ const EditorPage = () => {
 				w="100%"
 				bgSize="20px 20px"
 				bgImage={`linear-gradient(to right, rgba(52, 73, 102, ${bgOpacity}) 1px, transparent 1px), linear-gradient(to bottom, rgba(52, 73, 102, ${bgOpacity}) 1px, transparent 1px); `}
+				minH="100vh"
 				display="flex"
 				flexDir="column"
 				maxH="100vh"
@@ -55,10 +56,13 @@ const EditorPage = () => {
 				ref={onRootRef}
 				sx={{
 					"-ms-overflow-style": "none",
-					"scrollbar-width": "none",
+					"scrollbar-width": {
+						base: "default",
+						md: "none",
+					},
 					"overflow-y": "scroll",
 					"&::-webkit-scrollbar": {
-						display: "none",
+						display: { base: "default", md: "none" },
 					},
 				}}
 			>
@@ -148,7 +152,8 @@ const EditorPage = () => {
 				</Box>
 				<Box display="flex" alignItems="center" justifyContent="center">
 					<Box
-						w="800px"
+						w={["100%", null, "800px"]}
+						px={[4, 4, 0]}
 						pt="2rem"
 						pb="4rem"
 						fontFamily="'Source Sans 3', 'Noto Sans JP'"
@@ -162,7 +167,7 @@ const EditorPage = () => {
 					</Box>
 				</Box>
 			</Box>
-			<Box display="flex" pl="60px" pos="absolute" w="100%">
+			<Box display={["none", null, "flex"]} pl="60px" pos="absolute" w="100%">
 				<Box flexGrow="1" bg="yellow.100" flexShrink="0" />
 				<Box w="800px" />
 				<Box

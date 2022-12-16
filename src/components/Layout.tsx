@@ -36,7 +36,7 @@ const Layout = ({ children }: LayoutProps) => {
 					height="100vh"
 					bg="#fafaf9"
 					w={sidebarOpen ? "300px" : "62px"}
-					display="flex"
+					display={["none", "flex"]}
 					flexDir="column"
 					borderRight="1px solid #E7E7E7"
 					boxShadow="0px 0px 2px 2px rgba(0, 0, 0, 0.10);"
