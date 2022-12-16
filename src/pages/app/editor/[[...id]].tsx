@@ -69,10 +69,10 @@ const EditorPage = () => {
 				<Box
 					bg="rgba(255, 255, 255, 0.9)"
 					py={6}
-					px={{ sm: 4, md: 16 }}
+					px={[4, 16]}
 					top="0"
 					zIndex="20"
-					pos="sticky"
+					pos={["static", null, "sticky"]}
 					w="100%"
 					boxShadow="0px 1px 12px rgba(0, 0, 0, 0.05)"
 				>
