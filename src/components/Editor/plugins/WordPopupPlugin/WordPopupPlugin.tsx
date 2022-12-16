@@ -95,6 +95,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			sx={{
 				minW: "150px",
 				maxW: "400px",
+				width: "max-content",
 				pos: "absolute",
 				transition:
 					"80ms transform ease-out, 100ms opacity ease-out, 0ms left linear",
