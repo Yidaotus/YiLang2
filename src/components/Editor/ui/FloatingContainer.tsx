@@ -48,7 +48,7 @@ const FloatingContainer = ({
 			flip(),
 			shiftOnHeader,
 			...(middlewares || []),
-			arrow({ element: arrowRef }),
+			arrow({ element: arrowRef, padding: 0 }),
 		],
 	});
 
@@ -59,6 +59,7 @@ const FloatingContainer = ({
 	const visible = popupReference !== null;
 
 	let arrowRotation = 0;
+	let translate = 0;
 	let arrowY = middlewareData?.arrow?.y || 0;
 	let arrowX = middlewareData?.arrow?.x || 0;
 	const height = refs.floating.current?.clientHeight || 0;
@@ -67,16 +68,20 @@ const FloatingContainer = ({
 	if (placement === "left") {
 		arrowRotation = 135;
 		arrowX += width;
+		translate = -25;
 	}
 	if (placement === "right") {
 		arrowRotation = -90;
+		translate = -25;
 	}
 	if (placement === "bottom") {
 		arrowRotation = 45;
+		translate = -50;
 	}
 	if (placement === "top") {
 		arrowRotation = -135;
 		arrowY += height;
+		translate = -50;
 	}
 
 	return (

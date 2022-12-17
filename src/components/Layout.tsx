@@ -22,6 +22,12 @@ const Layout = ({ children }: LayoutProps) => {
 	const openNewDocument = useCallback(() => {
 		router.push("/app/editor/");
 	}, [router]);
+	const openLibrary = useCallback(() => {
+		router.push("/app/documents/");
+	}, [router]);
+	const openDictionary = useCallback(() => {
+		router.push("/app/dictionary/");
+	}, [router]);
 
 	return (
 		<>
@@ -115,6 +121,7 @@ const Layout = ({ children }: LayoutProps) => {
 							}
 							variant="ghost"
 							aria-label="home"
+							onClick={openLibrary}
 						/>
 						<IconButton
 							w="100%"
@@ -130,6 +137,7 @@ const Layout = ({ children }: LayoutProps) => {
 							}
 							variant="ghost"
 							aria-label="home"
+							onClick={openDictionary}
 						/>
 					</Box>
 				</Box>

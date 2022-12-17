@@ -78,7 +78,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 
 	return createPortal(
 		<FloatingContainer popupReference={popupReference} popupPlacement="bottom">
-			{wordNode?.id && <Word id={wordNode.id} />}
+			{wordNode?.id && <Word wordId={wordNode.id} />}
 		</FloatingContainer>,
 		anchorElem
 	);

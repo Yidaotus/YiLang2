@@ -23,7 +23,8 @@ import {
 	Divider,
 	useToken,
 } from "@chakra-ui/react";
-import { FORMAT_TEXT_COMMAND, LexicalEditor } from "lexical";
+import type { LexicalEditor } from "lexical";
+import { FORMAT_TEXT_COMMAND } from "lexical";
 import {
 	$getSelection,
 	$isRangeSelection,
@@ -51,15 +52,7 @@ import {
 } from "react-icons/io5";
 import useBearStore from "@store/store";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
-import {
-	arrow,
-	flip,
-	Middleware,
-	offset,
-	ReferenceType,
-	shift,
-	useFloating,
-} from "@floating-ui/react";
+import type { Middleware, ReferenceType } from "@floating-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 
 export function getDOMRangeRect(

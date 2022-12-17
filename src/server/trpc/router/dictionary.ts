@@ -1,3 +1,4 @@
+import { Result } from "postcss";
 import { z } from "zod";
 
 import { router, publicProcedure } from "../trpc";
@@ -110,7 +111,19 @@ export const dictionaryRouter = router({
 		}
 		return null;
 	}),
-	getAll: publicProcedure.query(({ ctx }) => {
-		return ctx.prisma.word.findMany();
+	getAll: publicProcedure.query(async ({ ctx }) => {
+		const allWords = await ctx.prisma.word.findMany({
+			include: {
+				tags: {
+					include: {
+						tag: true,
+					},
+				},
+			},
+		});
+		return allWords.map(({ translation, ...rest }) => ({
+			...rest,
+			translations: translation.split(";"),
+		}));
 	}),
 });

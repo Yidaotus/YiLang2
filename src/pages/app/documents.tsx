@@ -1,5 +1,6 @@
 import type { NextPageWithLayout } from "pages/_app";
-import { ReactElement, useMemo, useState } from "react";
+import type { ReactElement } from "react";
+import { useMemo, useState } from "react";
 
 import Layout from "@components/Layout";
 import { trpc } from "@utils/trpc";
@@ -28,6 +29,7 @@ import {
 	ButtonGroup,
 	CircularProgress,
 	InputRightElement,
+	useToken,
 } from "@chakra-ui/react";
 
 import {
@@ -46,6 +48,7 @@ import {
 	IoFunnel,
 	IoArrowUp,
 	IoSwapVertical,
+	IoLibrary,
 } from "react-icons/io5";
 
 const MAX_PAGINATION_BUTTONS = 5;
@@ -53,6 +56,7 @@ const MAX_PAGINATION_BUTTONS = 5;
 type compareFn<T> = (a: T, b: T) => number;
 
 const DocumentsPage: NextPageWithLayout = () => {
+	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
 	const router = useRouter();
 	const allDocuments = trpc.document.getAll.useQuery(undefined, {
 		refetchOnWindowFocus: false,
@@ -181,22 +185,14 @@ const DocumentsPage: NextPageWithLayout = () => {
 	);
 
 	return (
-		<Box>
-			<Box display="flex" justifyContent="flex-end" gap={5}>
-				<Button
-					leftIcon={<IoAdd />}
-					px={6}
-					variant="solid"
-					bg="#1A5660"
-					color="#FFFFFF"
-					sx={{
-						"&:hover": {
-							bg: "#164750",
-						},
-					}}
-				>
-					New Document
-				</Button>
+		<Box p={[6, 8, 12]}>
+			<Box display="flex" justifyContent="flex-end" alignItems="center" gap={5}>
+				<Box pb={4} display="flex" gap={4} alignItems="center">
+					<IoLibrary size="3em" color={brand500} />
+					<Text as="h1" fontSize="3em" color="brand.500">
+						Documents
+					</Text>
+				</Box>
 				<InputGroup>
 					<InputLeftElement pointerEvents="none">
 						<IoSearch />
@@ -236,11 +232,12 @@ const DocumentsPage: NextPageWithLayout = () => {
 					<CircularProgress
 						value={((page + 1) / pageCount) * 100}
 						size="35px"
+						color="brand.500"
 					/>
 				</Box>
 			</Box>
 			<TableContainer pt={5}>
-				<Table variant="striped" size="sm">
+				<Table size="md">
 					<Thead>
 						<Tr>
 							<Th w="100px">#</Th>
@@ -289,13 +286,14 @@ const DocumentsPage: NextPageWithLayout = () => {
 							<Th w="50px"></Th>
 						</Tr>
 					</Thead>
-					<Tbody>
+					<Tbody color="text.400">
 						{pageSlice.map((entry, index) => {
 							return (
-								<Tr key={entry.id} h="55px">
+								<Tr key={entry.id}>
 									<Td>{page * pageSize + index + 1}</Td>
 									<Td>
 										<Button
+											color="brand.500"
 											variant="link"
 											onClick={() => loadDocumentFromId(entry.id)}
 										>

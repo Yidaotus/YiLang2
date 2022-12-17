@@ -1,13 +1,15 @@
 import { trpc } from "@utils/trpc";
-import { Box } from "@chakra-ui/react";
+import { Box, Link } from "@chakra-ui/react";
 import { IoChatboxEllipses } from "react-icons/io5";
 
 type WordProps = {
-	id: string;
+	wordId: string;
+	wordKey?: string;
 	border?: boolean;
+	clickHandler?: ({ key, id }: { key?: string; id: string }) => void;
 };
-const Word = ({ id, border = false }: WordProps) => {
-	const dbWord = trpc.dictionary.getWord.useQuery(id);
+const Word = ({ wordKey, wordId, border = false, clickHandler }: WordProps) => {
+	const dbWord = trpc.dictionary.getWord.useQuery(wordId);
 
 	const borderStyle = border
 		? { borderColor: "text.100", borderWidth: "1px", borderRadius: "5px" }
@@ -18,9 +20,19 @@ const Word = ({ id, border = false }: WordProps) => {
 			{dbWord.data && (
 				<>
 					<Box sx={{ display: "flex", flexDir: "column" }} p={2}>
-						<Box fontSize="1.4em" color="text.500">
-							{dbWord.data.word}
-						</Box>
+						{!!clickHandler ? (
+							<Link
+								onClick={() => clickHandler({ key: wordKey, id: wordId })}
+								fontSize="1.4em"
+								color="text.500"
+							>
+								{dbWord.data.word}
+							</Link>
+						) : (
+							<Box fontSize="1.4em" color="text.500">
+								{dbWord.data.word}
+							</Box>
+						)}
 						{dbWord.data.spelling && (
 							<Box fontSize="0.8em" color="text.300" flexGrow="1">
 								{dbWord.data.spelling}

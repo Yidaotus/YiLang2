@@ -51,7 +51,7 @@ import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import { WordNode } from "@components/Editor/nodes/WordNode";
 import Word from "@components/Word";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import { Middleware, ReferenceType } from "@floating-ui/react";
+import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 
 const clipTop: Middleware = {
@@ -124,19 +124,22 @@ const WordListPlugin = () => {
 	}, [editor]);
 
 	const highlightWord = useCallback(
-		(key: string) => {
-			editor.update(() => {
-				const nodeElem = editor.getElementByKey(key);
-				if (nodeElem) {
-					const newSelection = $createNodeSelection();
-					newSelection.add(key);
-					$setSelection(newSelection);
-					nodeElem.scrollIntoView({
-						block: "end",
-						inline: "nearest",
-					});
-				}
-			});
+		({ id, key }: { id: string; key?: string }) => {
+			if (key) {
+				editor.update(() => {
+					const nodeElem = editor.getElementByKey(key);
+					if (nodeElem) {
+						setPopupReference(null);
+						const newSelection = $createNodeSelection();
+						newSelection.add(key);
+						$setSelection(newSelection);
+						nodeElem.scrollIntoView({
+							block: "center",
+							inline: "nearest",
+						});
+					}
+				});
+			}
 		},
 		[editor]
 	);
@@ -146,7 +149,7 @@ const WordListPlugin = () => {
 			<Button
 				leftIcon={<IoLanguageOutline size={20} color={text400} />}
 				gridColumn="span 2"
-				variant="ghost"
+				variant={!!popupReference ? "solid" : "ghost"}
 				aria-label="Appereance"
 				color="text.400"
 				disabled={Object.entries(wordStore).length < 1}
@@ -173,7 +176,15 @@ const WordListPlugin = () => {
 						overflow="auto"
 					>
 						{Object.entries(wordStore).map(([nodeKey, wordId]) =>
-							wordId ? <Word border key={nodeKey} id={wordId} /> : null
+							wordId ? (
+								<Word
+									border
+									key={nodeKey}
+									wordId={wordId}
+									wordKey={nodeKey}
+									clickHandler={highlightWord}
+								/>
+							) : null
 						)}
 					</Box>
 				</FloatingContainer>
