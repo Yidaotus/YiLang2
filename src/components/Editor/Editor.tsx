@@ -5,7 +5,7 @@ import { ListNode, ListItemNode } from "@lexical/list";
 import React, { useState } from "react";
 import { createCommand } from "lexical";
 
-import { Box } from "@chakra-ui/react";
+import { Box, useBreakpointValue } from "@chakra-ui/react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
@@ -41,6 +41,7 @@ import useBearStore from "@store/store";
 import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import shallow from "zustand/shallow";
+import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -121,6 +122,16 @@ export default React.memo(function Editor({
 		lineHeight += 0.9;
 	}
 
+	const isSemiReadOnly = useBreakpointValue(
+		{
+			base: true,
+			md: false,
+		},
+		{
+			fallback: "md",
+		}
+	);
+
 	return (
 		<Box>
 			<Box
@@ -142,8 +153,10 @@ export default React.memo(function Editor({
 										},
 									}}
 									ref={onFloatingRef}
+									contentEditable={false}
 								>
-									<ContentEditable
+									<CustomContentEditable
+										semiReadOnly={isSemiReadOnly}
 										style={{
 											transition:
 												"100ms font-size ease-out, 300ms line-height ease-out",
