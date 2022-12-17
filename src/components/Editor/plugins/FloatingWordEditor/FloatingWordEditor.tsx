@@ -64,6 +64,8 @@ import {
 	IoSaveSharp,
 } from "react-icons/io5";
 import { RxExit, RxStop, RxTrash } from "react-icons/rx";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import { ReferenceType } from "@floating-ui/react";
 
 type TagOption = EditorTag;
 
@@ -82,6 +84,27 @@ type TagFormType = {
 
 function delay(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function getDOMRangeRect(
+	nativeSelection: Selection,
+	rootElement: HTMLElement
+): DOMRect {
+	const domRange = nativeSelection.getRangeAt(0);
+
+	let rect;
+
+	if (nativeSelection.anchorNode === rootElement) {
+		let inner = rootElement;
+		while (inner.firstElementChild != null) {
+			inner = inner.firstElementChild as HTMLElement;
+		}
+		rect = inner.getBoundingClientRect();
+	} else {
+		rect = domRange.getBoundingClientRect();
+	}
+
+	return rect;
 }
 
 const TagForm = ({
@@ -561,17 +584,7 @@ const WordEditorPopup = React.forwardRef<
 		);
 
 		const updateLocation = useCallback(() => {
-			const boxElem = boxRef.current;
-			if (!boxElem) return;
-
 			if (!show) {
-				setFloatingElemPosition({
-					targetRect: null,
-					floatingElem: boxElem,
-					anchorElem,
-					verticalOffset: 10,
-				});
-
 				const { container } = selectionState;
 				const elements: Array<HTMLSpanElement> = selectionState.elements;
 				const elementsLength = elements.length;
@@ -600,12 +613,6 @@ const WordEditorPopup = React.forwardRef<
 					if (range !== null) {
 						const selectionRects = createRectsFromDOMRange(editor, range);
 
-						setFloatingElemPosition({
-							targetRect: range.getBoundingClientRect(),
-							floatingElem: boxElem,
-							anchorElem,
-							verticalOffset: 10,
-						});
 						const selectionRectsLength = selectionRects.length;
 						const { container } = selectionState;
 						const elements: Array<HTMLSpanElement> = selectionState.elements;
@@ -711,48 +718,7 @@ const WordEditorPopup = React.forwardRef<
 		const dbTags = trpc.dictionary.getAllTags.useQuery(undefined);
 
 		return (
-			<Box
-				sx={{
-					pos: "absolute",
-					top: 0,
-					left: 0,
-					zIndex: 20,
-					p: 4,
-					w: "350px",
-					borderRadius: "5px",
-					border: "1px solid #e2e8f0",
-					bg: "white",
-					boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.05)",
-					display: "grid",
-					gridTemplateRows: "1fr",
-					gridTemplateColumns: "1fr",
-					transformOrigin: "center left",
-					transition: "50ms transform ease-out, 50ms opacity ease-out",
-				}}
-				ref={(r) => {
-					boxRef.current = r;
-
-					if (ref) {
-						if (typeof ref === "function") {
-							ref(r);
-						} else {
-							ref.current = r;
-						}
-					}
-				}}
-			>
-				<Box
-					pos="absolute"
-					zIndex={50}
-					w="10px"
-					h="10px"
-					left="50%"
-					top="-6px"
-					transform="scale(1.4, 0.8) translate(-50%) rotate(45deg)"
-					borderTop="1px solid #e2e8f0"
-					borderLeft="1px solid #e2e8f0"
-					bg="#FFFFFF"
-				/>
+			<Box ref={ref} p={2} w="325px">
 				<Box
 					sx={{
 						gridColumnStart: 1,
@@ -784,6 +750,8 @@ const WordEditorPopup = React.forwardRef<
 	}
 );
 
+const WordEditorPopupMemo = React.memo(WordEditorPopup);
+
 const FloatingWordEditorPlugin = ({
 	anchorElem,
 }: {
@@ -794,10 +762,13 @@ const FloatingWordEditorPlugin = ({
 	const [word, setWord] = useState("");
 	const inputRef = useRef(null);
 	const [selection, setSelection] = useState<RangeSelection | null>(null);
+	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
+		null
+	);
 
 	useOnClickOutside(inputRef, () => {
 		if (showInput && inputRef.current) {
-			setShowInput(false);
+			setPopupReference(null);
 		}
 	});
 
@@ -816,7 +787,7 @@ const FloatingWordEditorPlugin = ({
 						newWord.id
 					);
 					$insertNodes([newWordNode]);
-					setShowInput(false);
+					setPopupReference(null);
 				}
 			});
 		},
@@ -831,6 +802,22 @@ const FloatingWordEditorPlugin = ({
 				if (!$isRangeSelection(selection)) return true;
 
 				setSelection(selection);
+
+				const nativeSelection = window.getSelection();
+				const rootElement = editor.getRootElement();
+				if (
+					selection !== null &&
+					nativeSelection !== null &&
+					!nativeSelection.isCollapsed &&
+					rootElement !== null &&
+					rootElement.contains(nativeSelection.anchorNode)
+				) {
+					const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
+					setPopupReference({ getBoundingClientRect: () => rangeRect });
+				} else {
+					setPopupReference(null);
+				}
+
 				const domSelection = window.getSelection();
 				if (domSelection !== null) {
 					domSelection.removeAllRanges();
@@ -838,7 +825,6 @@ const FloatingWordEditorPlugin = ({
 
 				const word = selection.getTextContent();
 				setWord(word);
-				setShowInput(true);
 				return true;
 			},
 			COMMAND_PRIORITY_EDITOR
@@ -846,19 +832,21 @@ const FloatingWordEditorPlugin = ({
 	}, [editor]);
 
 	const cancel = useCallback(() => {
-		setShowInput(false);
+		setPopupReference(null);
 	}, []);
 
 	return createPortal(
-		<WordEditorPopup
-			word={word}
-			ref={inputRef}
-			show={showInput}
-			cancel={cancel}
-			editor={editor}
-			submitWord={insertWord}
-			anchorElem={anchorElem}
-		/>,
+		<FloatingContainer popupReference={popupReference} popupPlacement="bottom">
+			<WordEditorPopupMemo
+				word={word}
+				ref={inputRef}
+				show={popupReference !== null}
+				cancel={cancel}
+				editor={editor}
+				submitWord={insertWord}
+				anchorElem={anchorElem}
+			/>
+		</FloatingContainer>,
 		anchorElem
 	);
 };
