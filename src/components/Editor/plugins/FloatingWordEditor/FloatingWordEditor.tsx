@@ -1,4 +1,9 @@
-import type { LexicalEditor, RangeSelection } from "lexical";
+import {
+	$insertNodes,
+	$setSelection,
+	LexicalEditor,
+	RangeSelection,
+} from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -800,6 +805,9 @@ const FloatingWordEditorPlugin = ({
 		(newWord: EditorWord) => {
 			editor.update(() => {
 				if (!selection) return;
+				// other methods will modify the editorstate so if we don't first 'import' our saved selection in the editor state
+				// things will fall apart if other methods try to modify the 'current selection'
+				$setSelection(selection);
 
 				if ($isRangeSelection(selection)) {
 					const newWordNode = $createWordNode(
@@ -807,7 +815,7 @@ const FloatingWordEditorPlugin = ({
 						newWord.word,
 						newWord.id
 					);
-					selection.insertNodes([newWordNode]);
+					$insertNodes([newWordNode]);
 					setShowInput(false);
 				}
 			});
