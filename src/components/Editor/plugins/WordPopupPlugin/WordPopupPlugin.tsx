@@ -1,5 +1,4 @@
 import { $isWordNode } from "@components/Editor/nodes/WordNode";
-import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 
 import { mergeRegister } from "@lexical/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -12,13 +11,12 @@ import {
 	SELECTION_CHANGE_COMMAND,
 	COMMAND_PRIORITY_LOW,
 } from "lexical";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { IoChatboxEllipses, IoLanguageOutline } from "react-icons/io5";
-import { usePopper } from "react-popper";
+import { IoChatboxEllipses } from "react-icons/io5";
+import { arrow, flip, offset, shift, useFloating } from "@floating-ui/react";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
-	const popperE = useRef<HTMLDivElement | null>(null);
 	const [wordNode, setWordNode] = useState<{
 		id?: string;
 		word: string;
@@ -28,33 +26,20 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		enabled: !!wordNode?.id,
 	});
 	const [editor] = useLexicalComposerContext();
-	const [referenceElement, setReferenceElement] = useState<HTMLElement | null>(
-		null
-	);
-	const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
-	const [arrowElement, setArrowElement] = useState<HTMLElement | null>(null);
-	const { styles, attributes, update } = usePopper(
-		referenceElement,
-		popperElement,
-		{
-			placement: "bottom",
-			modifiers: [
-				{ name: "arrow", options: { element: arrowElement } },
-				{
-					name: "offset",
-					options: {
-						offset: [0, 5],
-					},
-				},
-			],
-		}
-	);
+
+	const [popupVisible, setPopupVisible] = useState(false);
+	const arrowRef = useRef(null);
+	const { x, y, reference, floating, strategy, placement } = useFloating({
+		placement: "bottom",
+		middleware: [offset(10), shift(), arrow({ element: arrowRef }), flip()],
+	});
 
 	const updatePopup = useCallback(() => {
 		const selection = $getSelection();
 
 		if (!$isNodeSelection(selection)) {
-			setReferenceElement(null);
+			setPopupVisible(false);
+			reference(null);
 			return;
 		}
 
@@ -72,10 +57,8 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		const domPos = editor.getElementByKey(target.getKey());
 
 		if (!domPos) return;
-		const clientRect = domPos.getBoundingClientRect();
-
-		console.debug({ domPos });
-		setReferenceElement(domPos);
+		reference(domPos);
+		setPopupVisible(true);
 
 		/*
 		setFloatingElemPosition({
@@ -85,7 +68,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			verticalOffset: 8,
 		});
 	*/
-	}, [editor, update]);
+	}, [editor, reference]);
 
 	useEffect(() => {
 		document.addEventListener("resize", updatePopup);
@@ -112,19 +95,23 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 
 	return createPortal(
 		<Box
-			ref={setPopperElement}
-			style={styles.popper}
-			{...attributes.popper}
-			userSelect={referenceElement ? "inherit" : "none"}
-			pointerEvents={referenceElement ? "inherit" : "none"}
+			ref={floating}
+			style={{
+				position: strategy,
+				top: y ?? 0,
+				left: x ?? 0,
+				width: "max-content",
+			}}
+			userSelect={popupVisible ? "inherit" : "none"}
+			pointerEvents={popupVisible ? "inherit" : "none"}
 			width={["100vw", null, "max-content"]}
 			px={[2, null, 0]}
 		>
 			<Box
 				minW={["unset", null, "150px"]}
 				maxW={["unset", null, "400px"]}
-				opacity={referenceElement ? 1 : 0}
-				transform={referenceElement ? "scale(1)" : "scale(0.9)"}
+				opacity={popupVisible ? 1 : 0}
+				transform={popupVisible ? "scale(1)" : "scale(0.9)"}
 				sx={{
 					transition:
 						"100ms transform ease-out, 100ms opacity ease-out, 0ms left linear",
@@ -135,15 +122,16 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 					boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.05)",
 				}}
 			>
-				<Box style={styles.arrow} ref={setArrowElement}>
+				<Box ref={arrowRef} zIndex={20}>
 					<Box
 						pos="absolute"
-						zIndex={50}
 						w="10px"
 						h="10px"
 						left="50%"
-						top="-6px"
-						transform="scale(1.4, 0.8) translate(-50%) rotate(45deg)"
+						bottom={placement === "top" ? "-2px" : undefined}
+						top={placement === "bottom" ? "-10px" : undefined}
+						transform={`scale(1.4, 0.8) translate(-50%, 50%)
+						 ${placement === "top" ? "rotate(-135deg)" : "rotate(45deg)"}`}
 						borderTop="1px solid #e2e8f0"
 						borderLeft="1px solid #e2e8f0"
 						bg="#FFFFFF"
@@ -189,6 +177,8 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 						display="flex"
 						borderColor="text.100"
 						borderWidth="1px 0px 0px 0px"
+						pos="relative"
+						zIndex={30}
 					>
 						<IoChatboxEllipses color="text.400" size="18" />
 						{dbWord.data.comment}

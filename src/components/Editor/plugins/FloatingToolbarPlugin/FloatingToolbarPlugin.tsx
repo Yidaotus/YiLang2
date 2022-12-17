@@ -22,7 +22,6 @@ import {
 	MenuList,
 	Divider,
 	useToken,
-	MenuIcon,
 } from "@chakra-ui/react";
 import { FORMAT_TEXT_COMMAND, LexicalEditor } from "lexical";
 import {
@@ -36,16 +35,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
-import { setFloatingElemPosition } from "@components/Editor/utils/setFloatingPosition";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import {
-	RxBookmark,
-	RxFontBold,
-	RxFontItalic,
-	RxPencil1,
-	RxPencil2,
-	RxUnderline,
-} from "react-icons/rx";
 import {
 	RiBold,
 	RiItalic,
@@ -57,11 +47,18 @@ import {
 	IoChevronDown,
 	IoSearch,
 	IoLanguage,
-	IoBookmark,
 	IoCheckmark,
 } from "react-icons/io5";
 import useBearStore from "@store/store";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
+import {
+	arrow,
+	flip,
+	Middleware,
+	offset,
+	shift,
+	useFloating,
+} from "@floating-ui/react";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -108,7 +105,11 @@ function TextFormatFloatingToolbar({
 	isUnderline: boolean;
 }): JSX.Element {
 	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
-	const [text400, text500, brand500] = useToken("colors", ["text.400", "text.500", "brand.800"]);
+	const [text400, text500, brand500] = useToken("colors", [
+		"text.400",
+		"text.500",
+		"brand.800",
+	]);
 
 	const currentBlockType = useBearStore(
 		(state) => state.editorSelectedBlockType
@@ -127,87 +128,8 @@ function TextFormatFloatingToolbar({
 	};
 
 	// pos
-	const updateTextFormatFloatingToolbar = useCallback(() => {
-		const selection = $getSelection();
-
-		const popupCharStylesEditorElem = popupCharStylesEditorRef.current;
-		const nativeSelection = window.getSelection();
-
-		if (popupCharStylesEditorElem === null) {
-			return;
-		}
-
-		const rootElement = editor.getRootElement();
-		if (
-			selection !== null &&
-			nativeSelection !== null &&
-			!nativeSelection.isCollapsed &&
-			rootElement !== null &&
-			rootElement.contains(nativeSelection.anchorNode)
-		) {
-			const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
-			setFloatingElemPosition({
-				targetRect: rangeRect,
-				floatingElem: popupCharStylesEditorElem,
-				anchorElem,
-				verticalOffset: -45,
-				pos: "top",
-			});
-		} else {
-			setFloatingElemPosition({
-				targetRect: null,
-				floatingElem: popupCharStylesEditorElem,
-				anchorElem,
-				verticalOffset: -45,
-				pos: "top",
-			});
-		}
-	}, [editor, anchorElem]);
 
 	// Update pos on resize
-	useEffect(() => {
-		const scrollerElem = anchorElem.parentElement;
-
-		const update = () => {
-			editor.getEditorState().read(() => {
-				updateTextFormatFloatingToolbar();
-			});
-		};
-
-		window.addEventListener("resize", update);
-		if (scrollerElem) {
-			scrollerElem.addEventListener("scroll", update);
-		}
-
-		return () => {
-			window.removeEventListener("resize", update);
-			if (scrollerElem) {
-				scrollerElem.removeEventListener("scroll", update);
-			}
-		};
-	}, [editor, updateTextFormatFloatingToolbar, anchorElem]);
-
-	useEffect(() => {
-		editor.getEditorState().read(() => {
-			updateTextFormatFloatingToolbar();
-		});
-		return mergeRegister(
-			editor.registerUpdateListener(({ editorState }) => {
-				editorState.read(() => {
-					updateTextFormatFloatingToolbar();
-				});
-			}),
-
-			editor.registerCommand(
-				SELECTION_CHANGE_COMMAND,
-				() => {
-					updateTextFormatFloatingToolbar();
-					return false;
-				},
-				COMMAND_PRIORITY_LOW
-			)
-		);
-	}, [editor, updateTextFormatFloatingToolbar]);
 
 	const showWordEditor = useCallback(() => {
 		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
@@ -215,21 +137,7 @@ function TextFormatFloatingToolbar({
 
 	const iconSize = "18px";
 	return (
-		<Box
-			ref={popupCharStylesEditorRef}
-			sx={{
-				transition:
-					"80ms transform ease-out, 50ms opacity ease-in-out, 0ms left linear",
-				pos: "absolute",
-				transformOrigin: "bottom left",
-				zIndex: 10,
-				display: "flex",
-				borderRadius: "8px",
-				bg: "white",
-				border: "1px solid #e2e8f0",
-				boxShadow: "0px 0px 4px 4px rgba(0, 0, 0, 0.05)",
-			}}
-		>
+		<Box pos="relative" zIndex={50} display="flex" >
 			<ButtonGroup
 				size="sm"
 				isAttached
@@ -421,6 +329,23 @@ function TextFormatFloatingToolbar({
 	);
 }
 
+const TextFormatFloatingToolbarMemo = React.memo(TextFormatFloatingToolbar);
+
+const shiftOnHeader: Middleware = {
+	name: "shiftByOnePixel",
+	fn({ elements }) {
+		const elemY = elements.reference.getBoundingClientRect().y;
+		if (elemY < 150) {
+			return {
+				reset: {
+					placement: "bottom",
+				},
+			};
+		}
+		return {};
+	},
+};
+
 function useFloatingTextFormatToolbar(
 	editor: LexicalEditor,
 	anchorElem: HTMLElement
@@ -434,6 +359,63 @@ function useFloatingTextFormatToolbar(
 	const [isSubscript, setIsSubscript] = useState(false);
 	const [isSuperscript, setIsSuperscript] = useState(false);
 	const [isCode, setIsCode] = useState(false);
+	const [popupVisible, setPopupVisible] = useState(false);
+
+	const arrowRef = useRef(null);
+	const { x, y, reference, floating, strategy, placement } = useFloating({
+		placement: "top",
+		middleware: [
+			offset(10),
+			shift(),
+			arrow({ element: arrowRef }),
+			flip(),
+			shiftOnHeader,
+		],
+	});
+
+	const updateTextFormatFloatingToolbar = useCallback(() => {
+		const selection = $getSelection();
+
+		const nativeSelection = window.getSelection();
+
+		const rootElement = editor.getRootElement();
+		if (
+			selection !== null &&
+			nativeSelection !== null &&
+			!nativeSelection.isCollapsed &&
+			rootElement !== null &&
+			rootElement.contains(nativeSelection.anchorNode)
+		) {
+			const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
+			reference({ getBoundingClientRect: () => rangeRect });
+			setPopupVisible(true);
+		} else {
+			setPopupVisible(false);
+			reference(null);
+		}
+	}, [editor, reference]);
+
+	useEffect(() => {
+		editor.getEditorState().read(() => {
+			updateTextFormatFloatingToolbar();
+		});
+		return mergeRegister(
+			editor.registerUpdateListener(({ editorState }) => {
+				editorState.read(() => {
+					updateTextFormatFloatingToolbar();
+				});
+			}),
+
+			editor.registerCommand(
+				SELECTION_CHANGE_COMMAND,
+				() => {
+					updateTextFormatFloatingToolbar();
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
+			)
+		);
+	}, [editor, updateTextFormatFloatingToolbar]);
 
 	const updatePopup = useCallback(() => {
 		editor.getEditorState().read(() => {
@@ -510,18 +492,62 @@ function useFloatingTextFormatToolbar(
 	}, [editor, updatePopup]);
 
 	return createPortal(
-		<TextFormatFloatingToolbar
-			editor={editor}
-			anchorElem={anchorElem}
-			isLink={isLink}
-			isBold={isBold}
-			isItalic={isItalic}
-			isStrikethrough={isStrikethrough}
-			isSubscript={isSubscript}
-			isSuperscript={isSuperscript}
-			isUnderline={isUnderline}
-			isCode={isCode}
-		/>,
+		<Box
+			ref={floating}
+			userSelect={popupVisible ? "inherit" : "none"}
+			pointerEvents={popupVisible ? "inherit" : "none"}
+			width={["100vw", null, "max-content"]}
+			px={[2, null, 0]}
+			style={{
+				position: strategy,
+				top: y ?? 0,
+				left: x ?? 0,
+				width: "max-content",
+			}}
+		>
+			<Box
+				opacity={popupVisible ? 1 : 0}
+				transform={popupVisible ? "scale(1)" : "scale(0.9)"}
+				sx={{
+					transition:
+						"100ms transform ease-out, 100ms opacity ease-out, 0ms left linear",
+					zIndex: 30,
+					borderRadius: "5px",
+					bg: "white",
+					border: "1px solid #e2e8f0",
+					boxShadow: "0px 0px 8px 4px rgba(0, 0, 0, 0.05)",
+				}}
+			>
+				<Box ref={arrowRef}>
+					<Box
+						pos="absolute"
+						zIndex={50}
+						w="10px"
+						h="10px"
+						left="50%"
+						bottom={placement === "top" ? "-2px" : undefined}
+						top={placement === "bottom" ? "-10px" : undefined}
+						transform={`scale(1.4, 0.8) translate(-50%, 50%)
+						 ${placement === "top" ? "rotate(-135deg)" : "rotate(45deg)"}`}
+						borderTop="1px solid #e2e8f0"
+						borderLeft="1px solid #e2e8f0"
+						bg="#FFFFFF"
+					/>
+				</Box>
+				<TextFormatFloatingToolbarMemo
+					editor={editor}
+					anchorElem={anchorElem}
+					isLink={isLink}
+					isBold={isBold}
+					isItalic={isItalic}
+					isStrikethrough={isStrikethrough}
+					isSubscript={isSubscript}
+					isSuperscript={isSuperscript}
+					isUnderline={isUnderline}
+					isCode={isCode}
+				/>
+			</Box>
+		</Box>,
 		anchorElem
 	);
 }
