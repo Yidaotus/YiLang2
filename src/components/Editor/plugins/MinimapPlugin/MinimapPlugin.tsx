@@ -2,7 +2,7 @@ import { $isImageNode } from "@components/Editor/nodes/ImageNode";
 import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { Box } from "@chakra-ui/react";
+import { Box, useToken } from "@chakra-ui/react";
 import {
 	$getRoot,
 	$getSelection,
@@ -29,6 +29,7 @@ type MinimapPluginProps = {
 	sidebarPortal: HTMLElement;
 };
 const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
+	const [brandColor] = useToken("colors", ["brand.100"]);
 	const scrollIndicatorRef = useRef<HTMLDivElement>(null);
 	const scrollIndicatorTopRef = useRef<HTMLDivElement>(null);
 	const scrollIndicatorBottomRef = useRef<HTMLDivElement>(null);
@@ -43,6 +44,63 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	});
 	const height = 200;
 	const width = 100;
+
+	const updateMinimap = useCallback(() => {
+		const scrollerElem = scrollIndicatorRef.current;
+		if (!scrollerElem) {
+			return;
+		}
+
+		const contentHeight = anchorElem.scrollHeight;
+		const clientHeight = anchorElem.offsetHeight;
+
+		const scrollerHeight = (clientHeight / contentHeight) * height;
+
+		const scrollTop = anchorElem.scrollTop;
+		const pos = scrollTop / contentHeight;
+
+		if (contentHeight <= clientHeight) {
+			scrollerElem.style.transform = "translateY(0px)";
+			scrollerElem.style.height = "0px";
+			scrollerElem.style.width = "0px";
+		} else {
+			scrollerElem.style.transform = `translateY(${pos * height}px)`;
+			scrollerElem.style.height = `${scrollerHeight}px`;
+			scrollerElem.style.width = "100%";
+		}
+
+		const scrollerTopHeight = pos * height;
+
+		const scrollerBottomHeight = height - scrollerTopHeight - scrollerHeight;
+
+		if (scrollIndicatorTopRef.current) {
+			scrollIndicatorTopRef.current.style.height = `${scrollerTopHeight}px`;
+		}
+		if (scrollIndicatorBottomRef.current) {
+			scrollIndicatorBottomRef.current.style.height = `${scrollerBottomHeight}px`;
+		}
+
+		const scrollBackgroundElem = scrollBackgroundRef.current;
+		const scrollIndicatorElem = scrollIndicatorRef.current;
+		if (scrollBackgroundElem && scrollIndicatorElem) {
+			const anchorScrollTop = anchorElem.scrollTop;
+			const anchorScrollHeight = anchorElem.scrollHeight;
+			const anchorDeltaScroll =
+				anchorScrollTop / (anchorScrollHeight - anchorElem.clientHeight);
+
+			const scrollerScrollHeight = scrollBackgroundElem.scrollHeight;
+			const scrollTreshhold = scrollIndicatorElem.clientHeight / 4;
+			const scrollerDelta = Math.round(
+				anchorDeltaScroll *
+					(scrollerScrollHeight -
+						scrollBackgroundElem.clientHeight +
+						scrollTreshhold * 2) -
+					scrollTreshhold
+			);
+
+			scrollBackgroundElem.scrollTo({ top: scrollerDelta });
+		}
+	}, [anchorElem]);
 
 	const indexEditorToOutline = useCallback(() => {
 		editor.getEditorState().read(() => {
@@ -123,8 +181,8 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 			y = 0;
 			for (const topLevelChild of children) {
 				if (selectedKeys.includes(topLevelChild.getKey())) {
-					ctx.fillStyle = "#188B7D";
-					ctx.strokeStyle = "#188B7D";
+					ctx.fillStyle = brandColor;
+					ctx.strokeStyle = brandColor;
 				} else {
 					ctx.fillStyle = "#A9AfC0";
 					ctx.strokeStyle = "#A9AfC0";
@@ -250,6 +308,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 	useEffect(() => {
 		return mergeRegister(
 			editor.registerUpdateListener(indexEditorToOutline),
+			editor.registerUpdateListener(updateMinimap),
 
 			editor.registerCommand(
 				SELECTION_CHANGE_COMMAND,
@@ -260,64 +319,7 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 				COMMAND_PRIORITY_NORMAL
 			)
 		);
-	}, [editor, indexEditorToOutline]);
-
-	const updateMinimap = useCallback(() => {
-		const scrollerElem = scrollIndicatorRef.current;
-		if (!scrollerElem) {
-			return;
-		}
-
-		const contentHeight = anchorElem.scrollHeight;
-		const clientHeight = anchorElem.offsetHeight;
-
-		const scrollerHeight = (clientHeight / contentHeight) * height;
-
-		const scrollTop = anchorElem.scrollTop;
-		const pos = scrollTop / contentHeight;
-
-		if (contentHeight <= clientHeight) {
-			scrollerElem.style.transform = "translateY(0px)";
-			scrollerElem.style.height = "0px";
-			scrollerElem.style.width = "0px";
-		} else {
-			scrollerElem.style.transform = `translateY(${pos * height}px)`;
-			scrollerElem.style.height = `${scrollerHeight}px`;
-			scrollerElem.style.width = "100%";
-		}
-
-		const scrollerTopHeight = pos * height;
-
-		const scrollerBottomHeight = height - scrollerTopHeight - scrollerHeight;
-
-		if (scrollIndicatorTopRef.current) {
-			scrollIndicatorTopRef.current.style.height = `${scrollerTopHeight}px`;
-		}
-		if (scrollIndicatorBottomRef.current) {
-			scrollIndicatorBottomRef.current.style.height = `${scrollerBottomHeight}px`;
-		}
-
-		const scrollBackgroundElem = scrollBackgroundRef.current;
-		const scrollIndicatorElem = scrollIndicatorRef.current;
-		if (scrollBackgroundElem && scrollIndicatorElem) {
-			const anchorScrollTop = anchorElem.scrollTop;
-			const anchorScrollHeight = anchorElem.scrollHeight;
-			const anchorDeltaScroll =
-				anchorScrollTop / (anchorScrollHeight - anchorElem.clientHeight);
-
-			const scrollerScrollHeight = scrollBackgroundElem.scrollHeight;
-			const scrollTreshhold = scrollIndicatorElem.clientHeight / 4;
-			const scrollerDelta = Math.round(
-				anchorDeltaScroll *
-					(scrollerScrollHeight -
-						scrollBackgroundElem.clientHeight +
-						scrollTreshhold * 2) -
-					scrollTreshhold
-			);
-
-			scrollBackgroundElem.scrollTo({ top: scrollerDelta });
-		}
-	}, [anchorElem]);
+	}, [editor, indexEditorToOutline, updateMinimap]);
 
 	const dragStart = useCallback(
 		(e: MouseEvent | TouchEvent) => {
