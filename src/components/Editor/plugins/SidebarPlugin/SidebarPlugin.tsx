@@ -27,9 +27,15 @@ import { Box } from "@chakra-ui/react";
 import { $isHeadingNode } from "@lexical/rich-text";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
-import { $getRoot } from "lexical";
+import {
+	$createNodeSelection,
+	$getNodeByKey,
+	$getRoot,
+	$setSelection,
+	LineBreakNode,
+} from "lexical";
 import { useRouter } from "next/router";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
 	IoChevronDown,
@@ -42,6 +48,139 @@ import { RiFontSize2, RiLineHeight, RiParagraph } from "react-icons/ri";
 import useBearStore from "@store/store";
 import shallow from "zustand/shallow";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
+import { WordNode } from "@components/Editor/nodes/WordNode";
+import Word from "@components/Word";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import { Middleware, ReferenceType } from "@floating-ui/react";
+import useOnClickOutside from "@ui/hooks/useOnClickOutside";
+
+const clipTop: Middleware = {
+	name: "clipToTop",
+	fn({ y }) {
+		if (y < -230) {
+			return {
+				y: y + (-230 - y),
+			};
+		}
+		return {};
+	},
+};
+
+const WordListPlugin = () => {
+	const [text400] = useToken("colors", ["text.400"]);
+	const [editor] = useLexicalComposerContext();
+	const [wordStore, setWordStore] = useState<
+		Record<string, string | undefined>
+	>({});
+	const buttonRef = useRef(null);
+	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
+		null
+	);
+	const floatingRef = useRef(null);
+	useOnClickOutside(floatingRef, () => {
+		setPopupReference(null);
+	});
+
+	useEffect(() => {
+		return editor.registerNodeTransform(LineBreakNode, (node) => {
+			node.remove();
+		});
+	}, [editor]);
+
+	useEffect(() => {
+		/*
+			editor.registerDecoratorListener<any>((decorators) => {
+				setWordStore(
+					Object.entries(decorators)
+						.filter(([key, value]) => value?.props?.word)
+						.map(([key, value]) => ({
+							key,
+							text: value.props.word,
+						}))
+				);
+			})
+			*/
+		// Fixed in 0.6.5 see https://github.com/facebook/lexical/issues/3490
+		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
+			for (const [nodeKey, mutation] of mutatedNodes) {
+				if (mutation === "created") {
+					editor.getEditorState().read(() => {
+						const wordNode = $getNodeByKey(nodeKey) as WordNode;
+						const wordId = wordNode.getId();
+						setWordStore((currentStore) => ({
+							...currentStore,
+							[nodeKey]: wordId,
+						}));
+					});
+				}
+				if (mutation === "destroyed") {
+					setWordStore((currentStore) => {
+						delete currentStore[nodeKey];
+						return { ...currentStore };
+					});
+				}
+			}
+		});
+	}, [editor]);
+
+	const highlightWord = useCallback(
+		(key: string) => {
+			editor.update(() => {
+				const nodeElem = editor.getElementByKey(key);
+				if (nodeElem) {
+					const newSelection = $createNodeSelection();
+					newSelection.add(key);
+					$setSelection(newSelection);
+					nodeElem.scrollIntoView({
+						block: "end",
+						inline: "nearest",
+					});
+				}
+			});
+		},
+		[editor]
+	);
+
+	return (
+		<>
+			<Button
+				leftIcon={<IoLanguageOutline size={20} color={text400} />}
+				gridColumn="span 2"
+				variant="ghost"
+				aria-label="Appereance"
+				color="text.400"
+				disabled={Object.entries(wordStore).length < 1}
+				ref={buttonRef}
+				onClick={() =>
+					setPopupReference(popupReference ? null : buttonRef.current)
+				}
+			>
+				Words
+			</Button>
+			<div ref={floatingRef}>
+				<FloatingContainer
+					popupPlacement="left"
+					popupReference={popupReference}
+					middlewares={[clipTop]}
+				>
+					<Box
+						display="flex"
+						flexDir="column"
+						gap={4}
+						maxW="350px"
+						p={2}
+						maxH="80vh"
+						overflow="auto"
+					>
+						{Object.entries(wordStore).map(([nodeKey, wordId]) =>
+							wordId ? <Word border key={nodeKey} id={wordId} /> : null
+						)}
+					</Box>
+				</FloatingContainer>
+			</div>
+		</>
+	);
+};
 
 type SettingsSliderProps = {
 	value: number;
@@ -345,6 +484,13 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				aria-label="Bold"
 				onClick={saveDocument}
 			/>
+			<Divider
+				borderWidth="2px"
+				borderRadius="3px"
+				mb="0.5rem"
+				gridColumn="span 2"
+			/>
+			<WordListPlugin />
 		</Box>,
 		sidebarPortal
 	);

@@ -1,11 +1,8 @@
 import type { Klass, LexicalCommand, LexicalNode } from "lexical";
-import { LineBreakNode } from "lexical";
 
-import { $getNodeByKey } from "lexical";
 import { ListNode, ListItemNode } from "@lexical/list";
-import { $createNodeSelection, $setSelection } from "lexical";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { createCommand } from "lexical";
 
 import { Box } from "@chakra-ui/react";
@@ -31,7 +28,6 @@ import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/Flo
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
@@ -75,83 +71,6 @@ function onError(error: Error) {
 
 export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
 	createCommand("SHOW_FLOATING_WORD_EDITOR_COMMAN");
-
-const WordListPlugin = () => {
-	const [editor] = useLexicalComposerContext();
-	const [wordStore, setWordStore] = useState<Record<string, string>>({});
-
-	useEffect(() => {
-		return editor.registerNodeTransform(LineBreakNode, (node) => {
-			node.remove();
-		});
-	}, [editor]);
-
-	useEffect(() => {
-		/*
-			editor.registerDecoratorListener<any>((decorators) => {
-				setWordStore(
-					Object.entries(decorators)
-						.filter(([key, value]) => value?.props?.word)
-						.map(([key, value]) => ({
-							key,
-							text: value.props.word,
-						}))
-				);
-			})
-			*/
-		// Fixed in 0.6.5 see https://github.com/facebook/lexical/issues/3490
-		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
-			for (const [nodeKey, mutation] of mutatedNodes) {
-				if (mutation === "created") {
-					editor.getEditorState().read(() => {
-						const wordNode = $getNodeByKey(nodeKey) as WordNode;
-						const wordText = wordNode.getWord();
-						setWordStore((currentStore) => ({
-							...currentStore,
-							[nodeKey]: wordText,
-						}));
-					});
-				}
-				if (mutation === "destroyed") {
-					setWordStore((currentStore) => {
-						delete currentStore[nodeKey];
-						return { ...currentStore };
-					});
-				}
-			}
-		});
-	}, [editor]);
-
-	const highlightWord = useCallback(
-		(key: string) => {
-			editor.update(() => {
-				const nodeElem = editor.getElementByKey(key);
-				if (nodeElem) {
-					const newSelection = $createNodeSelection();
-					newSelection.add(key);
-					$setSelection(newSelection);
-					nodeElem.scrollIntoView({
-						block: "end",
-						inline: "nearest",
-					});
-				}
-			});
-		},
-		[editor]
-	);
-
-	return (
-		<div>
-			<ul>
-				{Object.entries(wordStore).map(([nodeKey, word]) => (
-					<li key={nodeKey}>
-						<button onClick={() => highlightWord(nodeKey)}>{word}</button>
-					</li>
-				))}
-			</ul>
-		</div>
-	);
-};
 
 type EditorProps = {
 	documentId?: string;
@@ -243,7 +162,6 @@ export default React.memo(function Editor({
 						<FetchDocumentPlugin id={documentId} />
 						<TabIndentationPlugin />
 						<ListMaxIndentLevelPlugin maxDepth={4} />
-						<WordListPlugin />
 						<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
 						<ListPlugin />
 						<ImagesPlugin />
