@@ -16,9 +16,15 @@ type LayoutProps = {
 const Layout = ({ children }: LayoutProps) => {
 	const router = useRouter();
 	const activeRoute = router.pathname.split("/").pop();
-	const [text400, brand500] = useToken("colors", ["text.400", "brand.800"]);
+	const [iconInactive, iconActive] = useToken("colors", [
+		"text.300",
+		"brand.500",
+	]);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
+	const openHome = useCallback(() => {
+		router.push("/app/editor/");
+	}, [router]);
 	const openNewDocument = useCallback(() => {
 		router.push("/app/editor/");
 	}, [router]);
@@ -52,7 +58,7 @@ const Layout = ({ children }: LayoutProps) => {
 					px={sidebarOpen ? 3 : 1}
 				>
 					<IconButton
-						color={text400}
+						color={iconInactive}
 						pos="absolute"
 						variant="link"
 						top="20px"
@@ -97,7 +103,7 @@ const Layout = ({ children }: LayoutProps) => {
 							h="48px"
 							icon={
 								<IoHomeOutline
-									color="#344966"
+									color={activeRoute === "editor" ? iconActive : iconInactive}
 									style={{
 										width: "22px",
 										height: "22px",
@@ -106,13 +112,16 @@ const Layout = ({ children }: LayoutProps) => {
 							}
 							variant="ghost"
 							aria-label="home"
+							onClick={openHome}
 						/>
 						<IconButton
 							w="100%"
 							h="48px"
 							icon={
 								<IoLibraryOutline
-									color="#8F93A3"
+									color={
+										activeRoute === "documents" ? iconActive : iconInactive
+									}
 									style={{
 										width: "22px",
 										height: "22px",
@@ -128,7 +137,9 @@ const Layout = ({ children }: LayoutProps) => {
 							h="48px"
 							icon={
 								<IoLanguageOutline
-									color="#8F93A3"
+									color={
+										activeRoute === "dictionary" ? iconActive : iconInactive
+									}
 									style={{
 										width: "22px",
 										height: "22px",

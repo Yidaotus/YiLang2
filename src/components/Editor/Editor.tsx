@@ -10,7 +10,6 @@ import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";

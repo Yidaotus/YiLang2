@@ -145,9 +145,18 @@ const DictionaryPage: NextPageWithLayout = () => {
 	);
 
 	return (
-		<Box p={[6, 8, 12]}>
-			<Box display="flex" justifyContent="flex-end" alignItems="center" gap={5}>
-				<Box pb={4} display="flex" gap={4} alignItems="center">
+		<Box px={[6, 8, 12]} maxH="100vh" overflow="auto" pos="relative">
+			<Box
+				display="flex"
+				justifyContent="flex-end"
+				alignItems="center"
+				gap={5}
+				pos="sticky"
+				top="0"
+				bg="white"
+				pt={4}
+			>
+				<Box pb={4} display="flex" gap={4} alignItems="center" zIndex={50}>
 					<RiTranslate size="3em" color={brand500} />
 					<Text as="h1" fontSize="3em" color="brand.500">
 						Dictionary
