@@ -15,6 +15,7 @@ import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Word from "@components/Word";
+import { Box } from "@chakra-ui/react";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const [wordNode, setWordNode] = useState<{
@@ -77,8 +78,15 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	}, [editor, updatePopup]);
 
 	return createPortal(
-		<FloatingContainer popupReference={popupReference} popupPlacement="bottom">
-			{wordNode?.id && <Word wordId={wordNode.id} />}
+		<FloatingContainer
+			popupReference={popupReference}
+			popupPlacement="bottom"
+			minW={["unset", null, "150px"]}
+			maxW={["unset", null, "400px"]}
+			width={["96vw", null, "max-content"]}
+			mx={[2, null, 0]}
+		>
+			<Box>{wordNode?.id && <Word wordId={wordNode.id} />}</Box>
 		</FloatingContainer>,
 		anchorElem
 	);
