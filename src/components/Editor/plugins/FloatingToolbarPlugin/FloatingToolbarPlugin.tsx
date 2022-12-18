@@ -559,7 +559,11 @@ function useFloatingTextFormatToolbar(
 	}, [editor, updatePopup]);
 
 	return createPortal(
-		<FloatingContainer popupReference={popupReference} popupPlacement="top">
+		<FloatingContainer
+			popupReference={popupReference}
+			popupPlacement="top"
+			showArrow
+		>
 			<TextFormatFloatingToolbarMemo
 				editor={editor}
 				anchorElem={anchorElem}

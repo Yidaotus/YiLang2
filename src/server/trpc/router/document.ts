@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { router, publicProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 
 export const documentRouter = router({
-	upsertDocument: publicProcedure
+	upsertDocument: protectedProcedure
 		.input(
 			z.object({
 				title: z.string().optional(),
@@ -34,7 +34,7 @@ export const documentRouter = router({
 			}
 			return dbDocument;
 		}),
-	updateDocument: publicProcedure
+	updateDocument: protectedProcedure
 		.input(
 			z.object({
 				id: z.string(),
@@ -61,10 +61,10 @@ export const documentRouter = router({
 				},
 			});
 		}),
-	getById: publicProcedure.input(String).query(({ ctx, input }) => {
+	getById: protectedProcedure.input(String).query(({ ctx, input }) => {
 		return ctx.prisma.document.findUnique({ where: { id: input } });
 	}),
-	getAll: publicProcedure.query(({ ctx }) => {
+	getAll: protectedProcedure.query(({ ctx }) => {
 		return ctx.prisma.document.findMany();
 	}),
 });

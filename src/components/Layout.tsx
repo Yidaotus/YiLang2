@@ -1,4 +1,5 @@
 import { Box, Button, IconButton, useToken } from "@chakra-ui/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useState } from "react";
@@ -34,6 +35,8 @@ const Layout = ({ children }: LayoutProps) => {
 	const openDictionary = useCallback(() => {
 		router.push("/app/dictionary/");
 	}, [router]);
+
+	const { data: session } = useSession();
 
 	return (
 		<>
@@ -150,6 +153,18 @@ const Layout = ({ children }: LayoutProps) => {
 							aria-label="home"
 							onClick={openDictionary}
 						/>
+
+						{!!session ? (
+							<>
+								Signed in as {session.user?.email} <br />
+								<button onClick={() => signOut()}>Sign out</button>
+							</>
+						) : (
+							<>
+								Not signed in <br />
+								<button onClick={() => signIn()}>Sign in</button>
+							</>
+						)}
 					</Box>
 				</Box>
 				<Box w="100%">{children}</Box>

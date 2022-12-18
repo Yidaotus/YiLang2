@@ -85,7 +85,6 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 			editor.getEditorState().read(() => {
 				const node = $getNodeByKey(selectedBlock.key);
 				if (node && $isImageNode(node)) {
-					console.debug("Getting source");
 					setImageSourceInput(node.getSrc());
 				} else {
 					setSourceEditorVisible(false);

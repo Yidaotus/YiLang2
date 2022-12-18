@@ -85,6 +85,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			maxW={["unset", null, "400px"]}
 			mx={[2, null, 0]}
 			stretchOnMobile
+			showArrow
 		>
 			<Box>{wordNode?.id && <Word wordId={wordNode.id} />}</Box>
 		</FloatingContainer>,

@@ -53,6 +53,7 @@ import Word from "@components/Word";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -165,6 +166,7 @@ const WordListPlugin = () => {
 					popupPlacement="left"
 					popupReference={popupReference}
 					middlewares={[clipTop]}
+					showArrow
 				>
 					<Box
 						display="flex"
@@ -433,6 +435,7 @@ type SidebarPluginProps = {
 };
 const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 	const [text400] = useToken("colors", ["text.400"]);
+	const { data: session } = useSession();
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 
