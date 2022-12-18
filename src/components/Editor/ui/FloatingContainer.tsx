@@ -61,7 +61,7 @@ const FloatingContainer = ({
 
 	const visible = popupReference !== null;
 
-	const arrowSize = 9;
+	const arrowSize = 10;
 	let arrowRotation = 0;
 	let arrowY = middlewareData?.arrow?.y || 0;
 	let arrowX = middlewareData?.arrow?.x || 0;
@@ -78,11 +78,11 @@ const FloatingContainer = ({
 	}
 	if (placement === "bottom") {
 		arrowRotation = 45;
-		arrowY -= arrowSize / 2 + 1;
+		arrowY -= arrowSize / 2;
 	}
 	if (placement === "top") {
 		arrowRotation = -135;
-		arrowY += height - (arrowSize / 2 - 1);
+		arrowY += height - arrowSize / 2;
 	}
 
 	return (
@@ -93,6 +93,7 @@ const FloatingContainer = ({
 			opacity={visible ? 1 : 0}
 			transform={visible ? "scale(1)" : "scale(0.9)"}
 			transition="100ms transform ease-out, 100ms opacity ease-out, 0ms left linear"
+			width={["100vw", null, "max-content"]}
 			style={{
 				position: strategy,
 				top: y ?? 0,

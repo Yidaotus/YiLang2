@@ -16,7 +16,6 @@ const DictionaryPage: NextPageWithLayout = () => {
 					<tr>
 						<th></th>
 						<th>Word</th>
-						<th>Translation</th>
 						<th className="w-1/6">Created at</th>
 					</tr>
 				</thead>
@@ -25,7 +24,6 @@ const DictionaryPage: NextPageWithLayout = () => {
 						<tr key={entry.id}>
 							<th>{index}</th>
 							<td>{entry.word}</td>
-							<td>{entry.translation}</td>
 							<td>{entry.createdAt.toDateString()}</td>
 						</tr>
 					))}

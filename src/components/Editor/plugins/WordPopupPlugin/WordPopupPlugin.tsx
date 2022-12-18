@@ -83,7 +83,6 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			popupPlacement="bottom"
 			minW={["unset", null, "150px"]}
 			maxW={["unset", null, "400px"]}
-			width={["96vw", null, "max-content"]}
 			mx={[2, null, 0]}
 		>
 			<Box>{wordNode?.id && <Word wordId={wordNode.id} />}</Box>
