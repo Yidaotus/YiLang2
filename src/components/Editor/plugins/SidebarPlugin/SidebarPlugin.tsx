@@ -246,8 +246,9 @@ const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 const FormatterMenu = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const editorSelectedBlockType = useBearStore(
-		(state) => state.editorSelectedBlockType
+	const { type: editorSelectedBlockType } = useBearStore(
+		(state) => state.editorSelectedBlock,
+		shallow
 	);
 
 	return (

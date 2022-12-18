@@ -1,4 +1,7 @@
-import type { SelectedBlockType } from "@components/Editor/plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
+import type {
+	SelectedBlock,
+	SelectedBlockType,
+} from "@components/Editor/plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 import create from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -15,8 +18,8 @@ interface BearState {
 	setEditorBackgroundOpacity: (state: number) => void;
 	setEditorShowSpelling: (state: boolean) => void;
 	increase: (by: number) => void;
-	editorSelectedBlockType: SelectedBlockType;
-	setEditorSelectedBlockType: (blockType: SelectedBlockType) => void;
+	editorSelectedBlock: SelectedBlock;
+	setEditorSelectedBlock: (selectedBlock: SelectedBlock) => void;
 }
 
 const useBearStore = create<BearState>()(
@@ -38,9 +41,9 @@ const useBearStore = create<BearState>()(
 			editorShowSpelling: false,
 			setEditorShowSpelling: (showSpelling: boolean) =>
 				set(() => ({ editorShowSpelling: showSpelling })),
-			editorSelectedBlockType: "paragraph",
-			setEditorSelectedBlockType: (blockType: SelectedBlockType) =>
-				set(() => ({ editorSelectedBlockType: blockType })),
+			editorSelectedBlock: { type: "paragraph", key: "" },
+			setEditorSelectedBlock: (selectedBlock: SelectedBlock) =>
+				set(() => ({ editorSelectedBlock: selectedBlock })),
 		}),
 		{
 			name: "editor-storage",

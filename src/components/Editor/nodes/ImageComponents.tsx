@@ -71,12 +71,12 @@ function LazyImage({
 	useSuspenseImage(src);
 	return (
 		<Box
+			my={4}
 			sx={{
 				m: 0,
 				borderRadius: "5px",
 				outline: isFocused && "1px solid #abb5c1",
 				border: "1px solid #cbd5e1",
-				p: 0,
 				boxShadow:
 					"0 5px 10px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
 				userSelect: isResizing ? "none" : "default",
@@ -222,7 +222,6 @@ export default function ImageComponent({
 			<Box
 				sx={{
 					display: "flex",
-					py: 4,
 					justifyContent: alignment,
 				}}
 			>

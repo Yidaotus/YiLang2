@@ -21,7 +21,6 @@ import {
 	InputLeftElement,
 	IconButton,
 	Text,
-	Stack,
 	Menu,
 	MenuButton,
 	MenuItem,
@@ -35,17 +34,13 @@ import {
 import {
 	IoSearch,
 	IoFilter,
-	IoAdd,
 	IoArrowForward,
 	IoArrowBack,
 	IoEllipsisVertical,
-	IoRemove,
-	IoOpen,
 	IoTrashBin,
 	IoPencil,
 	IoClose,
 	IoArrowDown,
-	IoFunnel,
 	IoArrowUp,
 	IoSwapVertical,
 	IoLibrary,
@@ -67,7 +62,7 @@ const DocumentsPage: NextPageWithLayout = () => {
 	const [sortByColumn, setSortByColumn] = useState<{
 		column: keyof Exclude<typeof allDocuments.data, undefined>[number];
 		order: "asc" | "desc";
-	}>();
+	}>({ column: "createdAt", order: "desc" });
 
 	const pageSearchResult = useMemo(() => {
 		if (!allDocuments.data) {

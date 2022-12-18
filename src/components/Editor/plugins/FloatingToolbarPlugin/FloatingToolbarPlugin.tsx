@@ -24,6 +24,7 @@ import {
 	useToken,
 } from "@chakra-ui/react";
 import type { LexicalEditor } from "lexical";
+import { FORMAT_ELEMENT_COMMAND } from "lexical";
 import { FORMAT_TEXT_COMMAND } from "lexical";
 import {
 	$getSelection,
@@ -38,6 +39,10 @@ import { createPortal } from "react-dom";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
 import {
+	RiAlignCenter,
+	RiAlignJustify,
+	RiAlignLeft,
+	RiAlignRight,
 	RiBold,
 	RiItalic,
 	RiMarkPenLine,
@@ -54,6 +59,7 @@ import useBearStore from "@store/store";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import shallow from "zustand/shallow";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -106,8 +112,9 @@ function TextFormatFloatingToolbar({
 		"brand.800",
 	]);
 
-	const currentBlockType = useBearStore(
-		(state) => state.editorSelectedBlockType
+	const { type: currentBlockType } = useBearStore(
+		(state) => state.editorSelectedBlock,
+		shallow
 	);
 
 	const insertLink = useCallback(() => {
@@ -237,6 +244,83 @@ function TextFormatFloatingToolbar({
 						editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
 					}
 				/>
+
+				<Divider
+					orientation="vertical"
+					h="60%"
+					alignSelf="center"
+					bg="text.200"
+				/>
+				<IconButton
+					icon={
+						<RiAlignLeft
+							color={isUnderline ? brand500 : text400}
+							style={{
+								height: iconSize,
+								width: iconSize,
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")}
+				/>
+				<IconButton
+					icon={
+						<RiAlignJustify
+							color={isUnderline ? brand500 : text400}
+							style={{
+								height: iconSize,
+								width: iconSize,
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={() =>
+						editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
+					}
+				/>
+				<IconButton
+					icon={
+						<RiAlignCenter
+							color={isUnderline ? brand500 : text400}
+							style={{
+								height: iconSize,
+								width: iconSize,
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={() =>
+						editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
+					}
+				/>
+				<IconButton
+					icon={
+						<RiAlignRight
+							color={isUnderline ? brand500 : text400}
+							style={{
+								height: iconSize,
+								width: iconSize,
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={() =>
+						editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
+					}
+				/>
+
+				<Divider
+					orientation="vertical"
+					h="60%"
+					alignSelf="center"
+					bg="text.200"
+				/>
+
 				<IconButton
 					icon={
 						<RiMarkPenLine

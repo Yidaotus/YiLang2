@@ -221,6 +221,11 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		return this.__src;
 	}
 
+	setSrc(newSrc: string) {
+		const updateNode = this.getWritable();
+		updateNode.__src = newSrc;
+	}
+
 	getAltText(): string {
 		return this.__altText;
 	}

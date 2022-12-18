@@ -24,6 +24,9 @@ type FloatingContainerProps = {
 	children: React.ReactNode;
 	popupPlacement: Placement;
 	middlewares?: Array<Middleware>;
+	stretchOnMobile?: boolean;
+	popupOffset?: number;
+	showArrow?: boolean;
 } & ChakraProps;
 
 const FloatingContainer = ({
@@ -31,6 +34,9 @@ const FloatingContainer = ({
 	children,
 	popupPlacement,
 	middlewares,
+	stretchOnMobile = false,
+	popupOffset = 10,
+	showArrow = false,
 	...rest
 }: FloatingContainerProps) => {
 	const arrowRef = useRef(null);
@@ -46,12 +52,12 @@ const FloatingContainer = ({
 	} = useFloating({
 		placement: popupPlacement,
 		middleware: [
-			offset(10),
+			offset(popupOffset),
 			shift(),
 			flip(),
 			shiftOnHeader,
 			...(middlewares || []),
-			arrow({ element: arrowRef, padding: 0 }),
+			showArrow && arrow({ element: arrowRef, padding: 0 }),
 		],
 	});
 
@@ -93,7 +99,7 @@ const FloatingContainer = ({
 			opacity={visible ? 1 : 0}
 			transform={visible ? "scale(1)" : "scale(0.9)"}
 			transition="100ms transform ease-out, 100ms opacity ease-out, 0ms left linear"
-			width={["100vw", null, "max-content"]}
+			width={stretchOnMobile ? ["100vw", null, "max-content"] : "max-content"}
 			style={{
 				position: strategy,
 				top: y ?? 0,
@@ -109,19 +115,21 @@ const FloatingContainer = ({
 				{...rest}
 			>
 				<Box>{children}</Box>
-				<Box
-					ref={arrowRef}
-					pos="absolute"
-					zIndex={10}
-					top={`${arrowY}px`}
-					left={`${arrowX}px`}
-					w={`${arrowSize}px`}
-					h={`${arrowSize}px`}
-					transform={`rotate(${arrowRotation}deg)`}
-					borderTop="1px solid #e2e8f0"
-					borderLeft="1px solid #e2e8f0"
-					bg="#FFFFFF"
-				/>
+				{showArrow && (
+					<Box
+						ref={arrowRef}
+						pos="absolute"
+						zIndex={10}
+						top={`${arrowY}px`}
+						left={`${arrowX}px`}
+						w={`${arrowSize}px`}
+						h={`${arrowSize}px`}
+						transform={`rotate(${arrowRotation}deg)`}
+						borderTop="1px solid #e2e8f0"
+						borderLeft="1px solid #e2e8f0"
+						bg="#FFFFFF"
+					/>
+				)}
 			</Box>
 		</Box>
 	);

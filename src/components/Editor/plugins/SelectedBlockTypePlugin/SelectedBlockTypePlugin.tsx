@@ -29,12 +29,18 @@ const blockTypeToBlockName = {
 	number: "Numbered List",
 	paragraph: "Normal",
 	quote: "Quote",
+	image: "Image",
 };
 
 export type SelectedBlockType = keyof typeof blockTypeToBlockName;
 
+export type SelectedBlock = {
+	type: SelectedBlockType;
+	key: string;
+};
+
 type SelectedBlockTypePluginProps = {
-	setSelectedBlockType: (blockType: SelectedBlockType) => void;
+	setSelectedBlockType: (blockType: SelectedBlock) => void;
 };
 
 const SelectedBlockTypePlugin = ({
@@ -71,13 +77,19 @@ const SelectedBlockTypePlugin = ({
 					const type = parentList
 						? parentList.getListType()
 						: element.getListType();
-					setSelectedBlockType(type);
+					setSelectedBlockType({
+						type: type as SelectedBlockType,
+						key: elementKey,
+					});
 				} else {
 					const type = $isHeadingNode(element)
 						? element.getTag()
 						: element.getType();
 					if (type in blockTypeToBlockName) {
-						setSelectedBlockType(type as SelectedBlockType);
+						setSelectedBlockType({
+							type: type as SelectedBlockType,
+							key: elementKey,
+						});
 					}
 				}
 			}
@@ -107,7 +119,10 @@ const SelectedBlockTypePlugin = ({
 					? element.getTag()
 					: element.getType();
 				if (type in blockTypeToBlockName) {
-					setSelectedBlockType(type as SelectedBlockType);
+					setSelectedBlockType({
+						type: type as SelectedBlockType,
+						key: elementKey,
+					});
 				}
 			}
 		}

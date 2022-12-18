@@ -41,6 +41,7 @@ import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedB
 
 import shallow from "zustand/shallow";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
+import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -94,7 +95,7 @@ export default React.memo(function Editor({
 			editorFontSize: state.editorFontSize,
 			editorLineHeight: state.editorLineHeight,
 			editorShowSpelling: state.editorShowSpelling,
-			setEditorSelectedBlockType: state.setEditorSelectedBlockType,
+			setEditorSelectedBlockType: state.setEditorSelectedBlock,
 		}),
 		shallow
 	);
@@ -195,6 +196,7 @@ export default React.memo(function Editor({
 							)}
 							{floatingAnchorElem && (
 								<>
+									<ImageMenuPlugin anchorElem={floatingAnchorElem} />
 									<FloatingTextFormatToolbarPlugin
 										anchorElem={floatingAnchorElem}
 									/>
