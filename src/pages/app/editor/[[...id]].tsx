@@ -14,8 +14,6 @@ import { useState } from "react";
 import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
 import Layout from "@components/Layout";
 import useBearStore from "@store/store";
-import { unstable_getServerSession } from "next-auth";
-import { authOptions } from "pages/api/auth/[...nextauth]";
 import { useSession } from "next-auth/react";
 import protectPage from "@utils/protectPage";
 
@@ -206,7 +204,7 @@ const EditorPage = () => {
 };
 
 EditorPage.getLayout = function getLayout(page: ReactElement) {
-	return <Layout>{page}</Layout>;
+	return <Layout session={page.props.session}>{page}</Layout>;
 };
 
 export const getServerSideProps = async (

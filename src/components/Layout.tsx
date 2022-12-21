@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, useToken } from "@chakra-ui/react";
+import { Avatar, Box, Button, IconButton, useToken } from "@chakra-ui/react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -59,6 +59,7 @@ const Layout = ({ children }: LayoutProps) => {
 					pos="relative"
 					py={1}
 					px={sidebarOpen ? 3 : 1}
+					alignItems="center"
 				>
 					<IconButton
 						color={iconInactive}
@@ -100,7 +101,13 @@ const Layout = ({ children }: LayoutProps) => {
 						{sidebarOpen ? "New Document" : "+"}
 					</Button>
 					<Box h="24px" />
-					<Box display="flex" flexDir="column" gap="4px">
+					<Box
+						display="flex"
+						flexDir="column"
+						gap="4px"
+						h="100%"
+						alignItems={sidebarOpen ? "flex-start" : "center"}
+					>
 						<IconButton
 							w="100%"
 							h="48px"
@@ -156,15 +163,21 @@ const Layout = ({ children }: LayoutProps) => {
 
 						{!!session ? (
 							<>
-								Signed in as {session.user?.email} <br />
-								<button onClick={() => signOut()}>Sign out</button>
+								<Box mt="auto" />
+								<Avatar
+									bg="text.100"
+									name={session.user?.name || "unkown"}
+									src={session.user?.image || undefined}
+								/>
 							</>
 						) : (
 							<>
+								<Box mt="auto" />
 								Not signed in <br />
 								<button onClick={() => signIn()}>Sign in</button>
 							</>
 						)}
+						<Box h="10px" />
 					</Box>
 				</Box>
 				<Box w="100%">{children}</Box>
