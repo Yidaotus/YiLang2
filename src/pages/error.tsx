@@ -16,7 +16,8 @@ import {
 } from "@chakra-ui/react";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { RiLockPasswordLine, RiMailFill } from "react-icons/ri";
-import { useCallback } from "react";
+import { useRouter } from "next/router";
+import { useCallback, useState } from "react";
 
 const ProviderIcons = {
 	google: <FaGoogle />,
@@ -38,7 +39,7 @@ const ErrorMessages = {
 	EmailCreateAccount: "Could not create email provider user in the database.",
 	Callback: "Error in the OAuth callback handler route",
 	OAuthAccountNotLinked:
-		"The email on the account is already linked, but not with this OAuth account",
+		"If the email on the account is already linked, but not with this OAuth account",
 	EmailSignin: "Sending the e-mail with the verification token failed",
 	CredentialsSignin: `The authorize callback returned null in the Credentials provider. We don't recommend providing information about which part of the credentials were wrong, as it might be abused by malicious hackers.`,
 	SessionRequired:
@@ -49,15 +50,36 @@ type ErrorCode = keyof typeof ErrorMessages;
 
 type SignInPageProps = {
 	providers: Array<ClientSafeProvider>;
-	error: ErrorCode | null;
+	callbackUrl: string;
 };
 
-export default function SignIn({ providers = [], error }: SignInPageProps) {
-	const [text100] = useToken("colors", ["text.100", "text.500", "brand.800"]);
+export default function SignIn({ providers, callbackUrl }: SignInPageProps) {
+	const [text100, text500, brand500] = useToken("colors", [
+		"text.100",
+		"text.500",
+		"brand.800",
+	]);
 
-	const signInWithProvider = useCallback(async (provider: string) => {
-		signIn(provider, { redirect: false });
-	}, []);
+	const router = useRouter();
+	const [error, setError] = useState<ErrorCode | null>(null);
+	const signInWithProvider = useCallback(
+		async (provider: string) => {
+			const signInResponse = await signIn(provider, { redirect: false });
+			if (!signInResponse) {
+				setError("Default");
+				return;
+			}
+			const { ok, error } = signInResponse;
+			if (ok) {
+				router.push(callbackUrl || "/app/editor");
+			} else if (error) {
+				setError(error as ErrorCode);
+			} else {
+				setError("Default");
+			}
+		},
+		[callbackUrl, router]
+	);
 
 	return (
 		<Box
@@ -73,7 +95,7 @@ export default function SignIn({ providers = [], error }: SignInPageProps) {
 				display="flex"
 				flexDir={["column", null, "row"]}
 				w={["100%", "800px"]}
-				h={["100%", null, "fit-content"]}
+				h={["100vh", null, "fit-content"]}
 			>
 				<Box
 					display="flex"
@@ -104,10 +126,7 @@ export default function SignIn({ providers = [], error }: SignInPageProps) {
 					{error && (
 						<>
 							<Box>
-								<Text color="red" fontWeight="bold">
-									Error
-								</Text>
-								<Text color="red">{ErrorMessages[error]}</Text>
+								<Text color="error">{ErrorMessages[error]}</Text>
 							</Box>
 							<Divider />
 						</>
@@ -164,24 +183,24 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 		authOptions
 	);
 
-	const error = context.query.error || null;
-	const target = context.query.target || null;
-
 	if (!session || !session.user) {
 		const providers = await getProviders();
 
 		return {
 			props: {
 				providers: Object.values(providers || {}),
-				error,
+				callbackUrl: context.query.target,
 			},
 		};
-	} else {
+	} 
+	
+	/*else {
 		return {
 			redirect: {
-				destination: target || "/app/editor",
+				destination: "/app/editor",
 				permanent: false,
 			},
 		};
 	}
+*/
 }

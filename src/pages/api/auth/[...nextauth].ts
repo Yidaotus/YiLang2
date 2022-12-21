@@ -18,6 +18,10 @@ export const authOptions: NextAuthOptions = {
 	},
 	// Configure one or more authentication providers
 	adapter: PrismaAdapter(prisma),
+	pages: {
+		signIn: "/signin",
+		error: "/signin", // Error code passed in query string as ?error=
+	},
 	providers: [
 		GithubProvider({
 			clientId: env.GITHUB_CLIENT_ID,
