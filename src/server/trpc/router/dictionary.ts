@@ -1,17 +1,9 @@
-import { Result } from "postcss";
 import { z } from "zod";
 
-import { router, publicProcedure } from "../trpc";
-
-function isNotString<T>(i: string | T): i is T {
-	return typeof i !== "string";
-}
-function isString<T>(i: string | T): i is string {
-	return typeof i === "string";
-}
+import { router, protectedProcedure } from "../trpc";
 
 export const dictionaryRouter = router({
-	createWord: publicProcedure
+	createWord: protectedProcedure
 		.input(
 			z.object({
 				word: z.string(),
@@ -32,11 +24,12 @@ export const dictionaryRouter = router({
 		)
 		.mutation(
 			async ({
-				ctx,
+				ctx: { prisma, session },
 				input: { translations, spelling, word, tags, documentId, comment },
 			}) => {
-				const dbWord = await ctx.prisma.word.create({
+				const dbWord = await prisma.word.create({
 					data: {
+						user: { connect: { id: session.user.id } },
 						translation: translations.join(";"),
 						spelling,
 						word,
@@ -71,48 +64,67 @@ export const dictionaryRouter = router({
 				return wordWithDeserializedTranslations;
 			}
 		),
-	getAllTags: publicProcedure.query(({ ctx }) => {
-		return ctx.prisma.tag.findMany();
-	}),
-	findTags: publicProcedure.input(String).query(({ ctx, input }) => {
-		return ctx.prisma.tag.findMany({
+	getAllTags: protectedProcedure.query(({ ctx: { prisma, session } }) => {
+		return prisma.tag.findMany({
 			where: {
-				name: {
-					contains: input,
+				user: {
+					id: session.user.id,
 				},
 			},
 		});
 	}),
-	createTag: publicProcedure
+	findTags: protectedProcedure
+		.input(String)
+		.query(({ ctx: { prisma, session }, input }) => {
+			return prisma.tag.findMany({
+				where: {
+					name: {
+						contains: input,
+					},
+					user: {
+						id: session.user.id,
+					},
+				},
+			});
+		}),
+	createTag: protectedProcedure
 		.input(z.object({ name: z.string(), color: z.string() }))
-		.mutation(async ({ ctx, input: { name, color } }) => {
-			const tag = await ctx.prisma.tag.create({
+		.mutation(async ({ ctx: { prisma, session }, input: { name, color } }) => {
+			const tag = await prisma.tag.create({
 				data: {
+					user: { connect: { id: session.user.id } },
 					name,
 					color,
 				},
 			});
 			return tag;
 		}),
-	getWord: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
-		const dbResult = await ctx.prisma.word.findUnique({
-			where: { id: input },
-			include: {
-				tags: {
-					include: {
-						tag: true,
+	getWord: protectedProcedure
+		.input(z.string())
+		.query(async ({ ctx: { prisma, session }, input }) => {
+			const dbResult = await prisma.word.findUnique({
+				where: { id: input },
+				include: {
+					tags: {
+						include: {
+							tag: true,
+						},
 					},
 				},
+			});
+			if (dbResult) {
+				const { translation, ...rest } = dbResult;
+				return { ...rest, translations: translation.split(";") };
+			}
+			return null;
+		}),
+	getAll: protectedProcedure.query(async ({ ctx: { prisma, session } }) => {
+		const allWords = await prisma.word.findMany({
+			where: {
+				user: {
+					id: session.user.id,
+				},
 			},
-		});
-		if (dbResult) {
-			const { translation, ...rest } = dbResult;
-			return { ...rest, translations: translation.split(";") };
-		}
-		return null;
-	}),
-	getAll: publicProcedure.query(async ({ ctx }) => {
-		const allWords = await ctx.prisma.word.findMany({
 			include: {
 				tags: {
 					include: {

@@ -12,10 +12,10 @@ export const documentRouter = router({
 				id: z.string().optional(),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
+		.mutation(async ({ ctx: { prisma, session }, input }) => {
 			let dbDocument;
 			if (input.id) {
-				dbDocument = await ctx.prisma.document.update({
+				dbDocument = await prisma.document.update({
 					where: {
 						id: input.id,
 					},
@@ -25,10 +25,11 @@ export const documentRouter = router({
 					},
 				});
 			} else {
-				dbDocument = await ctx.prisma.document.create({
+				dbDocument = await prisma.document.create({
 					data: {
 						title: input.title || "Untitled Document",
 						serializedDocument: input.serializedDocument,
+						user: { connect: { id: session.user.id } },
 					},
 				});
 			}
@@ -42,9 +43,11 @@ export const documentRouter = router({
 				serializedDocument: z.string(),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
-			const currentDocument = await ctx.prisma.document.findUnique({
-				where: { id: input.id },
+		.mutation(async ({ ctx: { prisma, session }, input }) => {
+			const currentDocument = await prisma.document.findUnique({
+				where: {
+					id: input.id,
+				},
 			});
 			if (!currentDocument) {
 				throw new TRPCError({
@@ -53,18 +56,27 @@ export const documentRouter = router({
 						"Trying to update a document which is not found in the database",
 				});
 			}
-			ctx.prisma.document.update({
+			prisma.document.update({
 				where: { id: currentDocument.id },
 				data: {
 					serializedDocument: input.serializedDocument,
 					title: input.title || currentDocument.title,
+					user: { connect: { id: session.user.id } },
 				},
 			});
 		}),
-	getById: protectedProcedure.input(String).query(({ ctx, input }) => {
-		return ctx.prisma.document.findUnique({ where: { id: input } });
-	}),
-	getAll: protectedProcedure.query(({ ctx }) => {
-		return ctx.prisma.document.findMany();
+	getById: protectedProcedure
+		.input(String)
+		.query(({ ctx: { prisma, session }, input }) => {
+			return prisma.document.findUnique({
+				where: {
+					id: input,
+				},
+			});
+		}),
+	getAll: protectedProcedure.query(({ ctx: { prisma, session } }) => {
+		return prisma.document.findMany({
+			where: { user: { id: session.user.id } },
+		});
 	}),
 });

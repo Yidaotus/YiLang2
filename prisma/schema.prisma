@@ -48,13 +48,16 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+  Tag           Tag[]
+  Word          Word[]
+  Document      Document[]
 }
 
 model VerificationToken {
@@ -72,6 +75,8 @@ model Tag {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   words     TagsOnWords[]
+  user      User?         @relation(fields: [userId], references: [id])
+  userId    String?
 }
 
 model Word {
@@ -85,6 +90,8 @@ model Word {
   comment        String?
   documentId     String?
   tags           TagsOnWords[]
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
 }
 
 model TagsOnWords {
@@ -104,4 +111,6 @@ model Document {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   Word               Word[]
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
 }
