@@ -54,6 +54,7 @@ import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { signIn, signOut, useSession } from "next-auth/react";
+import useLoadingToast from "@components/LoadingToast/LoadingToast";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -434,16 +435,25 @@ type SidebarPluginProps = {
 	sidebarPortal: HTMLElement;
 };
 const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
+	const [, setLoading] = useLoadingToast(false, {
+		title: "Saving",
+		position: "bottom-right",
+	});
+
 	const [text400] = useToken("colors", ["text.400"]);
 	const { data: session } = useSession();
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
-		onSuccess: (data) => {
-			if (!documentId) {
-				router.push(`/editor/${data.id}`);
-			}
+		onMutate() {
+			setLoading(true);
+		},
+		onError() {
+			setLoading(false);
+		},
+		onSuccess() {
+			setLoading(false);
 		},
 	});
 
@@ -485,6 +495,7 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 			<FormatterMenu />
 			<SettingsMenu />
 			<IconButton
+				disabled={upsertDocument.isLoading}
 				icon={
 					<IoSaveOutline
 						color={text400}

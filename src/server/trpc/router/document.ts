@@ -8,7 +8,7 @@ export const documentRouter = router({
 		.input(
 			z.object({
 				title: z.string().optional(),
-				serializedDocument: z.string(),
+				serializedDocument: z.string().optional(),
 				id: z.string().optional(),
 			})
 		)
@@ -17,7 +17,7 @@ export const documentRouter = router({
 			if (input.id) {
 				dbDocument = await prisma.document.update({
 					where: {
-						id: input.id,
+						userDocumentId: { id: input.id, userId: session.user.id },
 					},
 					data: {
 						title: input.title || "Untitled Document",
@@ -28,7 +28,6 @@ export const documentRouter = router({
 				dbDocument = await prisma.document.create({
 					data: {
 						title: input.title || "Untitled Document",
-						serializedDocument: input.serializedDocument,
 						user: { connect: { id: session.user.id } },
 					},
 				});
@@ -46,7 +45,7 @@ export const documentRouter = router({
 		.mutation(async ({ ctx: { prisma, session }, input }) => {
 			const currentDocument = await prisma.document.findUnique({
 				where: {
-					id: input.id,
+					userDocumentId: { id: input.id, userId: session.user.id },
 				},
 			});
 			if (!currentDocument) {
@@ -65,12 +64,24 @@ export const documentRouter = router({
 				},
 			});
 		}),
+	removeDocument: protectedProcedure
+		.input(String)
+		.mutation(({ ctx: { prisma, session }, input }) => {
+			return prisma.document.delete({
+				where: {
+					userDocumentId: {
+						id: input,
+						userId: session.user.id,
+					},
+				},
+			});
+		}),
 	getById: protectedProcedure
 		.input(String)
 		.query(({ ctx: { prisma, session }, input }) => {
 			return prisma.document.findUnique({
 				where: {
-					id: input,
+					userDocumentId: { id: input, userId: session.user.id },
 				},
 			});
 		}),

@@ -43,7 +43,13 @@ export const dictionaryRouter = router({
 								tag:
 									typeof tag === "string"
 										? { connect: { id: tag } }
-										: { create: { name: tag.name, color: tag.color } },
+										: {
+												create: {
+													name: tag.name,
+													color: tag.color,
+													user: { connect: { id: session.user.id } },
+												},
+										  },
 							})),
 						},
 						comment,
@@ -103,7 +109,7 @@ export const dictionaryRouter = router({
 		.input(z.string())
 		.query(async ({ ctx: { prisma, session }, input }) => {
 			const dbResult = await prisma.word.findUnique({
-				where: { id: input },
+				where: { userWordId: { id: input, userId: session.user.id } },
 				include: {
 					tags: {
 						include: {

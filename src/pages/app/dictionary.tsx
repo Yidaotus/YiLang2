@@ -27,6 +27,7 @@ import {
 	MenuItem,
 	Box,
 	useToken,
+	Skeleton,
 } from "@chakra-ui/react";
 import {
 	IoSearch,
@@ -207,117 +208,119 @@ const DictionaryPage: NextPageWithLayout = () => {
 					/>
 				</Box>
 			</Box>
-			<TableContainer pt={5}>
-				<Table size="md">
-					<Thead>
-						<Tr>
-							<Th w="100px">#</Th>
-							<Th flexGrow="1">
-								<Box display="flex">
-									<Text>Word</Text>
-									<IconButton
-										onClick={() => addSortColumn("word")}
-										variant="link"
-										aria-label="Sort by Date"
-										icon={
-											sortByColumn?.column === "word" ? (
-												sortByColumn.order === "asc" ? (
-													<IoArrowDown />
+			<Skeleton isLoaded={!allWords.isLoading}>
+				<TableContainer pt={5}>
+					<Table size="md">
+						<Thead>
+							<Tr>
+								<Th w="100px">#</Th>
+								<Th flexGrow="1">
+									<Box display="flex">
+										<Text>Word</Text>
+										<IconButton
+											onClick={() => addSortColumn("word")}
+											variant="link"
+											aria-label="Sort by Date"
+											icon={
+												sortByColumn?.column === "word" ? (
+													sortByColumn.order === "asc" ? (
+														<IoArrowDown />
+													) : (
+														<IoArrowUp />
+													)
 												) : (
-													<IoArrowUp />
+													<IoSwapVertical />
 												)
-											) : (
-												<IoSwapVertical />
-											)
-										}
-									/>
-								</Box>
-							</Th>
-							<Th flexGrow="1">
-								<Box display="flex">
-									<Text>Translations</Text>
-									<IconButton
-										onClick={() => addSortColumn("translations")}
-										variant="link"
-										aria-label="Sort by Date"
-										icon={
-											sortByColumn?.column === "translations" ? (
-												sortByColumn.order === "asc" ? (
-													<IoArrowDown />
+											}
+										/>
+									</Box>
+								</Th>
+								<Th flexGrow="1">
+									<Box display="flex">
+										<Text>Translations</Text>
+										<IconButton
+											onClick={() => addSortColumn("translations")}
+											variant="link"
+											aria-label="Sort by Date"
+											icon={
+												sortByColumn?.column === "translations" ? (
+													sortByColumn.order === "asc" ? (
+														<IoArrowDown />
+													) : (
+														<IoArrowUp />
+													)
 												) : (
-													<IoArrowUp />
+													<IoSwapVertical />
 												)
-											) : (
-												<IoSwapVertical />
-											)
-										}
-									/>
-								</Box>
-							</Th>
-							<Th flexGrow="1">
-								<Box display="flex">
-									<Text>Tags</Text>
-								</Box>
-							</Th>
-							<Th w="150px">
-								<Box display="flex">
-									<Text>Created at</Text>
-									<IconButton
-										onClick={() => addSortColumn("createdAt")}
-										variant="link"
-										aria-label="Sort by Date"
-										icon={
-											sortByColumn?.column === "createdAt" ? (
-												sortByColumn.order === "asc" ? (
-													<IoArrowDown />
+											}
+										/>
+									</Box>
+								</Th>
+								<Th flexGrow="1">
+									<Box display="flex">
+										<Text>Tags</Text>
+									</Box>
+								</Th>
+								<Th w="150px">
+									<Box display="flex">
+										<Text>Created at</Text>
+										<IconButton
+											onClick={() => addSortColumn("createdAt")}
+											variant="link"
+											aria-label="Sort by Date"
+											icon={
+												sortByColumn?.column === "createdAt" ? (
+													sortByColumn.order === "asc" ? (
+														<IoArrowDown />
+													) : (
+														<IoArrowUp />
+													)
 												) : (
-													<IoArrowUp />
+													<IoSwapVertical />
 												)
-											) : (
-												<IoSwapVertical />
-											)
-										}
-									/>
-								</Box>
-							</Th>
-							<Th w="50px"></Th>
-						</Tr>
-					</Thead>
-					<Tbody color="text.400">
-						{pageSlice.map((entry, index) => {
-							return (
-								<Tr key={entry.id}>
-									<Td>{page * pageSize + index + 1}</Td>
-									<Td>{entry.word}</Td>
-									<Td>{entry.translations.join(", ")}</Td>
-									<Td>{entry.tags.map((tag) => tag.tag.name).join(", ")}</Td>
-									<Td>{entry.createdAt.toLocaleDateString()}</Td>
-									<Td w="50px">
-										<Menu isLazy>
-											<MenuButton
-												as={IconButton}
-												aria-label="Options"
-												icon={<IoEllipsisVertical />}
-												variant="link"
-											/>
-											<MenuList>
-												<MenuItem icon={<IoPencil />}>Open Document</MenuItem>
-												<MenuItem
-													icon={<IoTrashBin />}
-													bg="#e11d48"
-													color="#FFFFFF"
-												>
-													Delete Document
-												</MenuItem>
-											</MenuList>
-										</Menu>
-									</Td>
-								</Tr>
-							);
-						})}
-					</Tbody>
-				</Table>
-			</TableContainer>
+											}
+										/>
+									</Box>
+								</Th>
+								<Th w="50px"></Th>
+							</Tr>
+						</Thead>
+						<Tbody color="text.400">
+							{pageSlice.map((entry, index) => {
+								return (
+									<Tr key={entry.id}>
+										<Td>{page * pageSize + index + 1}</Td>
+										<Td>{entry.word}</Td>
+										<Td>{entry.translations.join(", ")}</Td>
+										<Td>{entry.tags.map((tag) => tag.tag.name).join(", ")}</Td>
+										<Td>{entry.createdAt.toLocaleDateString()}</Td>
+										<Td w="50px">
+											<Menu isLazy>
+												<MenuButton
+													as={IconButton}
+													aria-label="Options"
+													icon={<IoEllipsisVertical />}
+													variant="link"
+												/>
+												<MenuList>
+													<MenuItem icon={<IoPencil />}>Open Document</MenuItem>
+													<MenuItem
+														icon={<IoTrashBin />}
+														bg="#e11d48"
+														color="#FFFFFF"
+													>
+														Delete Document
+													</MenuItem>
+												</MenuList>
+											</Menu>
+										</Td>
+									</Tr>
+								);
+							})}
+						</Tbody>
+					</Table>
+				</TableContainer>
+			</Skeleton>
 		</Box>
 	);
 };

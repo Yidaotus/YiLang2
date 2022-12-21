@@ -75,8 +75,10 @@ model Tag {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   words     TagsOnWords[]
-  user      User?         @relation(fields: [userId], references: [id])
-  userId    String?
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@unique(fields: [userId, id], name: "userTagId")
 }
 
 model Word {
@@ -92,6 +94,8 @@ model Word {
   tags           TagsOnWords[]
   userId         String
   user           User          @relation(fields: [userId], references: [id])
+
+  @@unique(fields: [userId, id], name: "userWordId")
 }
 
 model TagsOnWords {
@@ -106,11 +110,13 @@ model TagsOnWords {
 
 model Document {
   id                 String   @id @default(cuid())
-  serializedDocument String
+  serializedDocument String?
   title              String
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   Word               Word[]
   userId             String
   user               User     @relation(fields: [userId], references: [id])
+
+  @@unique(fields: [userId, id], name: "userDocumentId")
 }

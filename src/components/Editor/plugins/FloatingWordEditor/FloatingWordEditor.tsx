@@ -1,9 +1,5 @@
-import {
-	$insertNodes,
-	$setSelection,
-	LexicalEditor,
-	RangeSelection,
-} from "lexical";
+import type { LexicalEditor, RangeSelection } from "lexical";
+import { $insertNodes, $setSelection } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -24,7 +20,6 @@ import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
 import { trpc } from "@utils/trpc";
 import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
 import { $createWordNode } from "@editor/nodes/WordNode";
-import { setFloatingElemPosition } from "@editor/utils/setFloatingPosition";
 import { createPortal } from "react-dom";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { CreatableSelect } from "chakra-react-select";
@@ -33,7 +28,6 @@ import {
 	Input,
 	Stack,
 	Button,
-	ButtonGroup,
 	FormControl,
 	FormErrorMessage,
 	FormLabel,
@@ -45,27 +39,10 @@ import { useForm, Controller } from "react-hook-form";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 import { CirclePicker } from "react-color";
 
-import {
-	RiSafeLine,
-	RiSave2Fill,
-	RiSave2Line,
-	RiSave3Line,
-	RiSaveFill,
-	RiSaveLine,
-	RiStopCircleFill,
-	RiStopCircleLine,
-	RiStopLine,
-} from "react-icons/ri";
-import {
-	IoDiscOutline,
-	IoExit,
-	IoSave,
-	IoSaveOutline,
-	IoSaveSharp,
-} from "react-icons/io5";
-import { RxExit, RxStop, RxTrash } from "react-icons/rx";
+import { IoSave } from "react-icons/io5";
+import { RxExit, RxTrash } from "react-icons/rx";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import { ReferenceType } from "@floating-ui/react";
+import type { ReferenceType } from "@floating-ui/react";
 
 type TagOption = EditorTag;
 
@@ -81,10 +58,6 @@ type TagFormType = {
 	name: string;
 	color: string;
 };
-
-function delay(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -573,7 +546,6 @@ const WordEditorPopup = React.forwardRef<
 				utils.dictionary.getAllTags.invalidate();
 			},
 		});
-		const boxRef = useRef<HTMLDivElement | null>(null);
 
 		const selectionState = useMemo(
 			() => ({

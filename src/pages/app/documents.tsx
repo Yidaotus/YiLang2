@@ -29,6 +29,7 @@ import {
 	CircularProgress,
 	InputRightElement,
 	useToken,
+	Skeleton,
 } from "@chakra-ui/react";
 
 import {
@@ -50,11 +51,15 @@ import { GetServerSidePropsContext } from "next";
 
 const MAX_PAGINATION_BUTTONS = 5;
 
-type compareFn<T> = (a: T, b: T) => number;
-
 const DocumentsPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
 	const router = useRouter();
+	const utils = trpc.useContext();
+	const apiDeleteDocument = trpc.document.removeDocument.useMutation({
+		onSuccess() {
+			utils.document.getAll.invalidate();
+		},
+	});
 	const allDocuments = trpc.document.getAll.useQuery(undefined, {
 		refetchOnWindowFocus: false,
 	});
@@ -181,6 +186,13 @@ const DocumentsPage: NextPageWithLayout = () => {
 		[sortByColumn]
 	);
 
+	const deleteDocument = useCallback(
+		(id: string) => {
+			apiDeleteDocument.mutate(id);
+		},
+		[apiDeleteDocument]
+	);
+
 	return (
 		<Box px={[6, 8, 12]} maxH="100vh" overflow="auto" pos="relative">
 			<Box
@@ -242,103 +254,108 @@ const DocumentsPage: NextPageWithLayout = () => {
 					/>
 				</Box>
 			</Box>
-			<TableContainer pt={5}>
-				<Table size="md">
-					<Thead>
-						<Tr>
-							<Th w="100px">#</Th>
-							<Th flexGrow="1">
-								<Box display="flex">
-									<Text>Title</Text>
-									<IconButton
-										onClick={() => addSortColumn("title")}
-										variant="link"
-										aria-label="Sort by Title"
-										icon={
-											sortByColumn?.column === "title" ? (
-												sortByColumn.order === "asc" ? (
-													<IoArrowDown />
-												) : (
-													<IoArrowUp />
-												)
-											) : (
-												<IoSwapVertical />
-											)
-										}
-									/>
-								</Box>
-							</Th>
-							<Th w="150px">
-								<Box display="flex">
-									<Text>Created at</Text>
-									<IconButton
-										onClick={() => addSortColumn("createdAt")}
-										variant="link"
-										aria-label="Sort by Date"
-										icon={
-											sortByColumn?.column === "createdAt" ? (
-												sortByColumn.order === "asc" ? (
-													<IoArrowDown />
-												) : (
-													<IoArrowUp />
-												)
-											) : (
-												<IoSwapVertical />
-											)
-										}
-									/>
-								</Box>
-							</Th>
-							<Th w="50px"></Th>
-						</Tr>
-					</Thead>
-					<Tbody color="text.400">
-						{pageSlice.map((entry, index) => {
-							return (
-								<Tr key={entry.id}>
-									<Td>{page * pageSize + index + 1}</Td>
-									<Td>
-										<Button
-											color="brand.500"
+			<Skeleton
+				isLoaded={!allDocuments.isLoading && !apiDeleteDocument.isLoading}
+			>
+				<TableContainer pt={5}>
+					<Table size="md">
+						<Thead>
+							<Tr>
+								<Th w="100px">#</Th>
+								<Th flexGrow="1">
+									<Box display="flex">
+										<Text>Title</Text>
+										<IconButton
+											onClick={() => addSortColumn("title")}
 											variant="link"
-											onClick={() => loadDocumentFromId(entry.id)}
-										>
-											{entry.title}
-										</Button>
-									</Td>
-									<Td>{entry.createdAt.toLocaleDateString()}</Td>
-									<Td w="50px">
-										<Menu isLazy>
-											<MenuButton
-												as={IconButton}
-												aria-label="Options"
-												icon={<IoEllipsisVertical />}
+											aria-label="Sort by Title"
+											icon={
+												sortByColumn?.column === "title" ? (
+													sortByColumn.order === "asc" ? (
+														<IoArrowDown />
+													) : (
+														<IoArrowUp />
+													)
+												) : (
+													<IoSwapVertical />
+												)
+											}
+										/>
+									</Box>
+								</Th>
+								<Th w="150px">
+									<Box display="flex">
+										<Text>Created at</Text>
+										<IconButton
+											onClick={() => addSortColumn("createdAt")}
+											variant="link"
+											aria-label="Sort by Date"
+											icon={
+												sortByColumn?.column === "createdAt" ? (
+													sortByColumn.order === "asc" ? (
+														<IoArrowDown />
+													) : (
+														<IoArrowUp />
+													)
+												) : (
+													<IoSwapVertical />
+												)
+											}
+										/>
+									</Box>
+								</Th>
+								<Th w="50px"></Th>
+							</Tr>
+						</Thead>
+						<Tbody color="text.400">
+							{pageSlice.map((entry, index) => {
+								return (
+									<Tr key={entry.id}>
+										<Td>{page * pageSize + index + 1}</Td>
+										<Td>
+											<Button
+												color="brand.500"
 												variant="link"
-											/>
-											<MenuList>
-												<MenuItem
-													icon={<IoPencil />}
-													onClick={() => loadDocumentFromId(entry.id)}
-												>
-													Open Document
-												</MenuItem>
-												<MenuItem
-													icon={<IoTrashBin />}
-													bg="#e11d48"
-													color="#FFFFFF"
-												>
-													Delete Document
-												</MenuItem>
-											</MenuList>
-										</Menu>
-									</Td>
-								</Tr>
-							);
-						})}
-						{paginationFillerElements}
-					</Tbody>
-				</Table>
-			</TableContainer>
+												onClick={() => loadDocumentFromId(entry.id)}
+											>
+												{entry.title}
+											</Button>
+										</Td>
+										<Td>{entry.createdAt.toLocaleDateString()}</Td>
+										<Td w="50px">
+											<Menu isLazy>
+												<MenuButton
+													as={IconButton}
+													aria-label="Options"
+													icon={<IoEllipsisVertical />}
+													variant="link"
+												/>
+												<MenuList>
+													<MenuItem
+														icon={<IoPencil />}
+														onClick={() => loadDocumentFromId(entry.id)}
+													>
+														Open Document
+													</MenuItem>
+													<MenuItem
+														icon={<IoTrashBin />}
+														bg="#e11d48"
+														color="#FFFFFF"
+														onClick={() => deleteDocument(entry.id)}
+													>
+														Delete Document
+													</MenuItem>
+												</MenuList>
+											</Menu>
+										</Td>
+									</Tr>
+								);
+							})}
+							{paginationFillerElements}
+						</Tbody>
+					</Table>
+				</TableContainer>
+			</Skeleton>
 		</Box>
 	);
 };

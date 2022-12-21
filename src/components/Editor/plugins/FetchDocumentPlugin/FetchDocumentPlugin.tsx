@@ -18,10 +18,12 @@ const FetchDocumentPlugin = ({ id }: { id?: string }) => {
 	useEffect(() => {
 		if (editorDocument.data && shouldFetch) {
 			setShouldFetch(false);
-			const savedEditorState = editor.parseEditorState(
-				editorDocument.data.serializedDocument
-			);
-			editor.setEditorState(savedEditorState);
+			if (editorDocument.data.serializedDocument) {
+				const savedEditorState = editor.parseEditorState(
+					editorDocument.data.serializedDocument
+				);
+				editor.setEditorState(savedEditorState);
+			}
 		}
 	}, [editor, editorDocument, shouldFetch]);
 

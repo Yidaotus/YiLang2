@@ -2,7 +2,7 @@ import type { Klass, LexicalCommand, LexicalNode } from "lexical";
 
 import { ListNode, ListItemNode } from "@lexical/list";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { createCommand } from "lexical";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
@@ -43,6 +43,8 @@ import shallow from "zustand/shallow";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
+import { isMainThread } from "worker_threads";
+import useLoadingToast from "@components/LoadingToast/LoadingToast";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -75,7 +77,7 @@ export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
 	createCommand("SHOW_FLOATING_WORD_EDITOR_COMMAN");
 
 type EditorProps = {
-	documentId?: string;
+	documentId: string;
 	scrollAnchor?: HTMLElement;
 	sidebarPortal?: HTMLElement;
 	setDocumentTitle: (title: string) => void;
@@ -135,80 +137,92 @@ export default React.memo(function Editor({
 
 	return (
 		<Box>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-				}}
-			>
-				<div>
-					<LexicalComposer initialConfig={initialConfig}>
-						<RichTextPlugin
-							contentEditable={
-								<Box
-									sx={{
-										pos: "relative",
-										"*::selection": {
-											bg: "text.100",
-											borderRadius: "5px",
-										},
+			<Box display="flex" justifyContent="center" w="100%" pos="relative">
+				<LexicalComposer initialConfig={initialConfig}>
+					<RichTextPlugin
+						contentEditable={
+							<Box
+								sx={{
+									"*::selection": {
+										bg: "text.100",
+										borderRadius: "5px",
+									},
+								}}
+								width="100%"
+								minH="200px"
+								ref={onFloatingRef}
+								contentEditable={false}
+							>
+								<CustomContentEditable
+									id="EDITOR DIVV"
+									semiReadOnly={isSemiReadOnly}
+									autoFocus
+									style={{
+										width: "100%",
+										minHeight: "100px",
+										transition:
+											"100ms font-size ease-out, 300ms line-height ease-out",
+										outline: "none",
+										fontSize: `${fontSize}px`,
+										lineHeight: `${lineHeight}em`,
 									}}
-									ref={onFloatingRef}
-									contentEditable={false}
-								>
-									<CustomContentEditable
-										semiReadOnly={isSemiReadOnly}
-										style={{
-											transition:
-												"100ms font-size ease-out, 300ms line-height ease-out",
-											outline: "none",
-											fontSize: `${fontSize}px`,
-											lineHeight: `${lineHeight}em`,
-										}}
-									/>
-								</Box>
-							}
-							placeholder={<div>Enter some text...</div>}
-							ErrorBoundary={ErrorBoundary}
-						/>
-						<HistoryPlugin />
-						<PersistStateOnPageChangePlugion />
-						<FetchDocumentPlugin id={documentId} />
-						<TabIndentationPlugin />
-						<ListMaxIndentLevelPlugin maxDepth={4} />
-						<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
-						<ListPlugin />
-						<ImagesPlugin />
-						<SelectedBlockTypePlugin
-							setSelectedBlockType={setEditorSelectedBlockType}
-						/>
-						<>
-							{scrollAnchor && sidebarPortal && (
-								<>
-									<MinimapPlugin
-										anchorElem={scrollAnchor}
-										sidebarPortal={sidebarPortal}
-									/>
-									<SidebarPlugin
-										sidebarPortal={sidebarPortal}
-										documentId={documentId}
-									/>
-								</>
-							)}
-							{floatingAnchorElem && (
-								<>
-									<BlockSelectPopupPlugin anchorElem={floatingAnchorElem} />
-									<ImageMenuPlugin anchorElem={floatingAnchorElem} />
-									<FloatingTextFormatToolbarPlugin
-										anchorElem={floatingAnchorElem}
-									/>
-									<FloatingWordEditorPlugin anchorElem={floatingAnchorElem} />
-									<WordPopupPlugin anchorElem={floatingAnchorElem} />
-								</>
-							)}
-						</>
-					</LexicalComposer>
-				</div>
+								/>
+							</Box>
+						}
+						placeholder={
+							<Box
+								fontSize="2xl"
+								as="span"
+								pos="absolute"
+								left="0"
+								top="6px"
+								color="text.300"
+								pointerEvents="none"
+								userSelect="none"
+							>
+								Enter your document here
+							</Box>
+						}
+						ErrorBoundary={ErrorBoundary}
+					/>
+					<HistoryPlugin />
+					<PersistStateOnPageChangePlugion />
+					<FetchDocumentPlugin id={documentId} />
+					<TabIndentationPlugin />
+					<ListMaxIndentLevelPlugin maxDepth={4} />
+					<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
+					<ListPlugin />
+					<ImagesPlugin />
+					<SelectedBlockTypePlugin
+						setSelectedBlockType={setEditorSelectedBlockType}
+					/>
+					<>
+						{scrollAnchor && sidebarPortal && (
+							<>
+								<MinimapPlugin
+									anchorElem={scrollAnchor}
+									sidebarPortal={sidebarPortal}
+								/>
+								<SidebarPlugin
+									sidebarPortal={sidebarPortal}
+									documentId={documentId}
+								/>
+							</>
+						)}
+						{floatingAnchorElem && (
+							<>
+								<BlockSelectPopupPlugin anchorElem={floatingAnchorElem} />
+								<ImageMenuPlugin anchorElem={floatingAnchorElem} />
+								<FloatingTextFormatToolbarPlugin
+									anchorElem={floatingAnchorElem}
+									documentId={documentId}
+								/>
+								<FloatingWordEditorPlugin anchorElem={floatingAnchorElem} />
+								<WordPopupPlugin anchorElem={floatingAnchorElem} />
+							</>
+						)}
+					</>
+				</LexicalComposer>
 			</Box>
 		</Box>
 	);

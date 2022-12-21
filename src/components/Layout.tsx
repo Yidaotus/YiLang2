@@ -1,4 +1,5 @@
 import { Avatar, Box, Button, IconButton, useToken } from "@chakra-ui/react";
+import { trpc } from "@utils/trpc";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -23,12 +24,15 @@ const Layout = ({ children }: LayoutProps) => {
 	]);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
+	const apiCreateDocument = trpc.document.upsertDocument.useMutation();
+
 	const openHome = useCallback(() => {
 		router.push("/app/editor/");
 	}, [router]);
-	const openNewDocument = useCallback(() => {
-		router.push("/app/editor/");
-	}, [router]);
+	const createNewDocument = useCallback(async () => {
+		const newDocumentId = await apiCreateDocument.mutateAsync({});
+		router.push(`/app/editor/${newDocumentId.id}`);
+	}, [apiCreateDocument, router]);
 	const openLibrary = useCallback(() => {
 		router.push("/app/documents/");
 	}, [router]);
@@ -96,7 +100,7 @@ const Layout = ({ children }: LayoutProps) => {
 								color: "#FFFFFF",
 							},
 						}}
-						onClick={openNewDocument}
+						onClick={createNewDocument}
 					>
 						{sidebarOpen ? "New Document" : "+"}
 					</Button>

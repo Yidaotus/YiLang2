@@ -204,7 +204,7 @@ const EditorPage = () => {
 };
 
 EditorPage.getLayout = function getLayout(page: ReactElement) {
-	return <Layout session={page.props.session}>{page}</Layout>;
+	return <Layout>{page}</Layout>;
 };
 
 export const getServerSideProps = async (
