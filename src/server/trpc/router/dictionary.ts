@@ -111,6 +111,12 @@ export const dictionaryRouter = router({
 			const dbResult = await prisma.word.findUnique({
 				where: { userWordId: { id: input, userId: session.user.id } },
 				include: {
+					sourceDocument: {
+						select: {
+							title: true,
+							id: true,
+						},
+					},
 					tags: {
 						include: {
 							tag: true,

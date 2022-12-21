@@ -522,6 +522,7 @@ type CommentInputBoxProps = {
 	submitWord: (word: EditorWord) => void;
 	anchorElem: HTMLElement;
 	show: boolean;
+	documentId: string;
 };
 
 // eslint-disable-next-line react/display-name
@@ -537,6 +538,7 @@ const WordEditorPopup = React.forwardRef<
 			anchorElem,
 			word,
 			show,
+			documentId,
 		}: CommentInputBoxProps,
 		ref
 	) => {
@@ -678,6 +680,7 @@ const WordEditorPopup = React.forwardRef<
 						spelling: word.spelling,
 						tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
 						comment: word.comment,
+						documentId,
 					});
 					submitWord(newWord);
 				} else {
@@ -726,8 +729,10 @@ const WordEditorPopupMemo = React.memo(WordEditorPopup);
 
 const FloatingWordEditorPlugin = ({
 	anchorElem,
+	documentId,
 }: {
 	anchorElem: HTMLElement;
+	documentId: string;
 }) => {
 	const [editor] = useLexicalComposerContext();
 	const [showInput, setShowInput] = useState(false);
@@ -817,6 +822,7 @@ const FloatingWordEditorPlugin = ({
 				editor={editor}
 				submitWord={insertWord}
 				anchorElem={anchorElem}
+				documentId={documentId}
 			/>
 		</FloatingContainer>,
 		anchorElem

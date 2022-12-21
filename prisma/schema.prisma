@@ -88,9 +88,9 @@ model Word {
   spelling       String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  sourceDocument Document?     @relation(fields: [documentId], references: [id])
   comment        String?
   documentId     String?
+  sourceDocument Document?     @relation(fields: [documentId], references: [id])
   tags           TagsOnWords[]
   userId         String
   user           User          @relation(fields: [userId], references: [id])

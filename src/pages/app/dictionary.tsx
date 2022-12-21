@@ -1,5 +1,6 @@
 import type { NextPageWithLayout } from "pages/_app";
-import { ReactElement, useCallback, useMemo, useState } from "react";
+import type { ReactElement } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import useBearStore from "@store/store";
 import { trpc } from "../../utils/trpc";
@@ -28,6 +29,7 @@ import {
 	Box,
 	useToken,
 	Skeleton,
+	Link,
 } from "@chakra-ui/react";
 import {
 	IoSearch,
@@ -44,7 +46,8 @@ import {
 } from "react-icons/io5";
 import { RiTranslate } from "react-icons/ri";
 import protectPage from "@utils/protectPage";
-import { GetServerSidePropsContext } from "next";
+import type { GetServerSidePropsContext } from "next";
+import NextLink from "next/link";
 
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
@@ -290,7 +293,11 @@ const DictionaryPage: NextPageWithLayout = () => {
 								return (
 									<Tr key={entry.id}>
 										<Td>{page * pageSize + index + 1}</Td>
-										<Td>{entry.word}</Td>
+										<Td>
+											<NextLink href={`/app/dictionary/${entry.id}`} passHref>
+												<Link>{entry.word}</Link>
+											</NextLink>
+										</Td>
 										<Td>{entry.translations.join(", ")}</Td>
 										<Td>{entry.tags.map((tag) => tag.tag.name).join(", ")}</Td>
 										<Td>{entry.createdAt.toLocaleDateString()}</Td>

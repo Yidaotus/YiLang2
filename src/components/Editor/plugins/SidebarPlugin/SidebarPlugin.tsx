@@ -34,7 +34,7 @@ import {
 	$setSelection,
 	LineBreakNode,
 } from "lexical";
-import { useRouter } from "next/router";
+import router, { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -71,6 +71,9 @@ const clipTop: Middleware = {
 const WordListPlugin = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
+	const { highlight: targetWord } = router.query;
+	const targetWordId = Array.isArray(targetWord) ? targetWord[0] : targetWord;
+	//@TODO Idea pull out wordStore into plugin so other plugins can hook into it by bear
 	const [wordStore, setWordStore] = useState<
 		Record<string, string | undefined>
 	>({});
@@ -126,7 +129,7 @@ const WordListPlugin = () => {
 	}, [editor]);
 
 	const highlightWord = useCallback(
-		({ id, key }: { id: string; key?: string }) => {
+		(key: string) => {
 			if (key) {
 				editor.update(() => {
 					const nodeElem = editor.getElementByKey(key);
@@ -145,6 +148,17 @@ const WordListPlugin = () => {
 		},
 		[editor]
 	);
+
+	useEffect(() => {
+		if (targetWordId) {
+			const targetInStore = Object.entries(wordStore).find(
+				([key, wordId]) => targetWordId === wordId
+			);
+			if (targetInStore) {
+				highlightWord(targetInStore[0]);
+			}
+		}
+	}, [highlightWord, targetWordId, wordStore]);
 
 	return (
 		<>
@@ -185,7 +199,7 @@ const WordListPlugin = () => {
 									key={nodeKey}
 									wordId={wordId}
 									wordKey={nodeKey}
-									clickHandler={highlightWord}
+									clickHandler={() => highlightWord(nodeKey)}
 								/>
 							) : null
 						)}

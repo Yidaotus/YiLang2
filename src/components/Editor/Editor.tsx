@@ -217,7 +217,10 @@ export default React.memo(function Editor({
 									anchorElem={floatingAnchorElem}
 									documentId={documentId}
 								/>
-								<FloatingWordEditorPlugin anchorElem={floatingAnchorElem} />
+								<FloatingWordEditorPlugin
+									documentId={documentId}
+									anchorElem={floatingAnchorElem}
+								/>
 								<WordPopupPlugin anchorElem={floatingAnchorElem} />
 							</>
 						)}
