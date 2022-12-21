@@ -45,6 +45,8 @@ import {
 	IoSwapVertical,
 	IoLibrary,
 } from "react-icons/io5";
+import protectPage from "@utils/protectPage";
+import { GetServerSidePropsContext } from "next";
 
 const MAX_PAGINATION_BUTTONS = 5;
 
@@ -343,6 +345,12 @@ const DocumentsPage: NextPageWithLayout = () => {
 
 DocumentsPage.getLayout = function getLayout(page: ReactElement) {
 	return <Layout>{page}</Layout>;
+};
+
+export const getServerSideProps = async (
+	context: GetServerSidePropsContext
+) => {
+	return protectPage(context);
 };
 
 export default DocumentsPage;

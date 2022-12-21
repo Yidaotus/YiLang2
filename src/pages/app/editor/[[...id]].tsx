@@ -1,5 +1,7 @@
 import type { ReactElement } from "react";
 
+import type { GetServerSidePropsContext } from "next";
+
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { Box, IconButton } from "@chakra-ui/react";
@@ -12,10 +14,10 @@ import { useState } from "react";
 import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
 import Layout from "@components/Layout";
 import useBearStore from "@store/store";
-import { GetServerSidePropsContext } from "next";
 import { unstable_getServerSession } from "next-auth";
 import { authOptions } from "pages/api/auth/[...nextauth]";
 import { useSession } from "next-auth/react";
+import protectPage from "@utils/protectPage";
 
 const EditorPage = () => {
 	const router = useRouter();
@@ -207,30 +209,10 @@ EditorPage.getLayout = function getLayout(page: ReactElement) {
 	return <Layout>{page}</Layout>;
 };
 
-export const getServerSideProps = async (ctx: {
-	req: GetServerSidePropsContext["req"];
-	res: GetServerSidePropsContext["res"];
-}) => {
-	const session = await unstable_getServerSession(
-		ctx.req,
-		ctx.res,
-		authOptions
-	);
-
-	if (!session) {
-		return {
-			redirect: {
-				destination: "/login",
-				permanent: false,
-			},
-		};
-	}
-
-	return {
-		props: {
-			session,
-		},
-	};
+export const getServerSideProps = async (
+	context: GetServerSidePropsContext
+) => {
+	return protectPage(context);
 };
 
 export default EditorPage;

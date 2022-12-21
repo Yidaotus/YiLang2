@@ -42,6 +42,8 @@ import {
 	IoTrashBin,
 } from "react-icons/io5";
 import { RiTranslate } from "react-icons/ri";
+import protectPage from "@utils/protectPage";
+import { GetServerSidePropsContext } from "next";
 
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
@@ -322,6 +324,12 @@ const DictionaryPage: NextPageWithLayout = () => {
 
 DictionaryPage.getLayout = function getLayout(page: ReactElement) {
 	return <Layout>{page}</Layout>;
+};
+
+export const getServerSideProps = async (
+	context: GetServerSidePropsContext
+) => {
+	return protectPage(context);
 };
 
 export default DictionaryPage;
