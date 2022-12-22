@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Word from "@components/Word";
 import { Box } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const [wordNode, setWordNode] = useState<{
@@ -24,9 +25,18 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		translations: Array<string>;
 	} | null>(null);
 	const [editor] = useLexicalComposerContext();
+	const router = useRouter();
 
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
+	);
+
+	const editWord = useCallback(
+		(id: string) => {
+			//@TODO Save before switch maybe save on route switch plugin!
+			router.push(`/app/dictionary/${id}`);
+		},
+		[router]
 	);
 
 	const updatePopup = useCallback(() => {
@@ -87,7 +97,11 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			stretchOnMobile
 			showArrow
 		>
-			<Box>{wordNode?.id && <Word wordId={wordNode.id} />}</Box>
+			<Box>
+				{wordNode?.id && (
+					<Word wordId={wordNode.id} clickHandler={({ id }) => editWord(id)} />
+				)}
+			</Box>
 		</FloatingContainer>,
 		anchorElem
 	);

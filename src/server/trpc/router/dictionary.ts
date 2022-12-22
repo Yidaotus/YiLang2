@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import { router, protectedProcedure } from "../trpc";
 
+const filterUndefined = <T>(v: T | undefined): v is T => {
+	return v !== undefined;
+};
+
 export const dictionaryRouter = router({
 	createWord: protectedProcedure
 		.input(
@@ -97,12 +101,35 @@ export const dictionaryRouter = router({
 				ctx: { prisma, session },
 				input: { id, comment, spelling, tags, translations },
 			}) => {
+				if (tags) {
+					await prisma.tagsOnWords.deleteMany({
+						where: {
+							wordId: id,
+						},
+					});
+				}
 				return await prisma.word.update({
 					where: { userWordId: { id, userId: session.user.id } },
 					data: {
 						comment: comment,
 						spelling: spelling,
 						translation: !!translations ? translations.join(";") : undefined,
+						tags: tags
+							? {
+									create: tags.reverse().map((tag) => ({
+										tag:
+											typeof tag === "string"
+												? { connect: { id: tag } }
+												: {
+														create: {
+															name: tag.name,
+															color: tag.color,
+															user: { connect: { id: session.user.id } },
+														},
+												  },
+									})),
+							  }
+							: undefined,
 					},
 				});
 			}

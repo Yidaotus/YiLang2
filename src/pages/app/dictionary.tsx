@@ -2,7 +2,7 @@ import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
 
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import { trpc } from "../../utils/trpc";
 import Layout from "@components/Layout";
 import {
@@ -52,7 +52,7 @@ import NextLink from "next/link";
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
 	const allWords = trpc.dictionary.getAll.useQuery();
-	const bears = useBearStore((state) => state.bears);
+	const bears = useEditorStore((state) => state.bears);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [pageSize, setPageSize] = useState(20);
 	const [page, setPage] = useState(0);

@@ -37,6 +37,8 @@ import NextLink from "next/link";
 import { ReferenceType } from "@floating-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
+import { CreatableSelect } from "chakra-react-select";
+import { Tag } from "@prisma/client";
 
 type DataRowProps = {
 	title: React.ReactNode;
@@ -143,6 +145,7 @@ const TranslationsDataRow = ({
 						focusBorderColor="none"
 					/>
 					<InputRightElement width="5.5rem">
+						<Box borderLeftWidth="1px" borderColor="text.100" h="60%" />
 						<ButtonGroup isAttached>
 							<IconButton
 								variant="ghost"
@@ -278,6 +281,7 @@ const SpellingDataRow = ({
 							autoFocus
 						/>
 						<InputRightElement width="5.5rem">
+							<Box borderLeftWidth="1px" borderColor="text.100" h="60%" />
 							<ButtonGroup isAttached>
 								<IconButton
 									variant="ghost"
@@ -331,17 +335,34 @@ const SpellingDataRow = ({
 
 type TagDataRowProps = {
 	tags: Exclude<RouterTypes["dictionary"]["getWord"]["output"], null>["tags"];
+	linkNewTag: (tagId: string) => void;
+	removeTag: (tagId: string) => void;
 };
-const TagDataRow = ({ tags }: TagDataRowProps) => {
+const TagDataRow = ({ tags, linkNewTag, removeTag }: TagDataRowProps) => {
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
 	);
+	const allTags = trpc.dictionary.getAllTags.useQuery();
 	const floatingRef = useRef(null);
 	const inputRef = useRef(null);
 
 	useOnClickOutside(inputRef, () => {
 		setPopupReference(null);
 	});
+
+	const addTag = useCallback(
+		(tag: Tag) => {
+			linkNewTag(tag.id);
+		},
+		[linkNewTag]
+	);
+
+	const handleRemoveTag = useCallback(
+		(tag: Tag) => {
+			removeTag(tag.id);
+		},
+		[removeTag]
+	);
 
 	const showInputPopup = useCallback(() => {
 		setPopupReference(floatingRef.current);
@@ -354,29 +375,102 @@ const TagDataRow = ({ tags }: TagDataRowProps) => {
 				popupReference={popupReference}
 				showArrow
 			>
-				<InputGroup size="md" width={["90%", null, "400px"]} ref={inputRef}>
-					<Input pr="4.5rem" size="md" autoFocus />
-					<InputRightElement width="5.5rem">
-						<ButtonGroup isAttached>
-							<IconButton
-								variant="ghost"
-								colorScheme="brand"
-								h="2.1rem"
-								size="md"
-								aria-label="Add Translation"
-								icon={<IoSaveOutline />}
-							/>
-							<IconButton
-								variant="ghost"
-								colorScheme="brand"
-								h="2.1rem"
-								size="md"
-								aria-label="Add Translation"
-								icon={<RiCloseLine />}
-							/>
-						</ButtonGroup>
-					</InputRightElement>
-				</InputGroup>
+				<Box ref={inputRef}>
+					<CreatableSelect
+						size="md"
+						noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
+						focusBorderColor="none"
+						value={[] as Tag[]}
+						onChange={(newValue) => {
+							setPopupReference(null);
+							const newValueItem = newValue[0];
+							if (newValueItem) {
+								addTag(newValueItem);
+							}
+						}}
+						chakraStyles={{
+							container: (prev) => ({
+								...prev,
+								borderRadius: "5px",
+								bg: "#fafaf9",
+								w: "250px",
+								_focus: {
+									border: "none",
+								},
+							}),
+							multiValue: (prev, state) => ({
+								...prev,
+								justifyContent: "center",
+								alignItems: "center",
+								borderColor: "text.100",
+								bg: "#F5F5F5",
+								borderWidth: "1px",
+								"&::before": {
+									content: '""',
+									bg: state.data.color,
+									h: "10px",
+									w: "5px",
+									pr: 2,
+									mr: 2,
+									borderRadius: "1em",
+									border: `1px solid ${state.data.color}`,
+								},
+							}),
+							indicatorSeparator: (prev) => ({
+								...prev,
+								borderLeft: "1px solid text.100",
+								height: "60%",
+							}),
+							dropdownIndicator: (prev) => ({
+								...prev,
+								w: "10px",
+								bg: "#FCFCFB",
+							}),
+							placeholder: (prev) => ({
+								...prev,
+								color: "text.200",
+							}),
+						}}
+						placeholder="Tags"
+						isMulti
+						options={allTags.data || []}
+						getOptionValue={(o) => o.name}
+						getOptionLabel={(o) => o.name}
+						components={{
+							Option: ({ children, data, innerProps }) => (
+								<Box
+									as="div"
+									sx={{
+										color: "text.400",
+										display: "flex",
+										alignItems: "center",
+										cursor: "pointer",
+										py: 1,
+										fontSize: "16px",
+										w: "100%",
+										"&:hover": {
+											bg: "#f4f4f4",
+										},
+									}}
+									{...innerProps}
+								>
+									<Box
+										sx={{
+											w: "12px",
+											h: "12px",
+											ml: 1,
+											mr: 2,
+											borderRadius: "4px",
+											border: `2px solid ${data.color}`,
+											bg: data.color,
+										}}
+									/>
+									{children}
+								</Box>
+							),
+						}}
+					/>
+				</Box>
 			</FloatingContainer>
 			<DataRow
 				title={
@@ -418,6 +512,7 @@ const TagDataRow = ({ tags }: TagDataRowProps) => {
 											bg: "#BD4C50",
 										},
 									}}
+									onClick={() => handleRemoveTag(tag.tag)}
 								>
 									<RiCloseLine />
 								</Box>
@@ -497,6 +592,30 @@ const DictionaryEntryPag = () => {
 		[dbWord.data?.id, updateWord]
 	);
 
+	const linkNewTag = useCallback(
+		(tagId: string) => {
+			if (dbWord.data?.id) {
+				updateWord.mutate({
+					id: dbWord.data.id,
+					tags: [...dbWord.data.tags.map((t) => t.tagId), tagId],
+				});
+			}
+		},
+		[dbWord, updateWord]
+	);
+
+	const removeTag = useCallback(
+		(tagId: string) => {
+			if (dbWord.data?.id) {
+				updateWord.mutate({
+					id: dbWord.data.id,
+					tags: dbWord.data.tags.map((t) => t.tagId).filter((t) => t !== tagId),
+				});
+			}
+		},
+		[dbWord, updateWord]
+	);
+
 	return (
 		<Box display="flex">
 			<Box px={[6, 8, 12]} maxH="100vh" pos="relative" w="100vw">
@@ -550,7 +669,11 @@ const DictionaryEntryPag = () => {
 								addTranslation={addTranslation}
 								removeTranslation={removeTranslation}
 							/>
-							<TagDataRow tags={dbWord.data.tags} />
+							<TagDataRow
+								tags={dbWord.data.tags}
+								linkNewTag={linkNewTag}
+								removeTag={removeTag}
+							/>
 							<DataRow
 								title={
 									<Box display="flex" gap={1} alignItems="center">

@@ -1,13 +1,13 @@
 import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import { trpc } from "../../utils/trpc";
 import Layout from "@components/Layout";
 
 const DictionaryPage: NextPageWithLayout = () => {
 	const allWords = trpc.dictionary.getAll.useQuery();
-	const bears = useBearStore((state) => state.bears);
+	const bears = useEditorStore((state) => state.bears);
 
 	return (
 		<div className="min-w-full overflow-x-auto">

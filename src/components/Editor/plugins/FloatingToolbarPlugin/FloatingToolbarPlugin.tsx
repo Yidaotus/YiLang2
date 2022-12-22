@@ -55,7 +55,7 @@ import {
 	IoLanguage,
 	IoCheckmark,
 } from "react-icons/io5";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
@@ -112,7 +112,7 @@ function TextFormatFloatingToolbar({
 		"brand.800",
 	]);
 
-	const { type: currentBlockType } = useBearStore(
+	const { type: currentBlockType } = useEditorStore(
 		(state) => state.editorSelectedBlock,
 		shallow
 	);

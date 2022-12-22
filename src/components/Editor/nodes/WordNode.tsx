@@ -37,7 +37,7 @@ import React, { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { Box } from "@chakra-ui/react";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 
 export type SerializedWordNode = Spread<
 	{
@@ -55,7 +55,7 @@ type WordComponentProps = {
 	id?: string;
 };
 const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
-	const editorShowSpelling = useBearStore((state) => state.editorShowSpelling);
+	const editorShowSpelling = useEditorStore((state) => state.editorShowSpelling);
 	const [editor] = useLexicalComposerContext();
 	const dbWord = trpc.dictionary.getWord.useQuery(id || "", { enabled: !!id });
 	const wordRef = useRef(null);
@@ -119,12 +119,11 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 				</Box>
 			)}
 			{dbWord.data && (
-				<Box pos="relative" whiteSpace="normal">
+				<Box pos="relative" whiteSpace="normal" cursor="pointer">
 					<Box
 						ref={wordRef}
 						sx={{
 							mx: "2px",
-							cursor: "default",
 							borderRadius: "4px",
 							px: "2px",
 							bg: isSelected ? "text.100" : "#FAFAF9",

@@ -13,7 +13,7 @@ const Editor = dynamic(() => import("../../../components/Editor/Editor"), {
 import { useState } from "react";
 import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
 import Layout from "@components/Layout";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import { useSession } from "next-auth/react";
 import protectPage from "@utils/protectPage";
 
@@ -24,7 +24,7 @@ const EditorPage = () => {
 
 	const { data: session } = useSession();
 
-	const editorBackgroundOpacity = useBearStore(
+	const editorBackgroundOpacity = useEditorStore(
 		(state) => state.editorBackgroundOpacity
 	);
 

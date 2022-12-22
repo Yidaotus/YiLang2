@@ -36,7 +36,7 @@ import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocumentTitlePlugin";
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import shallow from "zustand/shallow";
@@ -93,7 +93,7 @@ export default React.memo(function Editor({
 		editorLineHeight,
 		editorShowSpelling,
 		setEditorSelectedBlockType,
-	} = useBearStore(
+	} = useEditorStore(
 		(state) => ({
 			editorFontSize: state.editorFontSize,
 			editorLineHeight: state.editorLineHeight,

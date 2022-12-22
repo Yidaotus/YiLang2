@@ -10,7 +10,7 @@ import { $isImageNode } from "@components/Editor/nodes/ImageNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import type { ReferenceType } from "@floating-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import { FORMAT_ELEMENT_COMMAND, $getNodeByKey } from "lexical";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -42,7 +42,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 		"brand.800",
 	]);
 
-	const selectedBlock = useBearStore(
+	const selectedBlock = useEditorStore(
 		(state) => state.editorSelectedBlock,
 		shallow
 	);

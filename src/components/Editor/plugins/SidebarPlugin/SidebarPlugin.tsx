@@ -32,6 +32,8 @@ import {
 	$getNodeByKey,
 	$getRoot,
 	$setSelection,
+	createCommand,
+	LexicalCommand,
 	LineBreakNode,
 } from "lexical";
 import router, { useRouter } from "next/router";
@@ -45,7 +47,7 @@ import {
 	IoSettings,
 } from "react-icons/io5";
 import { RiFontSize2, RiLineHeight, RiParagraph } from "react-icons/ri";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import shallow from "zustand/shallow";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import { WordNode } from "@components/Editor/nodes/WordNode";
@@ -55,6 +57,7 @@ import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { signIn, signOut, useSession } from "next-auth/react";
 import useLoadingToast from "@components/LoadingToast/LoadingToast";
+import useLocalStorage from "@ui/hooks/useLocalStorage";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -263,7 +266,7 @@ const SettingsSlider = ({ value, onChange }: SettingsSliderProps) => {
 const FormatterMenu = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const { type: editorSelectedBlockType } = useBearStore(
+	const { type: editorSelectedBlockType } = useEditorStore(
 		(state) => state.editorSelectedBlock,
 		shallow
 	);
@@ -312,6 +315,13 @@ const FormatterMenu = () => {
 	);
 };
 
+type SettingsState = {
+	lineHeight: number;
+	fontSize: number;
+	backgroundOpacity: number;
+	showSpelling: boolean;
+};
+
 const SettingsMenu = () => {
 	const {
 		setEditorLineHeight,
@@ -322,7 +332,7 @@ const SettingsMenu = () => {
 		editorFontSize,
 		editorBackgroundOpacity,
 		editorLineHeight,
-	} = useBearStore(
+	} = useEditorStore(
 		(state) => ({
 			setEditorLineHeight: state.setEditorLineHeight,
 			setEditorFontSize: state.setEditorFontSize,
@@ -336,6 +346,7 @@ const SettingsMenu = () => {
 		shallow
 	);
 	const [text400] = useToken("colors", ["text.400"]);
+
 	return (
 		<Popover placement="left">
 			<PopoverTrigger>

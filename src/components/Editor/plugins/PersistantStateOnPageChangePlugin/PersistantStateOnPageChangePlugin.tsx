@@ -1,12 +1,12 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useBearStore from "@store/store";
+import useEditorStore from "@store/store";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 const PersistStateOnPageChangePlugion = () => {
 	const [editor] = useLexicalComposerContext();
-	const editorState = useBearStore((state) => state.editorState);
-	const setEditorState = useBearStore((state) => state.setEditorState);
+	const editorState = useEditorStore((state) => state.editorState);
+	const setEditorState = useEditorStore((state) => state.setEditorState);
 	const router = useRouter();
 
 	useEffect(() => {
