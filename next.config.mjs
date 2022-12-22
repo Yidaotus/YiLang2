@@ -7,11 +7,25 @@
 
 /** @type {import("next").NextConfig} */
 const config = {
-  reactStrictMode: true,
-  swcMinify: true,
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
-  },
+	reactStrictMode: true,
+	swcMinify: true,
+	i18n: {
+		locales: ["en"],
+		defaultLocale: "en",
+	},
+	async headers() {
+		return [
+			{
+				// Apply these headers to all routes in your application.
+				source: "/:path*",
+				headers: [
+					{
+						key: "Referrer-Policy",
+						value: "no-referrer",
+					},
+				],
+			},
+		];
+	},
 };
 export default config;

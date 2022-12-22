@@ -185,7 +185,7 @@ export default React.memo(function Editor({
 						ErrorBoundary={ErrorBoundary}
 					/>
 					<HistoryPlugin />
-					<PersistStateOnPageChangePlugion />
+					<PersistStateOnPageChangePlugion documentId={documentId} />
 					<FetchDocumentPlugin id={documentId} />
 					<TabIndentationPlugin />
 					<ListMaxIndentLevelPlugin maxDepth={4} />

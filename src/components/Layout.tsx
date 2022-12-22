@@ -1,4 +1,5 @@
 import { Avatar, Box, Button, IconButton, useToken } from "@chakra-ui/react";
+import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
@@ -24,15 +25,18 @@ const Layout = ({ children }: LayoutProps) => {
 	]);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
+	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 	const apiCreateDocument = trpc.document.upsertDocument.useMutation();
 
 	const openHome = useCallback(() => {
 		router.push("/app/editor/");
 	}, [router]);
 	const createNewDocument = useCallback(async () => {
-		const newDocumentId = await apiCreateDocument.mutateAsync({});
+		const newDocumentId = await apiCreateDocument.mutateAsync({
+			language: selectedLanguage.id,
+		});
 		router.push(`/app/editor/${newDocumentId.id}`);
-	}, [apiCreateDocument, router]);
+	}, [apiCreateDocument, router, selectedLanguage]);
 	const openLibrary = useCallback(() => {
 		router.push("/app/documents/");
 	}, [router]);
@@ -169,6 +173,7 @@ const Layout = ({ children }: LayoutProps) => {
 							<>
 								<Box mt="auto" />
 								<Avatar
+									referrerPolicy="no-referrer"
 									bg="text.100"
 									name={session.user?.name || "unkown"}
 									src={session.user?.image || undefined}

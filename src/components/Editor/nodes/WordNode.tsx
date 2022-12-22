@@ -55,9 +55,15 @@ type WordComponentProps = {
 	id?: string;
 };
 const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
-	const editorShowSpelling = useEditorStore((state) => state.editorShowSpelling);
+	const editorShowSpelling = useEditorStore(
+		(state) => state.editorShowSpelling
+	);
 	const [editor] = useLexicalComposerContext();
-	const dbWord = trpc.dictionary.getWord.useQuery(id || "", { enabled: !!id });
+	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
+	const dbWord = trpc.dictionary.getWord.useQuery(
+		{ id: id || "" },
+		{ enabled: !!id }
+	);
 	const wordRef = useRef(null);
 	const [isSelected, setSelected, clearSelected] =
 		useLexicalNodeSelection(nodeKey);

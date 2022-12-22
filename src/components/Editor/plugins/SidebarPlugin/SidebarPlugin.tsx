@@ -1,6 +1,5 @@
 import {
 	Button,
-	Checkbox,
 	Divider,
 	FormControl,
 	FormLabel,
@@ -32,8 +31,6 @@ import {
 	$getNodeByKey,
 	$getRoot,
 	$setSelection,
-	createCommand,
-	LexicalCommand,
 	LineBreakNode,
 } from "lexical";
 import router, { useRouter } from "next/router";
@@ -55,9 +52,8 @@ import Word from "@components/Word";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import useLoadingToast from "@components/LoadingToast/LoadingToast";
-import useLocalStorage from "@ui/hooks/useLocalStorage";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -469,6 +465,7 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 	const { data: session } = useSession();
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
+	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
 
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
 		onMutate() {
@@ -498,9 +495,10 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				id: documentId,
 				title,
 				serializedDocument: serializedState,
+				language: selectedLanguage.id,
 			});
 		});
-	}, [documentId, editor, upsertDocument]);
+	}, [documentId, editor, selectedLanguage, upsertDocument]);
 
 	return createPortal(
 		<Box

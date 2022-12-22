@@ -14,6 +14,7 @@ const GetDocumentTitlePlugin = ({
 		editor.getEditorState().read(() => {
 			const root = $getRoot();
 			const rootElements = root.getChildren();
+			setDocumentTitle("");
 			for (const node of rootElements) {
 				if ($isHeadingNode(node)) {
 					setDocumentTitle(node.getTextContent());

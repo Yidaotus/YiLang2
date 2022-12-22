@@ -48,6 +48,7 @@ import {
 } from "react-icons/io5";
 import protectPage from "@utils/protectPage";
 import { GetServerSidePropsContext } from "next";
+import useEditorStore from "@store/store";
 
 const MAX_PAGINATION_BUTTONS = 5;
 
@@ -55,13 +56,14 @@ const DocumentsPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
 	const router = useRouter();
 	const utils = trpc.useContext();
+	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
 	const apiDeleteDocument = trpc.document.removeDocument.useMutation({
 		onSuccess() {
 			utils.document.getAll.invalidate();
 		},
 	});
-	const allDocuments = trpc.document.getAll.useQuery(undefined, {
-		refetchOnWindowFocus: false,
+	const allDocuments = trpc.document.getAll.useQuery({
+		language: selectedLanguage.id,
 	});
 	const [searchTerm, setSearchTerm] = useState("");
 	const [pageSize, setPageSize] = useState(10);

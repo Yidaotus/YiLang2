@@ -104,8 +104,16 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 	}
 
 	static importJSON(serializedNode: SerializedImageNode): ImageNode {
-		const { altText, height, width, maxWidth, caption, src, showCaption } =
-			serializedNode;
+		const {
+			altText,
+			height,
+			width,
+			maxWidth,
+			caption,
+			src,
+			showCaption,
+			alignment,
+		} = serializedNode;
 		const node = $createImageNode({
 			altText,
 			height,
@@ -113,7 +121,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			showCaption,
 			src,
 			width,
-			alignment: "center",
+			alignment,
 		});
 		const nestedEditor = node.__caption;
 		const editorState = nestedEditor.parseEditorState(caption.editorState);

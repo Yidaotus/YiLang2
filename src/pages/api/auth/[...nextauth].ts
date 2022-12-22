@@ -22,6 +22,17 @@ export const authOptions: NextAuthOptions = {
 		signIn: "/signin",
 		error: "/signin", // Error code passed in query string as ?error=
 	},
+	events: {
+		async createUser({ user }) {
+			await prisma.language.create({
+				data: {
+					id: "default",
+					name: "Default",
+					user: { connect: { id: user.id } },
+				},
+			});
+		},
+	},
 	providers: [
 		GithubProvider({
 			clientId: env.GITHUB_CLIENT_ID,

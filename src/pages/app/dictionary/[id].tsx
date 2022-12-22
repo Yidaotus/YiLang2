@@ -39,6 +39,7 @@ import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { CreatableSelect } from "chakra-react-select";
 import { Tag } from "@prisma/client";
+import useEditorStore from "@store/store";
 
 type DataRowProps = {
 	title: React.ReactNode;
@@ -334,15 +335,21 @@ const SpellingDataRow = ({
 };
 
 type TagDataRowProps = {
+	languageId: string;
 	tags: Exclude<RouterTypes["dictionary"]["getWord"]["output"], null>["tags"];
 	linkNewTag: (tagId: string) => void;
 	removeTag: (tagId: string) => void;
 };
-const TagDataRow = ({ tags, linkNewTag, removeTag }: TagDataRowProps) => {
+const TagDataRow = ({
+	tags,
+	linkNewTag,
+	removeTag,
+	languageId,
+}: TagDataRowProps) => {
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
 	);
-	const allTags = trpc.dictionary.getAllTags.useQuery();
+	const allTags = trpc.dictionary.getAllTags.useQuery({ language: languageId });
 	const floatingRef = useRef(null);
 	const inputRef = useRef(null);
 
@@ -546,12 +553,13 @@ const TagDataRow = ({ tags, linkNewTag, removeTag }: TagDataRowProps) => {
 const DictionaryEntryPag = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
-	const id = Array.isArray(routerId) ? routerId[0] : routerId;
+	const id = (Array.isArray(routerId) ? routerId[0] : routerId) || "";
+	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 	const trpcUtils = trpc.useContext();
-	const dbWord = trpc.dictionary.getWord.useQuery(id || "");
+	const dbWord = trpc.dictionary.getWord.useQuery({ id });
 	const updateWord = trpc.dictionary.updateWord.useMutation({
 		onSuccess() {
-			trpcUtils.dictionary.getWord.invalidate(id);
+			trpcUtils.dictionary.getWord.invalidate({ id });
 		},
 	});
 
@@ -561,10 +569,11 @@ const DictionaryEntryPag = () => {
 				updateWord.mutate({
 					id: dbWord.data.id,
 					translations: [...dbWord.data.translations, newTranslation],
+					language: selectedLanguage.id,
 				});
 			}
 		},
-		[dbWord.data, updateWord]
+		[dbWord.data, selectedLanguage.id, updateWord]
 	);
 
 	const removeTranslation = useCallback(
@@ -575,10 +584,11 @@ const DictionaryEntryPag = () => {
 					translations: dbWord.data.translations.filter(
 						(t) => t !== translation
 					),
+					language: selectedLanguage.id,
 				});
 			}
 		},
-		[dbWord.data, updateWord]
+		[dbWord, selectedLanguage.id, updateWord]
 	);
 
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
@@ -586,10 +596,14 @@ const DictionaryEntryPag = () => {
 	const updateSpelling = useCallback(
 		(newSpelling: string) => {
 			if (dbWord.data?.id) {
-				updateWord.mutate({ id: dbWord.data.id, spelling: newSpelling });
+				updateWord.mutate({
+					id: dbWord.data.id,
+					spelling: newSpelling,
+					language: selectedLanguage.id,
+				});
 			}
 		},
-		[dbWord.data?.id, updateWord]
+		[dbWord, selectedLanguage.id, updateWord]
 	);
 
 	const linkNewTag = useCallback(
@@ -598,10 +612,11 @@ const DictionaryEntryPag = () => {
 				updateWord.mutate({
 					id: dbWord.data.id,
 					tags: [...dbWord.data.tags.map((t) => t.tagId), tagId],
+					language: selectedLanguage.id,
 				});
 			}
 		},
-		[dbWord, updateWord]
+		[dbWord, selectedLanguage.id, updateWord]
 	);
 
 	const removeTag = useCallback(
@@ -610,10 +625,11 @@ const DictionaryEntryPag = () => {
 				updateWord.mutate({
 					id: dbWord.data.id,
 					tags: dbWord.data.tags.map((t) => t.tagId).filter((t) => t !== tagId),
+					language: selectedLanguage.id,
 				});
 			}
 		},
-		[dbWord, updateWord]
+		[dbWord, selectedLanguage.id, updateWord]
 	);
 
 	return (
@@ -670,6 +686,7 @@ const DictionaryEntryPag = () => {
 								removeTranslation={removeTranslation}
 							/>
 							<TagDataRow
+								languageId={selectedLanguage.id}
 								tags={dbWord.data.tags}
 								linkNewTag={linkNewTag}
 								removeTag={removeTag}

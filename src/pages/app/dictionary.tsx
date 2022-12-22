@@ -21,7 +21,6 @@ import {
 	Tbody,
 	Td,
 	Text,
-	Button,
 	Menu,
 	MenuButton,
 	MenuList,
@@ -51,8 +50,10 @@ import NextLink from "next/link";
 
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
-	const allWords = trpc.dictionary.getAll.useQuery();
-	const bears = useEditorStore((state) => state.bears);
+	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
+	const allWords = trpc.dictionary.getAll.useQuery({
+		language: selectedLanguage.id,
+	});
 	const [searchTerm, setSearchTerm] = useState("");
 	const [pageSize, setPageSize] = useState(20);
 	const [page, setPage] = useState(0);

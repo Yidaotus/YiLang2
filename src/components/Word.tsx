@@ -9,7 +9,7 @@ type WordProps = {
 	clickHandler?: ({ key, id }: { key?: string; id: string }) => void;
 };
 const Word = ({ wordKey, wordId, border = false, clickHandler }: WordProps) => {
-	const dbWord = trpc.dictionary.getWord.useQuery(wordId);
+	const dbWord = trpc.dictionary.getWord.useQuery({ id: wordId });
 
 	const borderStyle = border
 		? { borderColor: "text.100", borderWidth: "1px", borderRadius: "5px" }

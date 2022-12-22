@@ -14,18 +14,20 @@ import { useState } from "react";
 import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
 import Layout from "@components/Layout";
 import useEditorStore from "@store/store";
-import { useSession } from "next-auth/react";
 import protectPage from "@utils/protectPage";
+import shallow from "zustand/shallow";
 
 const EditorPage = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
 
-	const { data: session } = useSession();
-
-	const editorBackgroundOpacity = useEditorStore(
-		(state) => state.editorBackgroundOpacity
+	const { editorBackgroundOpacity, selectedLanguage } = useEditorStore(
+		(state) => ({
+			editorBackgroundOpacity: state.editorBackgroundOpacity,
+			selectedLanguage: state.selectedLanguage,
+		}),
+		shallow
 	);
 
 	const [sidebarPortalElem, setSidebarPortalElem] =
@@ -88,7 +90,7 @@ const EditorPage = () => {
 							style={{ minWidth: "22px", height: "22px" }}
 						/>
 						<Box as="span" color="#696F80">
-							Japanese
+							{selectedLanguage.name}
 						</Box>
 						<Box as="span" color="#BDBDBD" userSelect="none">
 							/

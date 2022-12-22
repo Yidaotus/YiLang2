@@ -43,6 +43,7 @@ import { IoSave } from "react-icons/io5";
 import { RxExit, RxTrash } from "react-icons/rx";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import type { ReferenceType } from "@floating-ui/react";
+import useEditorStore from "@store/store";
 
 type TagOption = EditorTag;
 
@@ -548,6 +549,7 @@ const WordEditorPopup = React.forwardRef<
 				utils.dictionary.getAllTags.invalidate();
 			},
 		});
+		const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 
 		const selectionState = useMemo(
 			() => ({
@@ -680,6 +682,7 @@ const WordEditorPopup = React.forwardRef<
 						spelling: word.spelling,
 						tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
 						comment: word.comment,
+						language: selectedLanguage.id,
 						documentId,
 					});
 					submitWord(newWord);
@@ -687,10 +690,12 @@ const WordEditorPopup = React.forwardRef<
 					cancel();
 				}
 			},
-			[cancel, createWord, submitWord]
+			[cancel, createWord, documentId, selectedLanguage, submitWord]
 		);
 
-		const dbTags = trpc.dictionary.getAllTags.useQuery(undefined);
+		const dbTags = trpc.dictionary.getAllTags.useQuery({
+			language: selectedLanguage.id,
+		});
 
 		return (
 			<Box ref={ref} p={2} w="325px">

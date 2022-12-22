@@ -10,30 +10,41 @@ export const documentRouter = router({
 				title: z.string().optional(),
 				serializedDocument: z.string().optional(),
 				id: z.string().optional(),
+				language: z.string(),
 			})
 		)
-		.mutation(async ({ ctx: { prisma, session }, input }) => {
-			let dbDocument;
-			if (input.id) {
-				dbDocument = await prisma.document.update({
-					where: {
-						userDocumentId: { id: input.id, userId: session.user.id },
-					},
-					data: {
-						title: input.title || "Untitled Document",
-						serializedDocument: input.serializedDocument,
-					},
-				});
-			} else {
-				dbDocument = await prisma.document.create({
-					data: {
-						title: input.title || "Untitled Document",
-						user: { connect: { id: session.user.id } },
-					},
-				});
+		.mutation(
+			async ({
+				ctx: { prisma, session },
+				input: { title, serializedDocument, id, language },
+			}) => {
+				let dbDocument;
+				if (id) {
+					dbDocument = await prisma.document.update({
+						where: {
+							userDocumentId: { id, userId: session.user.id },
+						},
+						data: {
+							title: title || "Untitled Document",
+							serializedDocument,
+						},
+					});
+				} else {
+					dbDocument = await prisma.document.create({
+						data: {
+							title: title || "Untitled Document",
+							user: { connect: { id: session.user.id } },
+							language: {
+								connect: {
+									userLanguageId: { userId: session.user.id, id: language },
+								},
+							},
+						},
+					});
+				}
+				return dbDocument;
 			}
-			return dbDocument;
-		}),
+		),
 	updateDocument: protectedProcedure
 		.input(
 			z.object({
@@ -43,24 +54,13 @@ export const documentRouter = router({
 			})
 		)
 		.mutation(async ({ ctx: { prisma, session }, input }) => {
-			const currentDocument = await prisma.document.findUnique({
+			return prisma.document.update({
 				where: {
-					userDocumentId: { id: input.id, userId: session.user.id },
+					userDocumentId: { userId: session.user.id, id: input.id },
 				},
-			});
-			if (!currentDocument) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message:
-						"Trying to update a document which is not found in the database",
-				});
-			}
-			prisma.document.update({
-				where: { id: currentDocument.id },
 				data: {
 					serializedDocument: input.serializedDocument,
-					title: input.title || currentDocument.title,
-					user: { connect: { id: session.user.id } },
+					title: input.title,
 				},
 			});
 		}),
@@ -85,9 +85,11 @@ export const documentRouter = router({
 				},
 			});
 		}),
-	getAll: protectedProcedure.query(({ ctx: { prisma, session } }) => {
-		return prisma.document.findMany({
-			where: { user: { id: session.user.id } },
-		});
-	}),
+	getAll: protectedProcedure
+		.input(z.object({ language: z.string() }))
+		.query(({ ctx: { prisma, session }, input: { language } }) => {
+			return prisma.document.findMany({
+				where: { user: { id: session.user.id }, language: { id: language } },
+			});
+		}),
 });

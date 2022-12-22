@@ -3,8 +3,12 @@ import create from "zustand";
 import { devtools } from "zustand/middleware";
 import { persist } from "zustand/middleware";
 
-interface BearState {
-	bears: number;
+type SelectedLanguage = {
+	name: string;
+	id: string;
+};
+
+interface EditorStore {
 	editorState: string;
 	editorFontSize: number;
 	editorLineHeight: number;
@@ -15,19 +19,21 @@ interface BearState {
 	setEditorLineHeight: (state: number) => void;
 	setEditorBackgroundOpacity: (state: number) => void;
 	setEditorShowSpelling: (state: boolean) => void;
-	increase: (by: number) => void;
 	editorSelectedBlock: SelectedBlock;
 	setEditorSelectedBlock: (selectedBlock: SelectedBlock) => void;
+	selectedLanguage: { id: string; name: string };
+	setSelectedLanguage: (language: SelectedLanguage) => void;
 }
 
-const useEditorStore = create<BearState>()(
+const useEditorStore = create<EditorStore>()(
 	devtools(
 		persist(
 			(set) => ({
 				editorState: "",
-				bears: 0,
+				selectedLanguage: { id: "default", name: "Default" },
+				setSelectedLanguage: (language: SelectedLanguage) =>
+					set(() => ({ selectedLanguage: language })),
 				setEditorState: (newState) => set(() => ({ editorState: newState })),
-				increase: (by) => set((state) => ({ bears: state.bears + by })),
 				editorFontSize: 40,
 				setEditorFontSize: (fontSize: number) =>
 					set(() => ({ editorFontSize: fontSize })),
