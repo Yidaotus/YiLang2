@@ -154,7 +154,6 @@ export default React.memo(function Editor({
 								contentEditable={false}
 							>
 								<CustomContentEditable
-									id="EDITOR DIVV"
 									semiReadOnly={isSemiReadOnly}
 									autoFocus
 									style={{
