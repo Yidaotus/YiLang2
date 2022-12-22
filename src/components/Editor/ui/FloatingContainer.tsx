@@ -27,6 +27,7 @@ type FloatingContainerProps = {
 	stretchOnMobile?: boolean;
 	popupOffset?: number;
 	showArrow?: boolean;
+	unMountOnHide?: boolean;
 } & ChakraProps;
 
 const FloatingContainer = ({
@@ -37,6 +38,7 @@ const FloatingContainer = ({
 	stretchOnMobile = false,
 	popupOffset = 10,
 	showArrow = false,
+	unMountOnHide = false,
 	...rest
 }: FloatingContainerProps) => {
 	const arrowRef = useRef(null);

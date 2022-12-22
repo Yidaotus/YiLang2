@@ -1,4 +1,5 @@
-import type { ReactElement } from "react";
+import { ReactElement, useRef } from "react";
+import { useCallback, useState } from "react";
 
 import type { GetServerSidePropsContext } from "next";
 
@@ -7,34 +8,35 @@ import {
 	Box,
 	Divider,
 	Link,
-	List,
-	ListItem,
 	Text,
+	Input,
 	useToken,
+	InputRightElement,
+	InputGroup,
+	ButtonGroup,
+	IconButton,
 } from "@chakra-ui/react";
 
 import Layout from "@components/Layout";
-import { useSession } from "next-auth/react";
 import protectPage from "@utils/protectPage";
 import {
 	RiAddLine,
-	RiCalendarLine,
 	RiCloseLine,
-	RiHashtag,
-	RiPriceTag2Line,
-	RiPriceTagLine,
-	RiTrainLine,
 	RiTranslate,
 	RiTranslate2,
 } from "react-icons/ri";
+import type { RouterTypes } from "@utils/trpc";
 import { trpc } from "@utils/trpc";
-import { RxCalendar, RxPlus } from "react-icons/rx";
+import { RxCalendar, RxPencil1, RxPlus } from "react-icons/rx";
 import {
 	IoDocumentOutline,
-	IoPricetags,
 	IoPricetagsOutline,
+	IoSaveOutline,
 } from "react-icons/io5";
 import NextLink from "next/link";
+import { ReferenceType } from "@floating-ui/react";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 
 type DataRowProps = {
 	title: React.ReactNode;
@@ -42,11 +44,15 @@ type DataRowProps = {
 };
 
 const DataRow = ({ title, value }: DataRowProps) => (
-	<Box display="flex" gap={8}>
+	<Box
+		display="flex"
+		gap={[1, null, 8]}
+		flexDirection={["column", null, "row"]}
+	>
 		<Box
-			w="30%"
+			w={["100%", null, "30%"]}
 			display="flex"
-			alignItems="flex-end"
+			alignItems={["flex-start", null, "flex-end"]}
 			justifyContent="center"
 			flexDir="column"
 			color="text.300"
@@ -55,7 +61,7 @@ const DataRow = ({ title, value }: DataRowProps) => (
 			<Box>{title}</Box>
 		</Box>
 		<Box
-			w="70%"
+			w={["100%", null, "70%"]}
 			display="flex"
 			alignItems="flex-start"
 			justifyContent="center"
@@ -68,14 +74,428 @@ const DataRow = ({ title, value }: DataRowProps) => (
 	</Box>
 );
 
+type TranslationsDataRowProps = {
+	translations: Exclude<
+		RouterTypes["dictionary"]["getWord"]["output"],
+		null
+	>["translations"];
+	removeTranslation: (spellingToRemove: string) => void;
+	addTranslation: (newSpelling: string) => void;
+};
+const TranslationsDataRow = ({
+	translations,
+	removeTranslation,
+	addTranslation,
+}: TranslationsDataRowProps) => {
+	const [translationInput, setTranslationInput] = useState("");
+	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
+		null
+	);
+	const floatingRef = useRef(null);
+	const inputGroupRef = useRef<HTMLDivElement | null>(null);
+	const inputRef = useRef<HTMLInputElement | null>(null);
+
+	useOnClickOutside(inputGroupRef, () => {
+		setPopupReference(null);
+	});
+
+	const addTranslationFromInput = useCallback(() => {
+		addTranslation(translationInput);
+		setTranslationInput("");
+		setPopupReference(null);
+	}, [addTranslation, translationInput]);
+
+	const showInputPopup = useCallback(() => {
+		setPopupReference(floatingRef.current);
+		inputRef.current?.focus();
+	}, []);
+
+	const handleInputKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.key === "Enter") {
+				addTranslationFromInput();
+			}
+		},
+		[addTranslationFromInput]
+	);
+
+	return (
+		<>
+			<FloatingContainer
+				popupPlacement="bottom"
+				popupReference={popupReference}
+				showArrow
+			>
+				<InputGroup
+					size="md"
+					width={["90%", null, "400px"]}
+					ref={inputGroupRef}
+				>
+					<Input
+						pr="4.5rem"
+						size="md"
+						autoFocus
+						value={translationInput}
+						onKeyDown={handleInputKeyDown}
+						onChange={(e) => setTranslationInput(e.target.value)}
+						ref={inputRef}
+						border="none"
+						focusBorderColor="none"
+					/>
+					<InputRightElement width="5.5rem">
+						<ButtonGroup isAttached>
+							<IconButton
+								variant="ghost"
+								colorScheme="brand"
+								h="2.1rem"
+								size="md"
+								aria-label="Add Translation"
+								icon={<IoSaveOutline />}
+								onClick={addTranslationFromInput}
+							/>
+							<IconButton
+								variant="ghost"
+								colorScheme="brand"
+								h="2.1rem"
+								size="md"
+								aria-label="Add Translation"
+								icon={<RiCloseLine />}
+								onClick={() => setPopupReference(null)}
+							/>
+						</ButtonGroup>
+					</InputRightElement>
+				</InputGroup>
+			</FloatingContainer>
+			<DataRow
+				title={
+					<Box display="flex" gap={1} alignItems="center">
+						<RiTranslate />
+						Translation
+					</Box>
+				}
+				value={
+					<Box display="flex" gap={2} fontSize="0.85em">
+						{translations.map((translation) => (
+							<Box
+								key={translation}
+								bg="text.100"
+								borderRadius="4px"
+								color="text.500"
+								display="flex"
+								flexWrap="nowrap"
+								alignItems="center"
+								gap={1}
+								pl={2}
+							>
+								<Text>{translation}</Text>
+								<Box
+									as="button"
+									h="100%"
+									borderRightRadius="4px"
+									display="flex"
+									alignItems="center"
+									px={1}
+									sx={{
+										"& svg": {
+											color: "text.400",
+										},
+										"&:hover": {
+											"& svg": {
+												color: "white",
+											},
+											bg: "#BD4C50",
+										},
+									}}
+									onClick={() => removeTranslation(translation)}
+								>
+									<RiCloseLine />
+								</Box>
+							</Box>
+						))}
+						<Box
+							bg="text.100"
+							borderRadius="4px"
+							color="text.500"
+							display="flex"
+							flexWrap="nowrap"
+							alignItems="center"
+							justifyContent="center"
+							px={1}
+							as="button"
+							_hover={{
+								bg: "text.200",
+							}}
+							onClick={showInputPopup}
+							ref={floatingRef}
+						>
+							<RiAddLine />
+						</Box>
+					</Box>
+				}
+			/>
+		</>
+	);
+};
+
+type SpellingDataRowProps = {
+	spelling: Exclude<
+		RouterTypes["dictionary"]["getWord"]["output"],
+		null
+	>["spelling"];
+	updateSpelling: (newSpelling: string) => void;
+};
+const SpellingDataRow = ({
+	spelling,
+	updateSpelling,
+}: SpellingDataRowProps) => {
+	const [isEditingSpelling, setIsEditingSpelling] = useState(false);
+	const [spellingInput, setSpellingInput] = useState(spelling || "");
+
+	const saveSpelling = useCallback(() => {
+		setIsEditingSpelling(false);
+		if (spellingInput && spelling !== spellingInput) {
+			updateSpelling(spellingInput);
+			//updateWord.mutate({ id: dbWord.data.id, spelling: spellingInput });
+		}
+	}, [spelling, spellingInput, updateSpelling]);
+
+	return (
+		<DataRow
+			title={
+				<Box display="flex" gap={1} alignItems="center">
+					<RiTranslate2 />
+					Spelling
+				</Box>
+			}
+			value={
+				isEditingSpelling ? (
+					<InputGroup size="md" width={["90%", null, "400px"]}>
+						<Input
+							pr="4.5rem"
+							size="md"
+							value={spellingInput}
+							onChange={(e) => setSpellingInput(e.target.value)}
+							autoFocus
+						/>
+						<InputRightElement width="5.5rem">
+							<ButtonGroup isAttached>
+								<IconButton
+									variant="ghost"
+									colorScheme="brand"
+									h="2.1rem"
+									size="md"
+									onClick={saveSpelling}
+									aria-label="Add Translation"
+									icon={<IoSaveOutline />}
+								/>
+								<IconButton
+									variant="ghost"
+									colorScheme="brand"
+									h="2.1rem"
+									size="md"
+									onClick={() => setIsEditingSpelling(false)}
+									aria-label="Add Translation"
+									icon={<RiCloseLine />}
+								/>
+							</ButtonGroup>
+						</InputRightElement>
+					</InputGroup>
+				) : (
+					<Box color="text.400" display="flex" gap={2}>
+						{spelling}
+
+						<Box
+							bg="text.100"
+							borderRadius="4px"
+							color="text.500"
+							display="flex"
+							flexWrap="nowrap"
+							alignItems="center"
+							justifyContent="center"
+							px={1}
+							as="button"
+							_hover={{
+								bg: "text.200",
+							}}
+							fontSize="1.0rem"
+							onClick={() => setIsEditingSpelling(true)}
+						>
+							<RxPencil1 />
+						</Box>
+					</Box>
+				)
+			}
+		/>
+	);
+};
+
+type TagDataRowProps = {
+	tags: Exclude<RouterTypes["dictionary"]["getWord"]["output"], null>["tags"];
+};
+const TagDataRow = ({ tags }: TagDataRowProps) => {
+	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
+		null
+	);
+	const floatingRef = useRef(null);
+	const inputRef = useRef(null);
+
+	useOnClickOutside(inputRef, () => {
+		setPopupReference(null);
+	});
+
+	const showInputPopup = useCallback(() => {
+		setPopupReference(floatingRef.current);
+	}, []);
+
+	return (
+		<>
+			<FloatingContainer
+				popupPlacement="bottom"
+				popupReference={popupReference}
+				showArrow
+			>
+				<InputGroup size="md" width={["90%", null, "400px"]} ref={inputRef}>
+					<Input pr="4.5rem" size="md" autoFocus />
+					<InputRightElement width="5.5rem">
+						<ButtonGroup isAttached>
+							<IconButton
+								variant="ghost"
+								colorScheme="brand"
+								h="2.1rem"
+								size="md"
+								aria-label="Add Translation"
+								icon={<IoSaveOutline />}
+							/>
+							<IconButton
+								variant="ghost"
+								colorScheme="brand"
+								h="2.1rem"
+								size="md"
+								aria-label="Add Translation"
+								icon={<RiCloseLine />}
+							/>
+						</ButtonGroup>
+					</InputRightElement>
+				</InputGroup>
+			</FloatingContainer>
+			<DataRow
+				title={
+					<Box display="flex" gap={1} alignItems="center">
+						<IoPricetagsOutline />
+						Tags
+					</Box>
+				}
+				value={
+					<Box display="flex" gap={2} fontSize="0.85em" flexWrap="wrap">
+						{tags.map((tag) => (
+							<Box
+								key={tag.tagId}
+								bg={`${tag.tag.color}55`}
+								borderRadius="4px"
+								color="text.500"
+								display="flex"
+								flexWrap="nowrap"
+								alignItems="center"
+								gap={1}
+								pl={2}
+							>
+								<Text>{tag.tag.name}</Text>
+								<Box
+									as="button"
+									h="100%"
+									borderRightRadius="4px"
+									display="flex"
+									alignItems="center"
+									px={1}
+									sx={{
+										"& svg": {
+											color: "text.400",
+										},
+										"&:hover": {
+											"& svg": {
+												color: "white",
+											},
+											bg: "#BD4C50",
+										},
+									}}
+								>
+									<RiCloseLine />
+								</Box>
+							</Box>
+						))}
+						<Box
+							bg="text.100"
+							borderRadius="4px"
+							color="text.500"
+							display="flex"
+							flexWrap="nowrap"
+							alignItems="center"
+							justifyContent="center"
+							px={1}
+							as="button"
+							_hover={{
+								bg: "text.200",
+							}}
+							ref={floatingRef}
+							onClick={showInputPopup}
+						>
+							<RxPlus />
+						</Box>
+					</Box>
+				}
+			/>
+		</>
+	);
+};
+
 const DictionaryEntryPag = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
+	const trpcUtils = trpc.useContext();
 	const dbWord = trpc.dictionary.getWord.useQuery(id || "");
+	const updateWord = trpc.dictionary.updateWord.useMutation({
+		onSuccess() {
+			trpcUtils.dictionary.getWord.invalidate(id);
+		},
+	});
+
+	const addTranslation = useCallback(
+		(newTranslation: string) => {
+			if (dbWord.data) {
+				updateWord.mutate({
+					id: dbWord.data.id,
+					translations: [...dbWord.data.translations, newTranslation],
+				});
+			}
+		},
+		[dbWord.data, updateWord]
+	);
+
+	const removeTranslation = useCallback(
+		(translation: string) => {
+			if (dbWord.data) {
+				updateWord.mutate({
+					id: dbWord.data.id,
+					translations: dbWord.data.translations.filter(
+						(t) => t !== translation
+					),
+				});
+			}
+		},
+		[dbWord.data, updateWord]
+	);
+
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
 
-	const { data: session } = useSession();
+	const updateSpelling = useCallback(
+		(newSpelling: string) => {
+			if (dbWord.data?.id) {
+				updateWord.mutate({ id: dbWord.data.id, spelling: newSpelling });
+			}
+		},
+		[dbWord.data?.id, updateWord]
+	);
 
 	return (
 		<Box display="flex">
@@ -105,192 +525,67 @@ const DictionaryEntryPag = () => {
 					w="100%"
 					pt={4}
 				>
-					<Box
-						display="flex"
-						gap={3}
-						flexDir="column"
-						fontSize="1.1rem"
-						w="100%"
-					>
-						<DataRow
-							title={<Box />}
-							value={
-								<Box fontSize="2.5em" color="brand.500">
-									{dbWord.data?.word}
-								</Box>
-							}
-						/>
-						<DataRow
-							title={
-								<Box display="flex" gap={1} alignItems="center">
-									<RiTranslate2 />
-									Spelling
-								</Box>
-							}
-							value={<Box color="text.400">{dbWord.data?.spelling}</Box>}
-						/>
-						<DataRow
-							title={
-								<Box display="flex" gap={1} alignItems="center">
-									<RiTranslate />
-									Translation
-								</Box>
-							}
-							value={
-								<Box display="flex" gap={2} fontSize="0.85em">
-									{dbWord.data?.translations.map((translation) => (
-										<Box
-											key={translation}
-											bg="text.100"
-											borderRadius="4px"
-											color="text.500"
-											display="flex"
-											flexWrap="nowrap"
-											alignItems="center"
-											gap={1}
-											pl={2}
-										>
-											<Text>{translation}</Text>
-											<Box
-												as="button"
-												h="100%"
-												borderRightRadius="4px"
-												display="flex"
-												alignItems="center"
-												px={1}
-												sx={{
-													"& svg": {
-														color: "text.400",
-													},
-													"&:hover": {
-														"& svg": {
-															color: "white",
-														},
-														bg: "#BD4C50",
-													},
-												}}
-											>
-												<RiCloseLine />
-											</Box>
-										</Box>
-									))}
-									<Box
-										bg="text.100"
-										borderRadius="4px"
-										color="text.500"
-										display="flex"
-										flexWrap="nowrap"
-										alignItems="center"
-										justifyContent="center"
-										px={1}
-										as="button"
-										_hover={{
-											bg: "text.200",
-										}}
-									>
-										<RiAddLine />
+					{dbWord.data && (
+						<Box
+							display="flex"
+							gap={[6, null, 3]}
+							flexDir="column"
+							fontSize="1.1rem"
+							w="100%"
+						>
+							<DataRow
+								title={<Box />}
+								value={
+									<Box fontSize="2.5em" color="brand.500">
+										{dbWord.data?.word}
 									</Box>
-								</Box>
-							}
-						/>
-						<DataRow
-							title={
-								<Box display="flex" gap={1} alignItems="center">
-									<IoPricetagsOutline />
-									Tags
-								</Box>
-							}
-							value={
-								<Box display="flex" gap={2} fontSize="0.85em" flexWrap="wrap">
-									{dbWord.data?.tags.map((tag) => (
-										<Box
-											key={tag.tagId}
-											bg={`${tag.tag.color}55`}
-											borderRadius="4px"
-											color="text.500"
-											display="flex"
-											flexWrap="nowrap"
-											alignItems="center"
-											gap={1}
-											pl={2}
-										>
-											<Text>{tag.tag.name}</Text>
-											<Box
-												as="button"
-												h="100%"
-												borderRightRadius="4px"
-												display="flex"
-												alignItems="center"
-												px={1}
-												sx={{
-													"& svg": {
-														color: "text.400",
-													},
-													"&:hover": {
-														"& svg": {
-															color: "white",
-														},
-														bg: "#BD4C50",
-													},
-												}}
-											>
-												<RiCloseLine />
-											</Box>
-										</Box>
-									))}
-									<Box
-										bg="text.100"
-										borderRadius="4px"
-										color="text.500"
-										display="flex"
-										flexWrap="nowrap"
-										alignItems="center"
-										justifyContent="center"
-										px={1}
-										as="button"
-										_hover={{
-											bg: "text.200",
-										}}
-									>
-										<RxPlus />
+								}
+							/>
+							<SpellingDataRow
+								spelling={dbWord.data.spelling}
+								updateSpelling={updateSpelling}
+							/>
+							<TranslationsDataRow
+								translations={dbWord.data.translations}
+								addTranslation={addTranslation}
+								removeTranslation={removeTranslation}
+							/>
+							<TagDataRow tags={dbWord.data.tags} />
+							<DataRow
+								title={
+									<Box display="flex" gap={1} alignItems="center">
+										<RxCalendar />
+										Created at
 									</Box>
-								</Box>
-							}
-						/>
-						<DataRow
-							title={
-								<Box display="flex" gap={1} alignItems="center">
-									<RxCalendar />
-									Created at
-								</Box>
-							}
-							value={
-								<Box color="text.400" fontSize="0.9em">
-									{dbWord.data?.createdAt.toLocaleDateString()}
-								</Box>
-							}
-						/>
-						<DataRow
-							title={
-								<Box display="flex" gap={1} alignItems="center">
-									<IoDocumentOutline />
-									Source Document
-								</Box>
-							}
-							value={
-								<NextLink
-									href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
-									passHref
-								>
-									<Link>
-										<Text textDecoration="underline" color="text.400">
-											{dbWord.data?.sourceDocument?.title}
-										</Text>
-									</Link>
-								</NextLink>
-							}
-						/>
-					</Box>
+								}
+								value={
+									<Box color="text.400" fontSize="0.9em">
+										{dbWord.data.createdAt.toLocaleDateString()}
+									</Box>
+								}
+							/>
+							<DataRow
+								title={
+									<Box display="flex" gap={1} alignItems="center">
+										<IoDocumentOutline />
+										Source Document
+									</Box>
+								}
+								value={
+									<NextLink
+										href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
+										passHref
+									>
+										<Link>
+											<Text textDecoration="underline" color="text.400">
+												{dbWord.data.sourceDocument?.title}
+											</Text>
+										</Link>
+									</NextLink>
+								}
+							/>
+						</Box>
+					)}
 				</Box>
 			</Box>
 		</Box>

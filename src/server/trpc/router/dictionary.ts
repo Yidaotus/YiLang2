@@ -63,11 +63,48 @@ export const dictionaryRouter = router({
 					//@TODO WHAT?
 					comment: dbWord.comment || undefined,
 					spelling: dbWord.spelling || undefined,
-					translations: dbWord.translation.split(";"),
+					translations: !!dbWord.translation.trim()
+						? dbWord.translation.split(";")
+						: [],
 					documentId: dbWord.documentId || undefined,
 					tags: dbWord.tags.map((tagOnWord) => tagOnWord.tagId),
 				};
 				return wordWithDeserializedTranslations;
+			}
+		),
+	updateWord: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				translations: z.array(z.string()).optional(),
+				spelling: z.string().optional(),
+				comment: z.string().optional(),
+				tags: z
+					.array(
+						z.union([
+							z.string(),
+							z.object({
+								name: z.string(),
+								color: z.string(),
+							}),
+						])
+					)
+					.optional(),
+			})
+		)
+		.mutation(
+			async ({
+				ctx: { prisma, session },
+				input: { id, comment, spelling, tags, translations },
+			}) => {
+				return await prisma.word.update({
+					where: { userWordId: { id, userId: session.user.id } },
+					data: {
+						comment: comment,
+						spelling: spelling,
+						translation: !!translations ? translations.join(";") : undefined,
+					},
+				});
 			}
 		),
 	getAllTags: protectedProcedure.query(({ ctx: { prisma, session } }) => {
@@ -126,7 +163,10 @@ export const dictionaryRouter = router({
 			});
 			if (dbResult) {
 				const { translation, ...rest } = dbResult;
-				return { ...rest, translations: translation.split(";") };
+				return {
+					...rest,
+					translations: !!translation.trim() ? translation.split(";") : [],
+				};
 			}
 			return null;
 		}),
