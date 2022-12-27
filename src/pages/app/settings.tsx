@@ -1,5 +1,6 @@
 import type { NextPageWithLayout } from "pages/_app";
-import { ReactElement, useRef } from "react";
+import type { ReactElement } from "react";
+import { useRef } from "react";
 import { useCallback, useState } from "react";
 
 import Layout from "@components/Layout";
@@ -56,8 +57,9 @@ import {
 	IoTrashBin,
 } from "react-icons/io5";
 import { RxPencil1 } from "react-icons/rx";
-import { RouterTypes, trpc } from "@utils/trpc";
-import { AppRouter } from "server/trpc/router/_app";
+import type { RouterTypes } from "@utils/trpc";
+import { trpc } from "@utils/trpc";
+import useEditorStore from "@store/store";
 
 type InlineLanguageNameInputProps = {
 	name: string;
@@ -479,13 +481,14 @@ const SettingsPage: NextPageWithLayout = () => {
 
 	const { data: session } = useSession();
 	const trpcUtils = trpc.useContext();
+
+	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
+	const setActiveLanguage = useEditorStore(
+		(store) => store.setSelectedLanguage
+	);
+
 	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
 	const apiAddLanguage = trpc.dictionary.addLanguage.useMutation({
-		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
-		},
-	});
-	const apiRemoveLookupSource = trpc.dictionary.removeLookupSource.useMutation({
 		onSuccess() {
 			trpcUtils.dictionary.getAllLanguages.invalidate();
 		},
@@ -511,12 +514,30 @@ const SettingsPage: NextPageWithLayout = () => {
 	);
 
 	const removeLanguage = useCallback(() => {
-		if (itemToDelete.current) {
-			apiRemoveLanguage.mutate({ id: itemToDelete.current });
+		const itemToDeleteId = itemToDelete.current;
+		if (itemToDeleteId) {
+			apiRemoveLanguage.mutate({ id: itemToDeleteId });
+			if (itemToDeleteId === activeLanguage.id) {
+				const firstOtherLanguage = allLanguages.data?.find(
+					(lang) => lang.id !== itemToDeleteId
+				);
+				if (firstOtherLanguage) {
+					setActiveLanguage({
+						id: firstOtherLanguage.id,
+						name: firstOtherLanguage.name,
+					});
+				}
+			}
 		}
 		onClose();
 		itemToDelete.current = null;
-	}, [apiRemoveLanguage, onClose]);
+	}, [
+		activeLanguage.id,
+		allLanguages.data,
+		apiRemoveLanguage,
+		onClose,
+		setActiveLanguage,
+	]);
 
 	const addLanguage = useCallback(() => {
 		if (languageNameInput) {
