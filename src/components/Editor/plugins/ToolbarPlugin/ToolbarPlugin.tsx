@@ -97,6 +97,7 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 				id: documentId,
 				title,
 				serializedDocument: serializedState,
+				language: ""
 			});
 		});
 	}, [documentId, editor, upsertDocument]);

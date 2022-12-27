@@ -642,44 +642,54 @@ const SettingsPage: NextPageWithLayout = () => {
 								</Box>
 							</Box>
 						</Box>
-						<StatGroup w="300px">
-							<Stat>
-								<StatLabel>Collected Words</StatLabel>
-								<StatNumber
-									color="brand.500"
-									display="flex"
-									alignItems="center"
-									gap="1"
+						<Box
+							display="flex"
+							pt="3"
+							flexDir={["column", null, "row"]}
+							w={["100%", null, "initial"]}
+							gap="4"
+						>
+							<StatGroup w={["100%", null, "300px"]}>
+								<Stat>
+									<StatLabel>Collected Words</StatLabel>
+									<StatNumber
+										color="brand.500"
+										display="flex"
+										alignItems="center"
+										gap="1"
+									>
+										<IoLanguageOutline /> {userStats.data?.wordCount || 0}
+									</StatNumber>
+								</Stat>
+								<Stat>
+									<StatLabel>Documents</StatLabel>
+									<StatNumber
+										color="brand.500"
+										display="flex"
+										alignItems="center"
+										gap="1"
+									>
+										<IoDocumentOutline /> {userStats.data?.documentCount || 0}
+									</StatNumber>
+								</Stat>
+							</StatGroup>
+							<Box minW={["100%", null, "180px"]}>
+								<Text fontSize="0.875rem" fontWeight="medium">
+									Active Language
+								</Text>
+								<Select
+									minW={["100%", null, "180px"]}
+									size="md"
+									value={activeLanguage.id}
+									onChange={(e) => switchActiveLanguage(e.target.value)}
 								>
-									<IoLanguageOutline /> {userStats.data?.wordCount || 0}
-								</StatNumber>
-							</Stat>
-							<Stat>
-								<StatLabel>Documents</StatLabel>
-								<StatNumber
-									color="brand.500"
-									display="flex"
-									alignItems="center"
-									gap="1"
-								>
-									<IoDocumentOutline /> {userStats.data?.documentCount || 0}
-								</StatNumber>
-							</Stat>
-						</StatGroup>
-						<Box minW={["100%", null, "180px"]}>
-							<Text>Active Language</Text>
-							<Select
-								minW={["100%", null, "180px"]}
-								size="md"
-								value={activeLanguage.id}
-								onChange={(e) => switchActiveLanguage(e.target.value)}
-							>
-								{allLanguages.data?.map((language) => (
-									<option key={language.id} value={language.id}>
-										{language.name}
-									</option>
-								))}
-							</Select>
+									{allLanguages.data?.map((language) => (
+										<option key={language.id} value={language.id}>
+											{language.name}
+										</option>
+									))}
+								</Select>
+							</Box>
 						</Box>
 					</Box>
 				</Box>
