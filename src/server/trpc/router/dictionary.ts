@@ -175,6 +175,20 @@ export const dictionaryRouter = router({
 				});
 			}
 		),
+	getAllLookupSources: protectedProcedure
+		.input(z.object({ languageId: z.string() }))
+		.query(({ ctx: { prisma, session }, input: { languageId } }) => {
+			return prisma.lookupSource.findMany({
+				where: {
+					language: {
+						id: languageId,
+					},
+					user: {
+						id: session.user.id,
+					},
+				},
+			});
+		}),
 	getAllLanguages: protectedProcedure.query(({ ctx: { prisma, session } }) => {
 		return prisma.language.findMany({
 			where: {

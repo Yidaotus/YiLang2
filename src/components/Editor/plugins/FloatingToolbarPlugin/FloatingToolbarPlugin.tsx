@@ -60,6 +60,7 @@ import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import shallow from "zustand/shallow";
+import { trpc } from "@utils/trpc";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -117,6 +118,12 @@ function TextFormatFloatingToolbar({
 		shallow
 	);
 
+	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
+	const lookupSources = trpc.dictionary.getAllLookupSources.useQuery(
+		{ languageId: activeLanguage.id },
+		{ enabled: !!activeLanguage }
+	);
+
 	const insertLink = useCallback(() => {
 		if (!isLink) {
 			editor.dispatchCommand(TOGGLE_LINK_COMMAND, "https://");
@@ -136,6 +143,21 @@ function TextFormatFloatingToolbar({
 	const showWordEditor = useCallback(() => {
 		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
 	}, [editor]);
+
+	const openExternalDictionary = useCallback(
+		(templateUrl: string) => {
+			editor.getEditorState().read(() => {
+				const selection = $getSelection();
+				const text = selection?.getTextContent();
+				const url = templateUrl.replace("{word}", encodeURIComponent(text || ''));
+
+				if (text && window && url) {
+					window.open(url, "_blank")?.focus();
+				}
+			});
+		},
+		[editor]
+	);
 
 	const iconSize = "18px";
 	return (
@@ -378,29 +400,16 @@ function TextFormatFloatingToolbar({
 						border="none"
 					/>
 					<MenuList fontSize={16}>
-						<MenuItem
-							py={1}
-							color="#40454f"
-							onClick={() => {
-								editor.getEditorState().read(() => {
-									const selection = $getSelection();
-									const text = selection?.getTextContent();
-									if (text && window) {
-										window
-											.open(
-												`https://wadoku.de/search/${encodeURIComponent(text)}`,
-												"_blank"
-											)
-											?.focus();
-									}
-								});
-							}}
-						>
-							Wadoku
-						</MenuItem>
-						<MenuItem color="#40454f">Jisho</MenuItem>
-						<MenuItem color="#40454f">Google</MenuItem>
-						<MenuItem color="#40454f">Baidu</MenuItem>
+						{lookupSources.data?.map((lookupSource) => (
+							<MenuItem
+								key={lookupSource.id}
+								py={1}
+								color="#40454f"
+								onClick={() => openExternalDictionary(lookupSource.url)}
+							>
+								{lookupSource.name}
+							</MenuItem>
+						))}
 					</MenuList>
 				</Menu>
 			</ButtonGroup>
