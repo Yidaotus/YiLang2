@@ -30,6 +30,7 @@ import {
 	Input,
 	List,
 	ListItem,
+	Select,
 	SkeletonText,
 	Stat,
 	StatGroup,
@@ -38,12 +39,12 @@ import {
 	StatNumber,
 	Text,
 	useDisclosure,
+	useToast,
 	useToken,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import type { GetServerSidePropsContext } from "next";
 import protectPage from "@utils/protectPage";
-import type { Session } from "next-auth";
 import {
 	IoAdd,
 	IoClose,
@@ -476,6 +477,8 @@ const SettingsPage: NextPageWithLayout = () => {
 		"brand.500",
 	]);
 
+	const toast = useToast();
+
 	const [languageNameInput, setLanguageNameInput] = useState("");
 	const [showLanguageNameInput, setShowLanguageNameInput] = useState(false);
 
@@ -486,6 +489,8 @@ const SettingsPage: NextPageWithLayout = () => {
 	const setActiveLanguage = useEditorStore(
 		(store) => store.setSelectedLanguage
 	);
+
+	const userStats = trpc.user.stats.useQuery();
 
 	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
 	const apiAddLanguage = trpc.dictionary.addLanguage.useMutation({
@@ -539,6 +544,29 @@ const SettingsPage: NextPageWithLayout = () => {
 		setActiveLanguage,
 	]);
 
+	const switchActiveLanguage = useCallback(
+		(id: string) => {
+			const selectedLanguage = allLanguages.data?.find(
+				(language) => language.id === id
+			);
+
+			if (selectedLanguage) {
+				setActiveLanguage({
+					id,
+					name: selectedLanguage.name,
+				});
+				toast({
+					title: "Language switched",
+					description: `Active language switched to ${selectedLanguage.name}`,
+					status: "success",
+					duration: 9000,
+					isClosable: true,
+				});
+			}
+		},
+		[allLanguages.data, setActiveLanguage, toast]
+	);
+
 	const addLanguage = useCallback(() => {
 		if (languageNameInput) {
 			apiAddLanguage.mutate({ name: languageNameInput.trim() });
@@ -589,7 +617,7 @@ const SettingsPage: NextPageWithLayout = () => {
 				</AlertDialogOverlay>
 			</AlertDialog>
 			<Box display="flex" flexDir="column">
-				<Box as="section" pl={["6", null, "6rem"]} pt="2rem">
+				<Box as="section" px={["6", null, "6rem"]} pt="2rem">
 					<Box
 						display="flex"
 						gap={[4, null, 12]}
@@ -623,9 +651,8 @@ const SettingsPage: NextPageWithLayout = () => {
 									alignItems="center"
 									gap="1"
 								>
-									<IoLanguageOutline /> 52
+									<IoLanguageOutline /> {userStats.data?.wordCount || 0}
 								</StatNumber>
-								<StatHelpText>Feb 12 - Feb 28</StatHelpText>
 							</Stat>
 							<Stat>
 								<StatLabel>Documents</StatLabel>
@@ -635,11 +662,25 @@ const SettingsPage: NextPageWithLayout = () => {
 									alignItems="center"
 									gap="1"
 								>
-									<IoDocumentOutline /> 19
+									<IoDocumentOutline /> {userStats.data?.documentCount || 0}
 								</StatNumber>
-								<StatHelpText>Feb 12 - Feb 28</StatHelpText>
 							</Stat>
 						</StatGroup>
+						<Box minW={["100%", null, "180px"]}>
+							<Text>Active Language</Text>
+							<Select
+								minW={["100%", null, "180px"]}
+								size="md"
+								value={activeLanguage.id}
+								onChange={(e) => switchActiveLanguage(e.target.value)}
+							>
+								{allLanguages.data?.map((language) => (
+									<option key={language.id} value={language.id}>
+										{language.name}
+									</option>
+								))}
+							</Select>
+						</Box>
 					</Box>
 				</Box>
 				<Divider py="2" />

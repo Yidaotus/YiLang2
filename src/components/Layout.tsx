@@ -1,7 +1,7 @@
 import { Avatar, Box, Button, IconButton, useToken } from "@chakra-ui/react";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useState } from "react";
@@ -42,6 +42,9 @@ const Layout = ({ children }: LayoutProps) => {
 	}, [router]);
 	const openDictionary = useCallback(() => {
 		router.push("/app/dictionary/");
+	}, [router]);
+	const openSettings = useCallback(() => {
+		router.push("/app/settings/");
 	}, [router]);
 
 	const { data: session } = useSession();
@@ -177,6 +180,8 @@ const Layout = ({ children }: LayoutProps) => {
 									bg="text.100"
 									name={session.user?.name || "unkown"}
 									src={session.user?.image || undefined}
+									_hover={{ cursor: "pointer" }}
+									onClick={openSettings}
 								/>
 							</>
 						) : (
