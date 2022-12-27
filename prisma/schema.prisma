@@ -77,8 +77,8 @@ model LookupSource {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   userId     String
-  user       User      @relation(fields: [userId], references: [id])
-  Language   Language? @relation(fields: [userId, languageId], references: [userId, id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language   Language? @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId String?
 
   @@unique(fields: [userId, id], name: "userLookupSourceId")
@@ -91,7 +91,7 @@ model Language {
   updatedAt     DateTime       @updatedAt
   lookupSources LookupSource[]
   userId        String
-  user          User           @relation(fields: [userId], references: [id])
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   Word          Word[]
   Document      Document[]
   Tag           Tag[]
@@ -107,8 +107,8 @@ model Tag {
   updatedAt  DateTime      @updatedAt
   words      TagsOnWords[]
   userId     String
-  user       User          @relation(fields: [userId], references: [id])
-  language   Language      @relation(fields: [userId, languageId], references: [userId, id])
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language   Language      @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId String
   Document   Document[]
   documentId String?
@@ -128,8 +128,8 @@ model Word {
   sourceDocument Document?     @relation(fields: [documentId], references: [id])
   tags           TagsOnWords[]
   userId         String
-  user           User          @relation(fields: [userId], references: [id])
-  language       Language      @relation(fields: [userId, languageId], references: [userId, id])
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language       Language      @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId     String
 
   @@unique(fields: [userId, id], name: "userWordId")
@@ -155,8 +155,8 @@ model Document {
   updatedAt          DateTime @updatedAt
   Word               Word[]
   userId             String
-  user               User     @relation(fields: [userId], references: [id])
-  language           Language @relation(fields: [userId, languageId], references: [userId, id])
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language           Language @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId         String
   tags               Tag[]
 

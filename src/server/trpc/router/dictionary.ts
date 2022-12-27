@@ -175,6 +175,41 @@ export const dictionaryRouter = router({
 				});
 			}
 		),
+	getAllLanguages: protectedProcedure.query(({ ctx: { prisma, session } }) => {
+		return prisma.language.findMany({
+			where: {
+				user: {
+					id: session.user.id,
+				},
+			},
+			include: {
+				lookupSources: true,
+			},
+		});
+	}),
+	addLanguage: protectedProcedure
+		.input(z.object({ name: z.string() }))
+		.mutation(async ({ ctx: { prisma, session }, input: { name } }) => {
+			const language = await prisma.language.create({
+				data: {
+					user: { connect: { id: session.user.id } },
+					name,
+				},
+			});
+			return language;
+		}),
+	removeLanguage: protectedProcedure
+		.input(z.object({ id: z.string() }))
+		.mutation(async ({ ctx: { prisma, session }, input: { id } }) => {
+			await prisma.language.delete({
+				where: {
+					userLanguageId: {
+						id,
+						userId: session.user.id,
+					},
+				},
+			});
+		}),
 	getAllTags: protectedProcedure
 		.input(z.object({ language: z.string() }))
 		.query(({ ctx: { prisma, session }, input: { language } }) => {
@@ -189,6 +224,69 @@ export const dictionaryRouter = router({
 				},
 			});
 		}),
+	changeLanguageName: protectedProcedure
+		.input(z.object({ id: z.string(), name: z.string() }))
+		.mutation(async ({ ctx: { prisma, session }, input: { id, name } }) => {
+			await prisma.language.update({
+				where: {
+					userLanguageId: {
+						userId: session.user.id,
+						id,
+					},
+				},
+				data: {
+					name,
+				},
+			});
+		}),
+	removeLookupSource: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+			})
+		)
+		.mutation(async ({ ctx: { prisma, session }, input: { id } }) => {
+			await prisma.lookupSource.delete({
+				where: {
+					userLookupSourceId: {
+						id,
+						userId: session.user.id,
+					},
+				},
+			});
+		}),
+	addLookupSource: protectedProcedure
+		.input(
+			z.object({
+				languageId: z.string(),
+				sourceName: z.string(),
+				sourceUrl: z.string(),
+			})
+		)
+		.mutation(
+			async ({
+				ctx: { prisma, session },
+				input: { languageId, sourceName, sourceUrl },
+			}) => {
+				await prisma.lookupSource.create({
+					data: {
+						name: sourceName,
+						url: sourceUrl,
+						language: {
+							connect: {
+								userLanguageId: {
+									userId: session.user.id,
+									id: languageId,
+								},
+							},
+						},
+						user: {
+							connect: { id: session.user.id },
+						},
+					},
+				});
+			}
+		),
 	findTags: protectedProcedure
 		.input(z.object({ searchString: z.string(), language: z.string() }))
 		.query(
