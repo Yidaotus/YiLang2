@@ -255,6 +255,30 @@ export const dictionaryRouter = router({
 				},
 			});
 		}),
+	changeLookupSource: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				name: z.string(),
+				url: z.string(),
+			})
+		)
+		.mutation(
+			async ({ ctx: { prisma, session }, input: { id, name, url } }) => {
+				await prisma.lookupSource.update({
+					where: {
+						userLookupSourceId: {
+							id,
+							userId: session.user.id,
+						},
+					},
+					data: {
+						name,
+						url,
+					},
+				});
+			}
+		),
 	addLookupSource: protectedProcedure
 		.input(
 			z.object({
