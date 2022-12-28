@@ -33,6 +33,7 @@ import {
 	FormLabel,
 	Textarea,
 	IconButton,
+	Spinner,
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -699,6 +700,23 @@ const WordEditorPopup = React.forwardRef<
 
 		return (
 			<Box ref={ref} p={2} w="325px">
+				{createWord.isLoading && (
+					<Box
+						w="100%"
+						h="100%"
+						pos="absolute"
+						left="0"
+						top="0"
+						bg="rgba(0,0,0,0.2)"
+						display="flex"
+						alignItems="center"
+						justifyContent="center"
+						zIndex={50}
+						borderRadius="5px"
+					>
+						<Spinner color="brand.500" size="lg" />
+					</Box>
+				)}
 				<Box
 					sx={{
 						gridColumnStart: 1,
