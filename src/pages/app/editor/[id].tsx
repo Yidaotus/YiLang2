@@ -63,12 +63,12 @@ const EditorPage = () => {
 				pos="relative"
 				ref={onRootRef}
 				sx={{
-					"-ms-overflow-style": "none",
-					"scrollbar-width": {
+					msOverflowStyle: "none",
+					scrollbarWidth: {
 						base: "default",
 						md: "none",
 					},
-					"overflow-y": "scroll",
+					overflowY: "scroll",
 					"&::-webkit-scrollbar": {
 						display: { base: "default", md: "none" },
 					},
@@ -76,7 +76,7 @@ const EditorPage = () => {
 			>
 				<Box
 					bg="rgba(255, 255, 255, 0.9)"
-					py={6}
+					py={4}
 					px={[4, 16]}
 					top="0"
 					zIndex="20"
@@ -89,12 +89,6 @@ const EditorPage = () => {
 							color="#696F80"
 							style={{ minWidth: "22px", height: "22px" }}
 						/>
-						<Box as="span" color="#696F80">
-							{selectedLanguage.name}
-						</Box>
-						<Box as="span" color="#BDBDBD" userSelect="none">
-							/
-						</Box>
 						<Box
 							as="span"
 							color="#696F80"
@@ -103,58 +97,6 @@ const EditorPage = () => {
 							overflow="hidden"
 						>
 							{documentTitle}
-						</Box>
-					</Box>
-					<Box
-						display="flex"
-						gap="16px"
-						fontSize="16px"
-						alignItems="center"
-						pt="7px"
-					>
-						<IoPricetagsOutline
-							color="#696F80"
-							style={{ minWidth: "20px", height: "20px" }}
-						/>
-						<Box display="flex" gap="12px">
-							<Box
-								as="span"
-								color="#FFFFFF"
-								borderRadius="4px"
-								bg="#EE8041"
-								px="6px"
-							>
-								news
-							</Box>
-							<Box
-								as="span"
-								color="#FFFFFF"
-								borderRadius="4px"
-								bg="#415DEE"
-								px="6px"
-							>
-								intermediate
-							</Box>
-							<Box
-								as="span"
-								color="#FFFFFF"
-								borderRadius="4px"
-								bg="#55C560"
-								px="6px"
-							>
-								formal
-							</Box>
-							<IconButton
-								aria-label="Add a tag"
-								icon={<span>+</span>}
-								w="26px"
-								minW="0px"
-								h="26px"
-								color="#696F80"
-								fontWeight="semibold"
-								borderRadius="4px"
-								bg="#EAEAEA"
-							/>
 						</Box>
 					</Box>
 				</Box>

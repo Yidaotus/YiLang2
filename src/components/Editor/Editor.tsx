@@ -2,7 +2,7 @@ import type { Klass, LexicalCommand, LexicalNode } from "lexical";
 
 import { ListNode, ListItemNode } from "@lexical/list";
 
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { createCommand } from "lexical";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
@@ -43,8 +43,6 @@ import shallow from "zustand/shallow";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
-import { isMainThread } from "worker_threads";
-import useLoadingToast from "@components/LoadingToast/LoadingToast";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,

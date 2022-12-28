@@ -1,3 +1,4 @@
+import Word from "@components/Word";
 import { z } from "zod";
 
 import { router, protectedProcedure } from "../trpc";
@@ -188,6 +189,42 @@ export const dictionaryRouter = router({
 					},
 				},
 			});
+		}),
+	getRecentDocuments: protectedProcedure
+		.input(z.object({ take: z.number() }))
+		.query(({ ctx: { prisma, session }, input: { take } }) => {
+			return prisma.document.findMany({
+				where: {
+					user: { id: session.user.id },
+				},
+				include: {
+					language: true,
+				},
+				orderBy: {
+					createdAt: "desc",
+				},
+				take,
+			});
+		}),
+	getRecentWords: protectedProcedure
+		.input(z.object({ take: z.number() }))
+		.query(async ({ ctx: { prisma, session }, input: { take } }) => {
+			const recentWords = await prisma.word.findMany({
+				where: {
+					user: { id: session.user.id },
+				},
+				include: {
+					language: true,
+				},
+				orderBy: {
+					createdAt: "desc",
+				},
+				take,
+			});
+			return recentWords.map((word) => ({
+				...word,
+				translations: word.translation.split(";"),
+			}));
 		}),
 	getAllLanguages: protectedProcedure.query(({ ctx: { prisma, session } }) => {
 		return prisma.language.findMany({

@@ -37,7 +37,7 @@ const Layout = ({ children }: LayoutProps) => {
 	const apiCreateDocument = trpc.document.upsertDocument.useMutation();
 
 	const openHome = useCallback(() => {
-		router.push("/app/editor/");
+		router.push("/app");
 	}, [router]);
 	const createNewDocument = useCallback(async () => {
 		const newDocumentId = await apiCreateDocument.mutateAsync({
