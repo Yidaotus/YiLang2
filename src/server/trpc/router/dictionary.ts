@@ -394,6 +394,7 @@ export const dictionaryRouter = router({
 				const { translation, ...rest } = dbResult;
 				return {
 					...rest,
+					tags: dbResult.tags.map((tOnW) => tOnW.tag),
 					translations: !!translation.trim() ? translation.split(";") : [],
 				};
 			}

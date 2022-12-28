@@ -1,4 +1,5 @@
-import { ReactElement, useRef } from "react";
+import type { ReactElement } from "react";
+import { useRef } from "react";
 import { useCallback, useState } from "react";
 
 import type { GetServerSidePropsContext } from "next";
@@ -15,6 +16,7 @@ import {
 	InputGroup,
 	ButtonGroup,
 	IconButton,
+	Textarea,
 } from "@chakra-ui/react";
 
 import Layout from "@components/Layout";
@@ -29,16 +31,18 @@ import type { RouterTypes } from "@utils/trpc";
 import { trpc } from "@utils/trpc";
 import { RxCalendar, RxPencil1, RxPlus } from "react-icons/rx";
 import {
+	IoChatbubble,
+	IoChatbubbleEllipses,
 	IoDocumentOutline,
 	IoPricetagsOutline,
 	IoSaveOutline,
 } from "react-icons/io5";
 import NextLink from "next/link";
-import { ReferenceType } from "@floating-ui/react";
+import type { ReferenceType } from "@floating-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { CreatableSelect } from "chakra-react-select";
-import { Tag } from "@prisma/client";
+import type { Tag } from "@prisma/client";
 import useEditorStore from "@store/store";
 
 type DataRowProps = {
@@ -382,7 +386,7 @@ const TagDataRow = ({
 				popupReference={popupReference}
 				showArrow
 			>
-				<Box ref={inputRef}>
+				<Box ref={inputRef} zIndex={50}>
 					<CreatableSelect
 						size="md"
 						noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
@@ -490,8 +494,8 @@ const TagDataRow = ({
 					<Box display="flex" gap={2} fontSize="0.85em" flexWrap="wrap">
 						{tags.map((tag) => (
 							<Box
-								key={tag.tagId}
-								bg={`${tag.tag.color}55`}
+								key={tag.id}
+								bg={`${tag.color}55`}
 								borderRadius="4px"
 								color="text.500"
 								display="flex"
@@ -500,7 +504,7 @@ const TagDataRow = ({
 								gap={1}
 								pl={2}
 							>
-								<Text>{tag.tag.name}</Text>
+								<Text>{tag.name}</Text>
 								<Box
 									as="button"
 									h="100%"
@@ -519,7 +523,7 @@ const TagDataRow = ({
 											bg: "#BD4C50",
 										},
 									}}
-									onClick={() => handleRemoveTag(tag.tag)}
+									onClick={() => handleRemoveTag(tag)}
 								>
 									<RiCloseLine />
 								</Box>
@@ -550,6 +554,10 @@ const TagDataRow = ({
 	);
 };
 
+const filterUndefined = <T,>(v: T | undefined): v is T => {
+	return v !== undefined;
+};
+
 const DictionaryEntryPag = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
@@ -559,6 +567,41 @@ const DictionaryEntryPag = () => {
 	const dbWord = trpc.dictionary.getWord.useQuery({ id });
 	const updateWord = trpc.dictionary.updateWord.useMutation({
 		onSuccess() {
+			trpcUtils.dictionary.getWord.invalidate({ id });
+		},
+		onMutate(updatedWord) {
+			const currentWord = trpcUtils.dictionary.getWord.getData({ id });
+
+			if (currentWord) {
+				trpcUtils.dictionary.getWord.cancel({ id });
+				const allTags = trpcUtils.dictionary.getAllTags.getData({
+					language: selectedLanguage.id,
+				});
+				console.debug({ allTags });
+				trpcUtils.dictionary.getWord.setData(
+					{
+						...currentWord,
+						translations: updatedWord.translations || currentWord.translations,
+						spelling: updatedWord.spelling || currentWord.spelling,
+						tags:
+							updatedWord.tags
+								?.map((t) =>
+									typeof t === "string"
+										? allTags?.find((tag) => tag.id === t)
+										: undefined
+								)
+								.filter(filterUndefined) || currentWord.tags,
+					},
+					{ id }
+				);
+
+				return { currentWord };
+			}
+		},
+		onError: (err, newTodo, context) => {
+			trpcUtils.dictionary.getWord.setData(context?.currentWord, { id });
+		},
+		onSettled: () => {
 			trpcUtils.dictionary.getWord.invalidate({ id });
 		},
 	});
@@ -611,7 +654,7 @@ const DictionaryEntryPag = () => {
 			if (dbWord.data?.id) {
 				updateWord.mutate({
 					id: dbWord.data.id,
-					tags: [...dbWord.data.tags.map((t) => t.tagId), tagId],
+					tags: [...dbWord.data.tags.map((t) => t.id), tagId],
 					language: selectedLanguage.id,
 				});
 			}
@@ -624,7 +667,7 @@ const DictionaryEntryPag = () => {
 			if (dbWord.data?.id) {
 				updateWord.mutate({
 					id: dbWord.data.id,
-					tags: dbWord.data.tags.map((t) => t.tagId).filter((t) => t !== tagId),
+					tags: dbWord.data.tags.map((t) => t.id).filter((t) => t !== tagId),
 					language: selectedLanguage.id,
 				});
 			}
@@ -722,6 +765,19 @@ const DictionaryEntryPag = () => {
 											</Text>
 										</Link>
 									</NextLink>
+								}
+							/>
+							<DataRow
+								title={
+									<Box display="flex" gap={1} alignItems="center">
+										<IoChatbubbleEllipses />
+										Comment
+									</Box>
+								}
+								value={
+									<Textarea color="text.400" maxW="500px" readOnly zIndex={-1}>
+										{dbWord.data.comment}
+									</Textarea>
 								}
 							/>
 						</Box>

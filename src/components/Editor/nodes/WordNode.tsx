@@ -144,9 +144,9 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 								bg: `linear-gradient(to right, ${dbWord.data.tags
 									.map(
 										(t, i, tags) =>
-											`${t.tag.color} ${(i / tags.length) * 100}%, ${
-												t.tag.color
-											} ${((i + 1) / tags.length) * 100}%`
+											`${t.color} ${(i / tags.length) * 100}%, ${t.color} ${
+												((i + 1) / tags.length) * 100
+											}%`
 									)
 									.join(",")})`,
 							},

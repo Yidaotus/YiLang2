@@ -45,9 +45,9 @@ const Word = ({ wordKey, wordId, border = false, clickHandler }: WordProps) => {
 							<Box display="flex" pl={6} gap={1}>
 								{dbWord.data.tags.map((t) => (
 									<Box
-										key={t.tagId}
+										key={t.id}
 										borderRadius="100%"
-										border={`5px solid ${t.tag.color}`}
+										border={`5px solid ${t.color}`}
 									/>
 								))}
 							</Box>
