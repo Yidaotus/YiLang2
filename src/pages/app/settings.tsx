@@ -34,7 +34,6 @@ import {
 	SkeletonText,
 	Stat,
 	StatGroup,
-	StatHelpText,
 	StatLabel,
 	StatNumber,
 	Text,
@@ -75,6 +74,11 @@ const InlineLanguageNameInput = ({
 	const [showInlineLanguageNameInput, setShowInlineLanguageNameInput] =
 		useState(false);
 
+	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
+	const setActiveLanguage = useEditorStore(
+		(store) => store.setSelectedLanguage
+	);
+
 	const trpcUtils = trpc.useContext();
 	const apiChangeLanguageName = trpc.dictionary.changeLanguageName.useMutation({
 		onSuccess() {
@@ -88,9 +92,18 @@ const InlineLanguageNameInput = ({
 				id,
 				name: inlineLanguageNameInput.trim(),
 			});
+			if (activeLanguage.id === id) {
+				setActiveLanguage({ id, name: inlineLanguageNameInput.trim() });
+			}
 		}
 		setShowInlineLanguageNameInput(false);
-	}, [apiChangeLanguageName, id, inlineLanguageNameInput]);
+	}, [
+		activeLanguage.id,
+		apiChangeLanguageName,
+		id,
+		inlineLanguageNameInput,
+		setActiveLanguage,
+	]);
 
 	const handleInlineLanguageNameInputKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
