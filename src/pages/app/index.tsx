@@ -91,7 +91,7 @@ const DashboardPage: NextPageWithLayout = () => {
 	);
 
 	return (
-		<Box display="flex" flexDir="column">
+		<Box display="flex" flexDir="column" maxH="100vh" overflow="auto" py="2">
 			<Box as="section" px={["6", null, "6rem"]} pt="2rem">
 				<Box
 					display="flex"
