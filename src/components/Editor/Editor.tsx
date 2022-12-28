@@ -43,6 +43,7 @@ import shallow from "zustand/shallow";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
+import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -190,6 +191,7 @@ export default React.memo(function Editor({
 					<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
 					<ListPlugin />
 					<ImagesPlugin />
+					<SaveOnBlurPlugin />
 					<SelectedBlockTypePlugin
 						setSelectedBlockType={setEditorSelectedBlockType}
 					/>
