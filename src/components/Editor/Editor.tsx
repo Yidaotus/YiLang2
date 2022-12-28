@@ -185,13 +185,13 @@ export default React.memo(function Editor({
 					/>
 					<HistoryPlugin />
 					<PersistStateOnPageChangePlugion documentId={documentId} />
-					<FetchDocumentPlugin id={documentId} />
+					<FetchDocumentPlugin documentId={documentId} />
 					<TabIndentationPlugin />
 					<ListMaxIndentLevelPlugin maxDepth={4} />
 					<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
 					<ListPlugin />
 					<ImagesPlugin />
-					<SaveOnBlurPlugin />
+					<SaveOnBlurPlugin documentId={documentId} />
 					<SelectedBlockTypePlugin
 						setSelectedBlockType={setEditorSelectedBlockType}
 					/>
