@@ -164,7 +164,7 @@ const EditorPage = () => {
 						px={[4, 4, 0]}
 						pt="2rem"
 						pb="4rem"
-						fontFamily="'Source Sans 3', 'Noto Sans JP'"
+						fontFamily="'Source Sans 3', 'Noto Sans SC', 'Noto Sans JP'"
 					>
 						{id && (
 							<Editor

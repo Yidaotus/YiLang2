@@ -15,8 +15,8 @@ import "../styles/globals.css";
 const theme = extendTheme(
 	{
 		fonts: {
-			heading: `'Outfit', 'Noto Sans JP', sans-serif`,
-			body: `'Outfit', 'Noto Sans JP', sans-serif`,
+			heading: `'Outfit', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
+			body: `'Outfit', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
 			button: `'Outfit', sans-serif`,
 		},
 		colors: {

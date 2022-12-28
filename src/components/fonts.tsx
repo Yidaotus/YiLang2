@@ -138,6 +138,42 @@ const Fonts = () => (
        url('/fonts/noto-sans-jp-v42-latin_japanese-900.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
        url('/fonts/noto-sans-jp-v42-latin_japanese-900.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
+/* noto-sans-sc-300 - chinese-simplified */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 300;
+  src: local(''),
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-300.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-300.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* noto-sans-sc-regular - chinese-simplified */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* noto-sans-sc-500 - chinese-simplified */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 500;
+  src: local(''),
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-500.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-500.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* noto-sans-sc-700 - chinese-simplified */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  src: local(''),
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-700.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/fonts/noto-sans-sc-v26-chinese-simplified-700.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
       `}
 	/>
 );
