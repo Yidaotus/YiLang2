@@ -361,7 +361,6 @@ const WordForm = ({
 									size="md"
 									value={value}
 									onChange={(val) => onChange(val)}
-									noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
 									chakraStyles={{
 										container: (prev) => ({
 											...prev,

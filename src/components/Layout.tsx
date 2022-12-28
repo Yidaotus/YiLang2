@@ -149,7 +149,7 @@ const Layout = ({ children }: LayoutProps) => {
 							h="48px"
 							icon={
 								<IoHomeOutline
-									color={activeRoute === "editor" ? iconActive : iconInactive}
+									color={activeRoute === "app" ? iconActive : iconInactive}
 									style={{
 										width: "22px",
 										height: "22px",
