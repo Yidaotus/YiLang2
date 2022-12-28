@@ -1,10 +1,17 @@
-import { Avatar, Box, Button, IconButton, useToken } from "@chakra-ui/react";
+import {
+	Avatar,
+	Box,
+	Button,
+	IconButton,
+	Spinner,
+	useToken,
+} from "@chakra-ui/react";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	IoHomeOutline,
 	IoLibraryOutline,
@@ -19,6 +26,7 @@ type LayoutProps = {
 const Layout = ({ children }: LayoutProps) => {
 	const router = useRouter();
 	const activeRoute = router.pathname.split("/").pop();
+	const [isLoading, setIsLoading] = useState(false);
 	const [iconInactive, iconActive] = useToken("colors", [
 		"text.300",
 		"brand.500",
@@ -46,6 +54,23 @@ const Layout = ({ children }: LayoutProps) => {
 	const openSettings = useCallback(() => {
 		router.push("/app/settings/");
 	}, [router]);
+
+	const routerChangeStart = useCallback(() => {
+		setIsLoading(true);
+	}, []);
+
+	const routerChangeFinish = useCallback(() => {
+		setIsLoading(false);
+	}, []);
+
+	useEffect(() => {
+		router.events.on("routeChangeStart", routerChangeStart);
+		router.events.on("routeChangeComplete", routerChangeFinish);
+		return () => {
+			router.events.off("routeChangeStart", routerChangeStart);
+			router.events.off("routeChangeComplete", routerChangeFinish);
+		};
+	});
 
 	const { data: session } = useSession();
 
@@ -194,7 +219,24 @@ const Layout = ({ children }: LayoutProps) => {
 						<Box h="10px" />
 					</Box>
 				</Box>
-				<Box w="100%">{children}</Box>
+				<Box w="100%">
+					{isLoading && (
+						<Box
+							w="100%"
+							h="100%"
+							bg="rgba(0,0,0,0.4)"
+							display="flex"
+							alignItems="center"
+							justifyContent="center"
+							pos="absolute"
+							top="0"
+							zIndex={50}
+						>
+							<Spinner color="brand.500" w="150px" h="150px" />
+						</Box>
+					)}
+					{children}
+				</Box>
 			</Box>
 		</>
 	);

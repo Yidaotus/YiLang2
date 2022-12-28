@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { $getRoot } from "lexical";
+import { Box, Spinner } from "@chakra-ui/react";
 
 const FetchDocumentPlugin = ({ id }: { id?: string }) => {
 	const [editor] = useLexicalComposerContext();
 	const [shouldFetch, setShouldFetch] = useState(false);
-	trpc.document.getById.useQuery(id || "", {
+	const documentQuery = trpc.document.getById.useQuery(id || "", {
 		enabled: !!id && shouldFetch,
 		onSuccess(data) {
 			setShouldFetch(false);
@@ -40,7 +41,26 @@ const FetchDocumentPlugin = ({ id }: { id?: string }) => {
 	}, [editor, editorDocument, shouldFetch]);
 */
 
-	return null;
+	return (
+		<>
+			{documentQuery.isLoading && (
+				<Box
+					w="100vw"
+					h="100vh"
+					bg="rgba(0,0,0,0.4)"
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+					pos="fixed"
+					left="60px"
+					top="0"
+					zIndex={50}
+				>
+					<Spinner color="brand.500" w="150px" h="150px" />
+				</Box>
+			)}
+		</>
+	);
 };
 
 export default FetchDocumentPlugin;
