@@ -44,7 +44,6 @@ export class RemarkContainerNode extends ElementNode {
 	createDOM(config: EditorConfig): HTMLElement {
 		const dom = document.createElement("div");
 		dom.classList.add(remarkStyles.Remark__Container || "Remark__Container");
-		dom.open = this.__open;
 		return dom;
 	}
 
