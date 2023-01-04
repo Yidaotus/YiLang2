@@ -1,4 +1,5 @@
 import type { LexicalEditor } from "lexical";
+import { $getRoot } from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import { $createParagraphNode } from "lexical";
@@ -17,10 +18,14 @@ import {
 	RiDoubleQuotesL,
 	RiH1,
 	RiH2,
+	RiInformationLine,
 	RiListOrdered,
 	RiListUnordered,
 	RiParagraph,
 } from "react-icons/ri";
+import { $createRemarkContainerNode } from "../plugins/RemarkBlockPlugin/RemarkContainerNode";
+import { $createRemarkContentNode } from "../plugins/RemarkBlockPlugin/RemarkContentNode";
+import { $createRemarkTitleNode } from "../plugins/RemarkBlockPlugin/RemarkTitleNode";
 
 type FormatterParams = {
 	editor: LexicalEditor;
@@ -45,6 +50,33 @@ export const formatHeading = ({
 			}
 		}
 	});
+};
+
+export const formatRemark = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "remark") {
+		editor.update(() => {
+			const selection = $getSelection();
+			if ($isRangeSelection(selection)) {
+				const anchorNode = selection.anchor.getNode();
+				const focusNode = selection.focus.getNode();
+				if (focusNode !== anchorNode) return false;
+
+				const anchorParent = anchorNode.getParent();
+				if (!anchorParent || anchorParent === $getRoot()) return false;
+
+				const anchorChildren = anchorParent.getChildren();
+				anchorParent.remove();
+
+				const title = $createRemarkTitleNode();
+				const content = $createRemarkContentNode().append(
+					$createParagraphNode().append(...anchorChildren)
+				);
+				const container = $createRemarkContainerNode().append(title, content);
+				selection.insertNodes([container]);
+				content.selectStart();
+			}
+		});
+	}
 };
 
 export const formatParagraph = ({
@@ -149,5 +181,11 @@ export const blockTypes: Partial<Record<SelectedBlockType, any>> = {
 		icon: <RiDoubleQuotesL size="100%" />,
 		formatter: ({ editor, currentBlockType }: FormatterParams) =>
 			formatQuote({ editor, currentBlockType }),
+	},
+	remark: {
+		type: "Remark",
+		icon: <RiInformationLine size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatRemark({ editor, currentBlockType }),
 	},
 };

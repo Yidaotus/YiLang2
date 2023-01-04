@@ -15,6 +15,7 @@ import {
 	$getNearestNodeOfType,
 } from "@lexical/utils";
 import { useCallback, useEffect } from "react";
+import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -30,6 +31,7 @@ const blockTypeToBlockName = {
 	paragraph: "Normal",
 	quote: "Quote",
 	image: "Image",
+	remark: "Remark",
 };
 
 export type SelectedBlockType = keyof typeof blockTypeToBlockName;
@@ -82,6 +84,20 @@ const SelectedBlockTypePlugin = ({
 						key: elementKey,
 					});
 				} else {
+					const container = $findMatchingParent(
+						selection.anchor.getNode(),
+						$isRemarkContainerNode
+					);
+
+					if (container !== null) {
+						setSelectedBlockType({
+							type: "remark",
+							key: elementKey,
+						});
+
+						return;
+					}
+
 					const type = $isHeadingNode(element)
 						? element.getTag()
 						: element.getType();

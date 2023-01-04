@@ -29,6 +29,12 @@ import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlug
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
 import { ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
+
+import RemarkPlugin from "./plugins/RemarkBlockPlugin";
+import { RemarkContainerNode } from "./plugins/RemarkBlockPlugin/RemarkContainerNode";
+import { RemarkContentNode } from "./plugins/RemarkBlockPlugin/RemarkContentNode";
+import { RemarkTitleNode } from "./plugins/RemarkBlockPlugin/RemarkTitleNode";
+
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
 
@@ -63,6 +69,9 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	ImageNode,
 	MarkNode,
 	WordNode,
+	RemarkContainerNode,
+	RemarkContentNode,
+	RemarkTitleNode,
 ];
 
 // Catch any errors that occur during Lexical updates and log them
@@ -183,6 +192,7 @@ export default React.memo(function Editor({
 						}
 						ErrorBoundary={ErrorBoundary}
 					/>
+					<RemarkPlugin />
 					<HistoryPlugin />
 					<PersistStateOnPageChangePlugion documentId={documentId} />
 					<FetchDocumentPlugin documentId={documentId} />

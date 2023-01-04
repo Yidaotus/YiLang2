@@ -1,0 +1,33 @@
+.Remark__Container {
+	border: 1px solid #344966;
+	border-left: 20px solid #344966;
+	border-radius: 5px;
+	padding-left: 1em;
+	padding-right: 0.5em;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	position: relative;
+}
+
+.Remark__Container::before {
+	content: "!";
+	position: absolute;
+	font-size: 3em;
+	left: -0.325em;
+	top: 50%;
+	transform: translateY(-50%);
+	color: white;
+}
+
+.Remark__Title {
+	color: #40454f;
+	font-size: 1.5em;
+	padding-bottom: 0.5em;
+	font-weight: bold;
+	padding-left: 0.5em;
+}
+
+.Remark__Content {
+	font-size: 1em;
+	padding-left: 1em;
+}
