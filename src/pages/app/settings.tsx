@@ -629,7 +629,14 @@ const SettingsPage: NextPageWithLayout = () => {
 					</AlertDialogContent>
 				</AlertDialogOverlay>
 			</AlertDialog>
-			<Box display="flex" flexDir="column">
+			<Box
+				display="flex"
+				flexDir="column"
+				px={[6, 8, 12]}
+				maxH="100vh"
+				overflow="auto"
+				pos="relative"
+			>
 				<Box as="section" px={["6", null, "6rem"]} pt="2rem">
 					<Box
 						display="flex"
