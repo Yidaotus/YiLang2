@@ -48,6 +48,10 @@ import {
 import { $wrapNodes } from "@lexical/selection";
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
+import {
+	INSERT_IMAGE_PARAGRAPH,
+	SPLIT_PARAGRAPH,
+} from "@components/Editor/Editor";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -97,7 +101,7 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 				id: documentId,
 				title,
 				serializedDocument: serializedState,
-				language: ""
+				language: "",
 			});
 		});
 	}, [documentId, editor, upsertDocument]);
@@ -238,6 +242,14 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 		}
 	};
 
+	const splitParagraph = () => {
+		editor.dispatchCommand(SPLIT_PARAGRAPH, undefined);
+	};
+
+	const insertImageParagraph = () => {
+		editor.dispatchCommand(INSERT_IMAGE_PARAGRAPH, undefined);
+	};
+
 	const formatCheckList = () => {
 		if (blockType !== "check") {
 			editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
@@ -333,6 +345,12 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 				</Menu>
 				<Button onClick={() => saveDocument()} as={Button}>
 					Save
+				</Button>
+				<Button onClick={() => insertImageParagraph()} as={Button}>
+					DEBUG
+				</Button>
+				<Button onClick={() => splitParagraph()} as={Button}>
+					SPLIT
 				</Button>
 				<Box sx={{ flexGrow: 1 }} />
 			</ButtonGroup>

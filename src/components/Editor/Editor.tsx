@@ -1,8 +1,15 @@
 import type { Klass, LexicalCommand, LexicalNode } from "lexical";
+import { COMMAND_PRIORITY_NORMAL, PASTE_COMMAND } from "lexical";
+import {
+	COMMAND_PRIORITY_LOW,
+	$createParagraphNode,
+	$getSelection,
+	$createTextNode,
+} from "lexical";
 
 import { ListNode, ListItemNode } from "@lexical/list";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createCommand } from "lexical";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
@@ -27,13 +34,15 @@ import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/Flo
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
-import { ImageNode } from "./nodes/ImageNode";
+import { $createImageNode, ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 
 import RemarkPlugin from "./plugins/RemarkBlockPlugin";
 import { RemarkContainerNode } from "./plugins/RemarkBlockPlugin/RemarkContainerNode";
 import { RemarkContentNode } from "./plugins/RemarkBlockPlugin/RemarkContentNode";
 import { RemarkTitleNode } from "./plugins/RemarkBlockPlugin/RemarkTitleNode";
+
+import { TreeView } from "@lexical/react/LexicalTreeView";
 
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
@@ -50,6 +59,11 @@ import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomCon
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import {
+	$createImagePargraphContainerNode,
+	ImagePargraphContainerNode,
+} from "./nodes/ImageParagraphNode/ImageParagraphContainer";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -72,6 +86,7 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	RemarkContainerNode,
 	RemarkContentNode,
 	RemarkTitleNode,
+	ImagePargraphContainerNode,
 ];
 
 // Catch any errors that occur during Lexical updates and log them
@@ -80,6 +95,113 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 function onError(error: Error) {
 	console.error(error);
 }
+
+export const SPLIT_PARAGRAPH: LexicalCommand<void> =
+	createCommand("SPLIT_PARAGRAPH");
+
+export const INSERT_IMAGE_PARAGRAPH: LexicalCommand<void> = createCommand(
+	"INSERT_IMAGE_PARAGRAPH"
+);
+
+const TreeViewPlugin = () => {
+	const [editor] = useLexicalComposerContext();
+	return (
+		<TreeView
+			viewClassName="tree-view-output"
+			timeTravelPanelClassName="debug-timetravel-panel"
+			timeTravelButtonClassName="debug-timetravel-button"
+			timeTravelPanelSliderClassName="debug-timetravel-panel-slider"
+			timeTravelPanelButtonClassName="debug-timetravel-panel-button"
+			editor={editor}
+		/>
+	);
+};
+
+const SplitPlugin = () => {
+	const [editor] = useLexicalComposerContext();
+
+	useEffect(() => {
+		return editor.registerCommand(
+			PASTE_COMMAND,
+			(e: ClipboardEvent) => {
+				const { clipboardData } = e;
+				if (clipboardData && clipboardData.items?.[0]) {
+					for (const item of clipboardData.items) {
+						console.debug({ item, file: item.getAsFile() });
+						const file = item.getAsFile();
+						if (!file) continue;
+						const src = window.URL.createObjectURL(file);
+						console.debug({ src });
+					}
+				}
+				return false;
+			},
+			COMMAND_PRIORITY_NORMAL
+		);
+	}, [editor]);
+
+	useEffect(() => {
+		return editor.registerCommand(
+			SPLIT_PARAGRAPH,
+			() => {
+				const paragraphNodeLeft = $createParagraphNode().append(
+					$createTextNode("test paragraph node Left")
+				);
+				const paragraphNodeRight = $createParagraphNode().append(
+					$createTextNode("test paragraph node Right")
+				);
+				const imageParagraphContainerNode = $createImagePargraphContainerNode();
+
+				imageParagraphContainerNode.append(
+					paragraphNodeLeft,
+					paragraphNodeRight
+				);
+
+				const selection = $getSelection();
+				if (selection) {
+					selection.insertNodes([imageParagraphContainerNode]);
+				}
+
+				return true;
+			},
+			COMMAND_PRIORITY_LOW
+		);
+	}, [editor]);
+
+	return null;
+};
+
+const ImageParagraphPlugin = () => {
+	const [editor] = useLexicalComposerContext();
+
+	useEffect(() => {
+		return editor.registerCommand(
+			INSERT_IMAGE_PARAGRAPH,
+			() => {
+				const imageNode = $createImageNode({
+					altText: "image node",
+					src: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Test.svg",
+				});
+				const paragraphNode = $createParagraphNode().append(
+					$createTextNode("test paragraph node!")
+				);
+				const imageParagraphContainerNode = $createImagePargraphContainerNode();
+
+				imageParagraphContainerNode.append(paragraphNode, imageNode);
+
+				const selection = $getSelection();
+				if (selection) {
+					selection.insertNodes([imageParagraphContainerNode]);
+				}
+
+				return true;
+			},
+			COMMAND_PRIORITY_LOW
+		);
+	}, [editor]);
+
+	return null;
+};
 
 export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
 	createCommand("SHOW_FLOATING_WORD_EDITOR_COMMAN");
@@ -145,7 +267,13 @@ export default React.memo(function Editor({
 
 	return (
 		<Box>
-			<Box display="flex" justifyContent="center" w="100%" pos="relative">
+			<Box
+				display="flex"
+				justifyContent="center"
+				w="100%"
+				pos="relative"
+				flexDir="column"
+			>
 				<LexicalComposer initialConfig={initialConfig}>
 					<RichTextPlugin
 						contentEditable={
@@ -196,6 +324,8 @@ export default React.memo(function Editor({
 					<HistoryPlugin />
 					<PersistStateOnPageChangePlugion documentId={documentId} />
 					<FetchDocumentPlugin documentId={documentId} />
+					<ImageParagraphPlugin />
+					<SplitPlugin />
 					<TabIndentationPlugin />
 					<ListMaxIndentLevelPlugin maxDepth={4} />
 					<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
@@ -234,6 +364,7 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
+					<TreeViewPlugin />
 				</LexicalComposer>
 			</Box>
 		</Box>

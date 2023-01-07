@@ -54,6 +54,10 @@ import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { useSession } from "next-auth/react";
 import useLoadingToast from "@components/LoadingToast/LoadingToast";
+import {
+	INSERT_IMAGE_PARAGRAPH,
+	SPLIT_PARAGRAPH,
+} from "@components/Editor/Editor";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -500,6 +504,14 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 		});
 	}, [documentId, editor, selectedLanguage, upsertDocument]);
 
+	const splitParagraph = () => {
+		editor.dispatchCommand(SPLIT_PARAGRAPH, undefined);
+	};
+
+	const insertImageParagraph = () => {
+		editor.dispatchCommand(INSERT_IMAGE_PARAGRAPH, undefined);
+	};
+
 	return createPortal(
 		<Box
 			w="100%"
@@ -540,6 +552,26 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				gridColumn="span 2"
 			/>
 			<WordListPlugin />
+			<Divider
+				borderWidth="2px"
+				borderRadius="3px"
+				mb="0.5rem"
+				gridColumn="span 2"
+			/>
+			<Button
+				aria-label="Appereance"
+				color="text.400"
+				onClick={() => splitParagraph()}
+			>
+				SPLIT
+			</Button>
+			<Button
+				aria-label="Appereance"
+				color="text.400"
+				onClick={() => insertImageParagraph()}
+			>
+				DEBUG
+			</Button>
 		</Box>,
 		sidebarPortal
 	);
