@@ -57,6 +57,7 @@ import useLoadingToast from "@components/LoadingToast/LoadingToast";
 import {
 	INSERT_IMAGE_PARAGRAPH,
 	SPLIT_PARAGRAPH,
+	SWAP_SPLIT_COLUMNS,
 } from "@components/Editor/Editor";
 
 const clipTop: Middleware = {
@@ -504,6 +505,10 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 		});
 	}, [documentId, editor, selectedLanguage, upsertDocument]);
 
+	const swapSplitLayout = () => {
+		editor.dispatchCommand(SWAP_SPLIT_COLUMNS, undefined);
+	};
+
 	const splitParagraph = () => {
 		editor.dispatchCommand(SPLIT_PARAGRAPH, undefined);
 	};
@@ -571,6 +576,13 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				onClick={() => insertImageParagraph()}
 			>
 				DEBUG
+			</Button>
+			<Button
+				aria-label="Appereance"
+				color="text.400"
+				onClick={() => swapSplitLayout()}
+			>
+				SWAP
 			</Button>
 		</Box>,
 		sidebarPortal
