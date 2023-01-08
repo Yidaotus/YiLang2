@@ -55,7 +55,7 @@ const SelectedBlockTypePlugin = ({
 
 		if ($isRangeSelection(selection)) {
 			const anchorNode = selection.anchor.getNode();
-			let element =
+			let topLevelElement =
 				anchorNode.getKey() === "root"
 					? anchorNode
 					: $findMatchingParent(anchorNode, (e) => {
@@ -63,22 +63,22 @@ const SelectedBlockTypePlugin = ({
 							return parent !== null && $isRootOrShadowRoot(parent);
 					  });
 
-			if (element === null) {
-				element = anchorNode.getTopLevelElementOrThrow();
+			if (topLevelElement === null) {
+				topLevelElement = anchorNode.getTopLevelElementOrThrow();
 			}
 
-			const elementKey = element.getKey();
+			const elementKey = topLevelElement.getKey();
 			const elementDOM = editor.getElementByKey(elementKey);
 
 			if (elementDOM !== null) {
-				if ($isListNode(element)) {
+				if ($isListNode(topLevelElement)) {
 					const parentList = $getNearestNodeOfType<ListNode>(
 						anchorNode,
 						ListNode
 					);
 					const type = parentList
 						? parentList.getListType()
-						: element.getListType();
+						: topLevelElement.getListType();
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
@@ -98,9 +98,9 @@ const SelectedBlockTypePlugin = ({
 						return;
 					}
 
-					const type = $isHeadingNode(element)
-						? element.getTag()
-						: element.getType();
+					const type = $isHeadingNode(topLevelElement)
+						? topLevelElement.getTag()
+						: topLevelElement.getType();
 					if (type in blockTypeToBlockName) {
 						setSelectedBlockType({
 							type: type as SelectedBlockType,

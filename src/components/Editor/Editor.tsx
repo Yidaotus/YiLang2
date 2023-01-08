@@ -1,4 +1,5 @@
 import type { Klass, LexicalCommand, LexicalNode } from "lexical";
+import { $isRangeSelection, KEY_ARROW_DOWN_COMMAND } from "lexical";
 import { COMMAND_PRIORITY_NORMAL, PASTE_COMMAND } from "lexical";
 import {
 	COMMAND_PRIORITY_LOW,
@@ -8,6 +9,7 @@ import {
 } from "lexical";
 
 import { ListNode, ListItemNode } from "@lexical/list";
+import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 
 import React, { useEffect, useState } from "react";
 import { createCommand } from "lexical";
@@ -61,9 +63,15 @@ import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupP
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
-	$createImagePargraphContainerNode,
-	ImagePargraphContainerNode,
-} from "./nodes/ImageParagraphNode/ImageParagraphContainer";
+	$createSplitLayoutContainerNode,
+	$isSplitLayoutContainerNode,
+	SplitLayoutContainerNode,
+} from "./nodes/SplitLayout/SplitLayoutContainer";
+import {
+	$createSplitLayoutColumnNode,
+	$isSplitLayoutColumnNode,
+	SplitLayoutColumnNode,
+} from "./nodes/SplitLayout/SplitLayoutColumn";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -86,7 +94,8 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	RemarkContainerNode,
 	RemarkContentNode,
 	RemarkTitleNode,
-	ImagePargraphContainerNode,
+	SplitLayoutContainerNode,
+	SplitLayoutColumnNode,
 ];
 
 // Catch any errors that occur during Lexical updates and log them
@@ -121,22 +130,76 @@ const SplitPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 
 	useEffect(() => {
-		return editor.registerCommand(
-			PASTE_COMMAND,
-			(e: ClipboardEvent) => {
-				const { clipboardData } = e;
-				if (clipboardData && clipboardData.items?.[0]) {
-					for (const item of clipboardData.items) {
-						console.debug({ item, file: item.getAsFile() });
-						const file = item.getAsFile();
-						if (!file) continue;
-						const src = window.URL.createObjectURL(file);
-						console.debug({ src });
+		return mergeRegister(
+			editor.registerCommand(
+				PASTE_COMMAND,
+				(e: ClipboardEvent) => {
+					const { clipboardData } = e;
+					if (clipboardData && clipboardData.items?.[0]) {
+						for (const item of clipboardData.items) {
+							console.debug({ item, file: item.getAsFile() });
+							const file = item.getAsFile();
+							if (!file) continue;
+							const src = window.URL.createObjectURL(file);
+							console.debug({ src });
+						}
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerNodeTransform(SplitLayoutColumnNode, (node) => {
+				const childrenSize = node.getChildrenSize();
+				if (childrenSize < 1) {
+					node.append($createParagraphNode());
+				}
+			}),
+			editor.registerNodeTransform(SplitLayoutContainerNode, (node) => {
+				const CHILDREN_TO_HAVE = 2;
+				const childrenSize = node.getChildrenSize();
+				if (childrenSize !== CHILDREN_TO_HAVE) {
+					const childrenToCreate = CHILDREN_TO_HAVE - childrenSize;
+					for (let i = 0; i < childrenToCreate; i++) {
+						const newChildColumn = $createSplitLayoutColumnNode();
+						node.append(newChildColumn);
 					}
 				}
-				return false;
-			},
-			COMMAND_PRIORITY_NORMAL
+			}),
+			editor.registerCommand(
+				KEY_ARROW_DOWN_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+						return false;
+					}
+
+					const container = $findMatchingParent(
+						selection.anchor.getNode(),
+						$isSplitLayoutContainerNode
+					);
+
+					if (container === null) {
+						return false;
+					}
+
+					const parent = container.getParent();
+					if (parent !== null && parent.getLastChild() === container) {
+						parent.append($createParagraphNode());
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
+			),
+			editor.registerNodeTransform(SplitLayoutColumnNode, (node) => {
+				const parent = node.getParent();
+				if (!$isSplitLayoutContainerNode(parent)) {
+					const children = node.getChildren();
+					for (const child of children) {
+						node.insertBefore(child);
+					}
+					node.remove();
+				}
+			})
 		);
 	}, [editor]);
 
@@ -144,22 +207,26 @@ const SplitPlugin = () => {
 		return editor.registerCommand(
 			SPLIT_PARAGRAPH,
 			() => {
+				const splitContainer = $createSplitLayoutContainerNode();
+
+				const splitColumnLeft = $createSplitLayoutColumnNode();
+				const splitColumnRight = $createSplitLayoutColumnNode();
+
 				const paragraphNodeLeft = $createParagraphNode().append(
 					$createTextNode("test paragraph node Left")
 				);
 				const paragraphNodeRight = $createParagraphNode().append(
 					$createTextNode("test paragraph node Right")
 				);
-				const imageParagraphContainerNode = $createImagePargraphContainerNode();
 
-				imageParagraphContainerNode.append(
-					paragraphNodeLeft,
-					paragraphNodeRight
-				);
+				splitColumnLeft.append(paragraphNodeLeft);
+				splitColumnRight.append(paragraphNodeRight);
+
+				splitContainer.append(splitColumnLeft, splitColumnRight);
 
 				const selection = $getSelection();
 				if (selection) {
-					selection.insertNodes([imageParagraphContainerNode]);
+					selection.insertNodes([splitContainer]);
 				}
 
 				return true;
@@ -185,7 +252,7 @@ const ImageParagraphPlugin = () => {
 				const paragraphNode = $createParagraphNode().append(
 					$createTextNode("test paragraph node!")
 				);
-				const imageParagraphContainerNode = $createImagePargraphContainerNode();
+				const imageParagraphContainerNode = $createSplitLayoutContainerNode();
 
 				imageParagraphContainerNode.append(paragraphNode, imageNode);
 

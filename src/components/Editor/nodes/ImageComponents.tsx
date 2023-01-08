@@ -30,7 +30,8 @@ import {
 import * as React from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { $isImageNode, ImageAlignment } from "./ImageNode";
+import type { ImageAlignment } from "./ImageNode";
+import { $isImageNode } from "./ImageNode";
 import ImageResizer from "./ImageResizer";
 import { Box } from "@chakra-ui/react";
 

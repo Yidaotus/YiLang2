@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import imageParagraphStyles from "./ImageParagraph.module.scss";
+import splitLayoutContainerStyles from "./SplitLayoutContainer.module.scss";
 
 import type {
 	DOMConversionMap,
@@ -17,38 +17,38 @@ import type {
 } from "lexical";
 import { ElementNode } from "lexical";
 
-type SerializedImageParagraphContainerNode = Spread<
+type SerializedSplitLayoutContainerNode = Spread<
 	{
-		type: "image-paragraph-container";
+		type: "split-layout-container";
 		version: 1;
 	},
 	SerializedElementNode
 >;
 
-export class ImagePargraphContainerNode extends ElementNode {
+export class SplitLayoutContainerNode extends ElementNode {
 	constructor(key?: NodeKey) {
 		super(key);
 	}
 
 	static getType(): string {
-		return "image-paragraph-container";
+		return "split-layout-container";
 	}
 
-	static clone(node: ImagePargraphContainerNode): ImagePargraphContainerNode {
-		return new ImagePargraphContainerNode(node.__key);
+	static clone(node: SplitLayoutContainerNode): SplitLayoutContainerNode {
+		return new SplitLayoutContainerNode(node.__key);
 	}
 
 	createDOM(config: EditorConfig): HTMLElement {
 		const dom = document.createElement("div");
 		dom.classList.add(
-			imageParagraphStyles.ImageParagraph__Container ||
-				"ImageParagraph__Container"
+			splitLayoutContainerStyles.SplitLayout__Container ||
+				"SplitLayout__Container"
 		);
 		return dom;
 	}
 
 	updateDOM(
-		prevNode: ImagePargraphContainerNode,
+		prevNode: SplitLayoutContainerNode,
 		dom: HTMLDetailsElement
 	): boolean {
 		return false;
@@ -59,16 +59,16 @@ export class ImagePargraphContainerNode extends ElementNode {
 	}
 
 	static importJSON(
-		serializedNode: SerializedImageParagraphContainerNode
-	): ImagePargraphContainerNode {
-		const node = $createImagePargraphContainerNode();
+		serializedNode: SerializedSplitLayoutContainerNode
+	): SplitLayoutContainerNode {
+		const node = $createSplitLayoutContainerNode();
 		return node;
 	}
 
-	exportJSON(): SerializedImageParagraphContainerNode {
+	exportJSON(): SerializedSplitLayoutContainerNode {
 		return {
 			...super.exportJSON(),
-			type: "image-paragraph-container",
+			type: "split-layout-container",
 			version: 1,
 		};
 	}
@@ -87,12 +87,12 @@ export class ImagePargraphContainerNode extends ElementNode {
 	}
 }
 
-export function $createImagePargraphContainerNode(): ImagePargraphContainerNode {
-	return new ImagePargraphContainerNode();
+export function $createSplitLayoutContainerNode(): SplitLayoutContainerNode {
+	return new SplitLayoutContainerNode();
 }
 
-export function $isImagePargraphContainerNode(
+export function $isSplitLayoutContainerNode(
 	node: LexicalNode | null | undefined
-): node is ImagePargraphContainerNode {
-	return node instanceof ImagePargraphContainerNode;
+): node is SplitLayoutContainerNode {
+	return node instanceof SplitLayoutContainerNode;
 }
