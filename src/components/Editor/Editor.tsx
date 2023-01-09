@@ -3,6 +3,7 @@ import {
 	$isDecoratorNode,
 	$isTextNode,
 	$setSelection,
+	KEY_ARROW_UP_COMMAND,
 } from "lexical";
 import { $getRoot } from "lexical";
 import { $copyNode } from "lexical";
@@ -12,6 +13,7 @@ import type {
 	LexicalCommand,
 	LexicalNode,
 	DecoratorNode,
+	TextNode,
 } from "lexical";
 import { $isLeafNode } from "lexical";
 import { $isElementNode } from "lexical";
@@ -124,8 +126,12 @@ function onError(error: Error) {
 
 export const SWAP_SPLIT_COLUMNS: LexicalCommand<void> =
 	createCommand("SWAP_SPLIT_COLUMNS");
-export const SPLIT_PARAGRAPH: LexicalCommand<void> =
-	createCommand("SPLIT_PARAGRAPH");
+export const SET_LAYOUT_MODE_SPLIT: LexicalCommand<void> = createCommand(
+	"SET_LAYOUT_MODE_SPLIT"
+);
+export const SET_LAYOUT_MODE_FULL: LexicalCommand<void> = createCommand(
+	"SET_LAYOUT_MODE_FULL"
+);
 
 export const INSERT_IMAGE_PARAGRAPH: LexicalCommand<void> = createCommand(
 	"INSERT_IMAGE_PARAGRAPH"
@@ -185,7 +191,7 @@ const SplitPlugin = () => {
 				}
 			}),
 			editor.registerCommand(
-				KEY_ARROW_DOWN_COMMAND,
+				KEY_ARROW_UP_COMMAND,
 				() => {
 					const selection = $getSelection();
 					if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
@@ -202,9 +208,53 @@ const SplitPlugin = () => {
 					}
 
 					const parent = container.getParent();
-					if (parent !== null && parent.getLastChild() === container) {
-						parent.append($createParagraphNode());
+					if (parent !== null && parent.getFirstChild() === container) {
+						parent.splice(0, 0, [$createParagraphNode()]);
 					}
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
+			),
+			editor.registerCommand(
+				KEY_ARROW_DOWN_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!$isRangeSelection(selection) || !selection.isCollapsed())
+						return false;
+
+					const container = $findMatchingParent(
+						selection.anchor.getNode(),
+						$isSplitLayoutContainerNode
+					);
+
+					if (container === null) return false;
+
+					const parent = container.getParent();
+					if (parent === null || parent.getLastChild() !== container)
+						return false;
+
+					const targetRow = (
+						container as SplitLayoutContainerNode
+					).getLastChild();
+					if (!targetRow) return false;
+
+					const targetChild = (
+						targetRow as SplitLayoutContainerNode
+					).getLastChild();
+					if (!targetChild) return false;
+
+					let anchorNode: ElementNode | TextNode | null =
+						selection.anchor.getNode();
+					if ($isTextNode(anchorNode)) {
+						anchorNode = anchorNode.getParent();
+					}
+
+					if (anchorNode !== targetChild) return false;
+
+					if (selection.anchor.offset < targetChild.getTextContentSize())
+						return false;
+
+					parent.append($createParagraphNode());
 					return false;
 				},
 				COMMAND_PRIORITY_LOW
@@ -225,7 +275,7 @@ const SplitPlugin = () => {
 	useEffect(() => {
 		return mergeRegister(
 			editor.registerCommand(
-				SPLIT_PARAGRAPH,
+				SET_LAYOUT_MODE_SPLIT,
 				() => {
 					const selection = $getSelection();
 					if (!selection || !$isRangeSelection(selection)) {
@@ -248,7 +298,7 @@ const SplitPlugin = () => {
 					console.debug({ nodes });
 					for (const node of nodes) {
 						let elementNode = null;
-						if ($isTextNode(node)) {
+						if ($isLeafNode(node)) {
 							const target = node.getTopLevelElement();
 							if (!target) continue;
 							elementNode = target;
@@ -275,6 +325,48 @@ const SplitPlugin = () => {
 					splitColumnRight.append(paragraphNodeRight);
 					splitContainer.append(splitColumnLeft, splitColumnRight);
 					tempContainer.replace(splitContainer);
+					return true;
+				},
+				COMMAND_PRIORITY_LOW
+			),
+			editor.registerCommand(
+				SET_LAYOUT_MODE_FULL,
+				() => {
+					const selection = $getSelection();
+					if (!selection) {
+						return true;
+					}
+
+					const targetElement = selection.getNodes()[0];
+
+					if (!targetElement) return true;
+
+					const parentSplitContainer = $findMatchingParent(
+						targetElement,
+						$isSplitLayoutContainerNode
+					);
+
+					if (!parentSplitContainer) return true;
+
+					const splitColumns = (
+						parentSplitContainer as SplitLayoutContainerNode
+					).getChildren();
+
+					if (splitColumns.length !== 2) return true;
+					const currentLeft = splitColumns[0] as SplitLayoutColumnNode;
+					const currentRight = splitColumns[1] as SplitLayoutColumnNode;
+
+					if (!currentLeft || !currentRight) return true;
+
+					const parentIndex = parentSplitContainer.getIndexWithinParent();
+					const splitParent = parentSplitContainer.getParent();
+
+					if (splitParent !== $getRoot()) return true;
+
+					splitParent.splice(parentIndex, 1, [
+						...currentLeft.getChildren(),
+						...currentRight.getChildren(),
+					]);
 					return true;
 				},
 				COMMAND_PRIORITY_LOW

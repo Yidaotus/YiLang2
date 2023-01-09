@@ -46,7 +46,7 @@ const useEditorStore = create<EditorStore>()(
 				editorShowSpelling: false,
 				setEditorShowSpelling: (showSpelling: boolean) =>
 					set(() => ({ editorShowSpelling: showSpelling })),
-				editorSelectedBlock: { type: "paragraph", key: "" },
+				editorSelectedBlock: { type: "paragraph", key: "", layoutMode: "full" },
 				setEditorSelectedBlock: (selectedBlock: SelectedBlock) =>
 					set(() => ({ editorSelectedBlock: selectedBlock })),
 			}),

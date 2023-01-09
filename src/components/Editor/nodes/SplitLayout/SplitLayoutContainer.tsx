@@ -47,10 +47,7 @@ export class SplitLayoutContainerNode extends ElementNode {
 		return dom;
 	}
 
-	updateDOM(
-		prevNode: SplitLayoutContainerNode,
-		dom: HTMLDetailsElement
-	): boolean {
+	updateDOM(prevNode: SplitLayoutContainerNode, dom: HTMLDivElement): boolean {
 		return false;
 	}
 

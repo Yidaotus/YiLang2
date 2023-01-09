@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $wrapNodeInElement, mergeRegister } from "@lexical/utils";
 import type { ElementFormatType, LexicalCommand } from "lexical";
+import { $getNearestRootOrShadowRoot } from "lexical";
 import { COMMAND_PRIORITY_NORMAL } from "lexical";
 import { FORMAT_ELEMENT_COMMAND } from "lexical";
 import {
@@ -201,6 +202,13 @@ export default function ImagesPlugin({
 		}
 
 		return mergeRegister(
+			editor.registerNodeTransform(ImageNode, (node) => {
+				const parent = node.getParent();
+				if (!parent) return;
+				if (parent != $getNearestRootOrShadowRoot(node)) {
+					parent.insertAfter(node);
+				}
+			}),
 			editor.registerCommand<ElementFormatType>(
 				FORMAT_ELEMENT_COMMAND,
 				(formatType) => {
@@ -236,9 +244,11 @@ export default function ImagesPlugin({
 				(payload) => {
 					const imageNode = $createImageNode(payload);
 					$insertNodes([imageNode]);
+					/*
 					if ($isRootOrShadowRoot(imageNode.getParentOrThrow())) {
 						$wrapNodeInElement(imageNode, $createParagraphNode).selectEnd();
 					}
+					*/
 
 					return true;
 				},

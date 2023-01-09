@@ -50,7 +50,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
 	INSERT_IMAGE_PARAGRAPH,
-	SPLIT_PARAGRAPH,
+	SET_LAYOUT_MODE_SPLIT,
 } from "@components/Editor/Editor";
 
 const blockTypeToBlockName = {
@@ -243,7 +243,7 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 	};
 
 	const splitParagraph = () => {
-		editor.dispatchCommand(SPLIT_PARAGRAPH, undefined);
+		editor.dispatchCommand(SET_LAYOUT_MODE_SPLIT, undefined);
 	};
 
 	const insertImageParagraph = () => {

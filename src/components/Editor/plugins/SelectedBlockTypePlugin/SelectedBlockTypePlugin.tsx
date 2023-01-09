@@ -16,6 +16,7 @@ import {
 } from "@lexical/utils";
 import { useCallback, useEffect } from "react";
 import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
+import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -39,6 +40,7 @@ export type SelectedBlockType = keyof typeof blockTypeToBlockName;
 export type SelectedBlock = {
 	type: SelectedBlockType;
 	key: string;
+	layoutMode: "split" | "full";
 };
 
 type SelectedBlockTypePluginProps = {
@@ -70,6 +72,11 @@ const SelectedBlockTypePlugin = ({
 			const elementKey = topLevelElement.getKey();
 			const elementDOM = editor.getElementByKey(elementKey);
 
+			const layoutMode =
+				$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
+					? "split"
+					: "full";
+
 			if (elementDOM !== null) {
 				if ($isListNode(topLevelElement)) {
 					const parentList = $getNearestNodeOfType<ListNode>(
@@ -82,6 +89,7 @@ const SelectedBlockTypePlugin = ({
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
+						layoutMode,
 					});
 				} else {
 					const container = $findMatchingParent(
@@ -93,6 +101,7 @@ const SelectedBlockTypePlugin = ({
 						setSelectedBlockType({
 							type: "remark",
 							key: elementKey,
+							layoutMode,
 						});
 
 						return;
@@ -105,6 +114,7 @@ const SelectedBlockTypePlugin = ({
 						setSelectedBlockType({
 							type: type as SelectedBlockType,
 							key: elementKey,
+							layoutMode,
 						});
 					}
 				}
@@ -130,6 +140,11 @@ const SelectedBlockTypePlugin = ({
 			const elementKey = element.getKey();
 			const elementDOM = editor.getElementByKey(elementKey);
 
+			const layoutMode =
+				$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
+					? "split"
+					: "full";
+
 			if (elementDOM !== null) {
 				const type = $isHeadingNode(element)
 					? element.getTag()
@@ -138,6 +153,7 @@ const SelectedBlockTypePlugin = ({
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
+						layoutMode,
 					});
 				}
 			}

@@ -220,13 +220,8 @@ export default function ImageComponent({
 	const isFocused = isSelected || isResizing;
 	return (
 		<Suspense fallback={null}>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: alignment,
-				}}
-			>
-				<Box sx={{ position: "relative", display: "inline-block" }}>
+			<Box display="flex" justifyContent={alignment}>
+				<Box position="relative" display="inline-block">
 					<LazyImage
 						isResizing={isResizing}
 						isFocused={isFocused}

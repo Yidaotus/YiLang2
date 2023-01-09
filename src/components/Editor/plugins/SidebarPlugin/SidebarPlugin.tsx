@@ -1,5 +1,6 @@
 import {
 	Button,
+	ButtonGroup,
 	Divider,
 	FormControl,
 	FormLabel,
@@ -43,7 +44,13 @@ import {
 	IoSaveOutline,
 	IoSettings,
 } from "react-icons/io5";
-import { RiFontSize2, RiLineHeight, RiParagraph } from "react-icons/ri";
+import {
+	RiFontSize2,
+	RiLineHeight,
+	RiParagraph,
+	RiSwapBoxLine,
+	RiSwapFill,
+} from "react-icons/ri";
 import useEditorStore from "@store/store";
 import shallow from "zustand/shallow";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
@@ -56,9 +63,11 @@ import { useSession } from "next-auth/react";
 import useLoadingToast from "@components/LoadingToast/LoadingToast";
 import {
 	INSERT_IMAGE_PARAGRAPH,
-	SPLIT_PARAGRAPH,
+	SET_LAYOUT_MODE_FULL,
+	SET_LAYOUT_MODE_SPLIT,
 	SWAP_SPLIT_COLUMNS,
 } from "@components/Editor/Editor";
+import { RxColumns, RxRows } from "react-icons/rx";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -471,6 +480,9 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
+	const editorSelectedBlockType = useEditorStore(
+		(state) => state.editorSelectedBlock
+	);
 
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
 		onMutate() {
@@ -509,8 +521,12 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 		editor.dispatchCommand(SWAP_SPLIT_COLUMNS, undefined);
 	};
 
-	const splitParagraph = () => {
-		editor.dispatchCommand(SPLIT_PARAGRAPH, undefined);
+	const setLayoutModeSplit = () => {
+		editor.dispatchCommand(SET_LAYOUT_MODE_SPLIT, undefined);
+	};
+
+	const setLayoutModeFull = () => {
+		editor.dispatchCommand(SET_LAYOUT_MODE_FULL, undefined);
 	};
 
 	const insertImageParagraph = () => {
@@ -563,27 +579,34 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				mb="0.5rem"
 				gridColumn="span 2"
 			/>
-			<Button
-				aria-label="Appereance"
-				color="text.400"
-				onClick={() => splitParagraph()}
-			>
-				SPLIT
-			</Button>
-			<Button
-				aria-label="Appereance"
-				color="text.400"
-				onClick={() => insertImageParagraph()}
-			>
-				DEBUG
-			</Button>
-			<Button
+			<IconButton
 				aria-label="Appereance"
 				color="text.400"
 				onClick={() => swapSplitLayout()}
+				icon={<RiSwapBoxLine />}
+				gridColumn="span 2"
+				variant="ghost"
 			>
 				SWAP
-			</Button>
+			</IconButton>
+			<ButtonGroup isAttached gridColumn="span 2">
+				<IconButton
+					w="100%"
+					aria-label="multi column"
+					icon={<RxColumns />}
+					variant="ghost"
+					isActive={editorSelectedBlockType.layoutMode === "split"}
+					onClick={setLayoutModeSplit}
+				/>
+				<IconButton
+					w="100%"
+					aria-label="single column"
+					icon={<RxRows />}
+					variant="ghost"
+					isActive={editorSelectedBlockType.layoutMode === "full"}
+					onClick={setLayoutModeFull}
+				/>
+			</ButtonGroup>
 		</Box>,
 		sidebarPortal
 	);
