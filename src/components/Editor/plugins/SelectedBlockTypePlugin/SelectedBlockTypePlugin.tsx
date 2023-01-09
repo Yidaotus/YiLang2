@@ -16,6 +16,7 @@ import {
 } from "@lexical/utils";
 import { useCallback, useEffect } from "react";
 import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
+import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -39,6 +40,7 @@ export type SelectedBlockType = keyof typeof blockTypeToBlockName;
 export type SelectedBlock = {
 	type: SelectedBlockType;
 	key: string;
+	layoutMode: "split" | "full";
 };
 
 type SelectedBlockTypePluginProps = {
@@ -55,7 +57,7 @@ const SelectedBlockTypePlugin = ({
 
 		if ($isRangeSelection(selection)) {
 			const anchorNode = selection.anchor.getNode();
-			let element =
+			let topLevelElement =
 				anchorNode.getKey() === "root"
 					? anchorNode
 					: $findMatchingParent(anchorNode, (e) => {
@@ -63,25 +65,31 @@ const SelectedBlockTypePlugin = ({
 							return parent !== null && $isRootOrShadowRoot(parent);
 					  });
 
-			if (element === null) {
-				element = anchorNode.getTopLevelElementOrThrow();
+			if (topLevelElement === null) {
+				topLevelElement = anchorNode.getTopLevelElementOrThrow();
 			}
 
-			const elementKey = element.getKey();
+			const elementKey = topLevelElement.getKey();
 			const elementDOM = editor.getElementByKey(elementKey);
 
+			const layoutMode =
+				$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
+					? "split"
+					: "full";
+
 			if (elementDOM !== null) {
-				if ($isListNode(element)) {
+				if ($isListNode(topLevelElement)) {
 					const parentList = $getNearestNodeOfType<ListNode>(
 						anchorNode,
 						ListNode
 					);
 					const type = parentList
 						? parentList.getListType()
-						: element.getListType();
+						: topLevelElement.getListType();
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
+						layoutMode,
 					});
 				} else {
 					const container = $findMatchingParent(
@@ -93,18 +101,20 @@ const SelectedBlockTypePlugin = ({
 						setSelectedBlockType({
 							type: "remark",
 							key: elementKey,
+							layoutMode,
 						});
 
 						return;
 					}
 
-					const type = $isHeadingNode(element)
-						? element.getTag()
-						: element.getType();
+					const type = $isHeadingNode(topLevelElement)
+						? topLevelElement.getTag()
+						: topLevelElement.getType();
 					if (type in blockTypeToBlockName) {
 						setSelectedBlockType({
 							type: type as SelectedBlockType,
 							key: elementKey,
+							layoutMode,
 						});
 					}
 				}
@@ -130,6 +140,11 @@ const SelectedBlockTypePlugin = ({
 			const elementKey = element.getKey();
 			const elementDOM = editor.getElementByKey(elementKey);
 
+			const layoutMode =
+				$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
+					? "split"
+					: "full";
+
 			if (elementDOM !== null) {
 				const type = $isHeadingNode(element)
 					? element.getTag()
@@ -138,6 +153,7 @@ const SelectedBlockTypePlugin = ({
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
+						layoutMode,
 					});
 				}
 			}

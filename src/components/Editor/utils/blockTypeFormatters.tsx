@@ -3,7 +3,7 @@ import { $getRoot } from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import { $createParagraphNode } from "lexical";
-import { $wrapNodes } from "@lexical/selection";
+import { $wrapNodes, $setBlocksType_experimental } from "@lexical/selection";
 import {
 	INSERT_CHECK_LIST_COMMAND,
 	INSERT_ORDERED_LIST_COMMAND,
@@ -44,9 +44,11 @@ export const formatHeading = ({
 
 		if ($isRangeSelection(selection)) {
 			if (currentBlockType === headingSize) {
-				$wrapNodes(selection, () => $createParagraphNode());
+				$setBlocksType_experimental(selection, () => $createParagraphNode());
 			} else {
-				$wrapNodes(selection, () => $createHeadingNode(headingSize));
+				$setBlocksType_experimental(selection, () =>
+					$createHeadingNode(headingSize)
+				);
 			}
 		}
 	});
@@ -88,7 +90,7 @@ export const formatParagraph = ({
 			const selection = $getSelection();
 
 			if ($isRangeSelection(selection)) {
-				$wrapNodes(selection, () => $createParagraphNode());
+				$setBlocksType_experimental(selection, () => $createParagraphNode());
 			}
 		});
 	}

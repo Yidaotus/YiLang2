@@ -30,7 +30,8 @@ import {
 import * as React from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { $isImageNode, ImageAlignment } from "./ImageNode";
+import type { ImageAlignment } from "./ImageNode";
+import { $isImageNode } from "./ImageNode";
 import ImageResizer from "./ImageResizer";
 import { Box } from "@chakra-ui/react";
 
@@ -219,13 +220,8 @@ export default function ImageComponent({
 	const isFocused = isSelected || isResizing;
 	return (
 		<Suspense fallback={null}>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: alignment,
-				}}
-			>
-				<Box sx={{ position: "relative", display: "inline-block" }}>
+			<Box display="flex" justifyContent={alignment}>
+				<Box position="relative" display="inline-block">
 					<LazyImage
 						isResizing={isResizing}
 						isFocused={isFocused}
