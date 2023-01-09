@@ -139,7 +139,7 @@ export default function RemarkPlugin(): JSX.Element | null {
 						$isRemarkContainerNode
 					);
 
-					if (container === null) {
+					if (!$isRemarkContainerNode(container)) {
 						return false;
 					}
 

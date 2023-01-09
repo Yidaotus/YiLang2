@@ -227,15 +227,13 @@ const SplitPlugin = () => {
 						$isSplitLayoutContainerNode
 					);
 
-					if (container === null) return false;
+					if (!$isSplitLayoutContainerNode(container)) return false;
 
 					const parent = container.getParent();
 					if (parent === null || parent.getLastChild() !== container)
 						return false;
 
-					const targetRow = (
-						container as SplitLayoutContainerNode
-					).getLastChild();
+					const targetRow = container.getLastChild();
 					if (!targetRow) return false;
 
 					const targetChild = (
@@ -346,17 +344,19 @@ const SplitPlugin = () => {
 						$isSplitLayoutContainerNode
 					);
 
-					if (!parentSplitContainer) return true;
+					if (!$isSplitLayoutContainerNode(parentSplitContainer)) return true;
 
-					const splitColumns = (
-						parentSplitContainer as SplitLayoutContainerNode
-					).getChildren();
+					const splitColumns = parentSplitContainer.getChildren();
 
 					if (splitColumns.length !== 2) return true;
-					const currentLeft = splitColumns[0] as SplitLayoutColumnNode;
-					const currentRight = splitColumns[1] as SplitLayoutColumnNode;
+					const currentLeft = splitColumns[0];
+					const currentRight = splitColumns[1];
 
-					if (!currentLeft || !currentRight) return true;
+					if (
+						!$isSplitLayoutContainerNode(currentLeft) ||
+						!$isSplitLayoutContainerNode(currentRight)
+					)
+						return true;
 
 					const parentIndex = parentSplitContainer.getIndexWithinParent();
 					const splitParent = parentSplitContainer.getParent();
