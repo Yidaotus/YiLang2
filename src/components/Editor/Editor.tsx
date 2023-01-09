@@ -26,6 +26,8 @@ import {
 	$createTextNode,
 } from "lexical";
 
+import { env } from "../../env/server.mjs";
+
 import { ListNode, ListItemNode } from "@lexical/list";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 
@@ -88,7 +90,6 @@ import {
 } from "./nodes/SplitLayout/SplitLayoutContainer";
 import {
 	$createSplitLayoutColumnNode,
-	$isSplitLayoutColumnNode,
 	SplitLayoutColumnNode,
 } from "./nodes/SplitLayout/SplitLayoutColumn";
 
@@ -604,7 +605,7 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
-					<>{!process.env.VERCEL && <TreeViewPlugin />}</>
+					<>{env.NODE_ENV === "development" && <TreeViewPlugin />}</>
 				</LexicalComposer>
 			</Box>
 		</Box>
