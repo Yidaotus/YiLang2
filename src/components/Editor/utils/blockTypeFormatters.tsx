@@ -67,15 +67,14 @@ export const formatRemark = ({ editor, currentBlockType }: FormatterParams) => {
 				if (!anchorParent || anchorParent === $getRoot()) return false;
 
 				const anchorChildren = anchorParent.getChildren();
-				anchorParent.remove();
 
 				const title = $createRemarkTitleNode();
 				const content = $createRemarkContentNode().append(
 					$createParagraphNode().append(...anchorChildren)
 				);
 				const container = $createRemarkContainerNode().append(title, content);
-				selection.insertNodes([container]);
-				content.selectStart();
+				anchorParent.replace(container);
+				container.selectStart();
 			}
 		});
 	}
