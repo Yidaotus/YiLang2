@@ -1,22 +1,14 @@
-import {
-	$applyNodeReplacement,
-	$isDecoratorNode,
-	$isTextNode,
-	$setSelection,
-	KEY_ARROW_UP_COMMAND,
-} from "lexical";
-import { $getRoot } from "lexical";
-import { $copyNode } from "lexical";
 import type {
 	ElementNode,
 	Klass,
 	LexicalCommand,
 	LexicalNode,
-	DecoratorNode,
 	TextNode,
 } from "lexical";
+
+import { $isTextNode, KEY_ARROW_UP_COMMAND } from "lexical";
+import { $getRoot } from "lexical";
 import { $isLeafNode } from "lexical";
-import { $isElementNode } from "lexical";
 import { $isRangeSelection, KEY_ARROW_DOWN_COMMAND } from "lexical";
 import { COMMAND_PRIORITY_NORMAL, PASTE_COMMAND } from "lexical";
 import {
@@ -25,8 +17,6 @@ import {
 	$getSelection,
 	$createTextNode,
 } from "lexical";
-
-import { env } from "../../env/server.mjs";
 
 import { ListNode, ListItemNode } from "@lexical/list";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
@@ -45,7 +35,6 @@ import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { MarkNode } from "@lexical/mark";
-import { $wrapNodes } from "@lexical/selection";
 import { OverflowNode } from "@lexical/overflow";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
@@ -605,7 +594,6 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
-					<>{env.NODE_ENV === "development" && <TreeViewPlugin />}</>
 				</LexicalComposer>
 			</Box>
 		</Box>
