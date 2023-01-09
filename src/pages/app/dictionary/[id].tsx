@@ -44,6 +44,7 @@ import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { CreatableSelect } from "chakra-react-select";
 import type { Tag } from "@prisma/client";
 import useEditorStore from "@store/store";
+import { EditorTag } from "@components/Editor/nodes/WordNode";
 
 type DataRowProps = {
 	title: React.ReactNode;
@@ -228,7 +229,7 @@ const TranslationsDataRow = ({
 							flexWrap="nowrap"
 							alignItems="center"
 							justifyContent="center"
-							px={1}
+							p={1}
 							as="button"
 							_hover={{
 								bg: "text.200",
@@ -321,7 +322,8 @@ const SpellingDataRow = ({
 							flexWrap="nowrap"
 							alignItems="center"
 							justifyContent="center"
-							px={1}
+							px={2}
+							py={1}
 							as="button"
 							_hover={{
 								bg: "text.200",
@@ -386,10 +388,9 @@ const TagDataRow = ({
 				popupReference={popupReference}
 				showArrow
 			>
-				<Box ref={inputRef} zIndex={50}>
+				<Box ref={inputRef}>
 					<CreatableSelect
 						size="md"
-						noOptionsMessage={(val) => <span>{`Create ${val}`}</span>}
 						focusBorderColor="none"
 						value={[] as Tag[]}
 						onChange={(newValue) => {
@@ -537,7 +538,7 @@ const TagDataRow = ({
 							flexWrap="nowrap"
 							alignItems="center"
 							justifyContent="center"
-							px={1}
+							p={1}
 							as="button"
 							_hover={{
 								bg: "text.200",

@@ -2,6 +2,7 @@ import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 import { useRef } from "react";
 import { useCallback, useState } from "react";
+import { signOut } from "next-auth/react";
 
 import Layout from "@components/Layout";
 import {
@@ -49,6 +50,7 @@ import {
 	IoClose,
 	IoDocumentOutline,
 	IoLanguageOutline,
+	IoLogOut,
 	IoMailOutline,
 	IoSave,
 	IoSaveOutline,
@@ -505,6 +507,8 @@ const SettingsPage: NextPageWithLayout = () => {
 
 	const userStats = trpc.user.stats.useQuery();
 
+	console.debug({ userStats });
+
 	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
 	const apiAddLanguage = trpc.dictionary.addLanguage.useMutation({
 		onSuccess() {
@@ -633,6 +637,7 @@ const SettingsPage: NextPageWithLayout = () => {
 				display="flex"
 				flexDir="column"
 				px={[6, 8, 12]}
+				py={2}
 				maxH="100vh"
 				overflow="auto"
 				pos="relative"
@@ -641,7 +646,7 @@ const SettingsPage: NextPageWithLayout = () => {
 					<Box
 						display="flex"
 						gap={[4, null, 12]}
-						alignItems="flex-start"
+						alignItems="center"
 						flexDir={["column", null, "row"]}
 					>
 						<Box display="flex" gap="4">
@@ -653,52 +658,48 @@ const SettingsPage: NextPageWithLayout = () => {
 								size="xl"
 							/>
 							<Box>
-								<Text color="text.500" fontSize="2rem">
-									{session.user?.name}
-								</Text>
+								<Box
+									display="flex"
+									gap="1"
+									alignItems="center"
+									justifyContent="center"
+								>
+									<Text color="text.500" fontSize="2rem">
+										{session.user?.name}
+									</Text>
+								</Box>
 								<Box display="flex" gap="1" alignItems="center">
 									<IoMailOutline color={iconActive} />
 									<Text color="text.400">{session.user?.email}</Text>
 								</Box>
 							</Box>
 						</Box>
-						<Box
-							display="flex"
-							pt="3"
-							flexDir={["column", null, "row"]}
-							w={["100%", null, "initial"]}
-							gap="4"
-						>
-							<StatGroup w={["100%", null, "300px"]}>
-								<Stat>
-									<StatLabel>Collected Words</StatLabel>
-									<StatNumber
-										color="brand.500"
-										display="flex"
-										alignItems="center"
-										gap="1"
-									>
-										<IoLanguageOutline /> {userStats.data?.wordCount || 0}
-									</StatNumber>
-								</Stat>
-								<Stat>
-									<StatLabel>Documents</StatLabel>
-									<StatNumber
-										color="brand.500"
-										display="flex"
-										alignItems="center"
-										gap="1"
-									>
-										<IoDocumentOutline /> {userStats.data?.documentCount || 0}
-									</StatNumber>
-								</Stat>
-							</StatGroup>
-							<Box minW={["100%", null, "180px"]}>
-								<Text fontSize="0.875rem" fontWeight="medium">
-									Active Language
-								</Text>
+						<StatGroup w={["100%", null, "500px"]}>
+							<Stat>
+								<StatLabel>Collected Words</StatLabel>
+								<StatNumber
+									color="brand.500"
+									display="flex"
+									alignItems="center"
+									gap="1"
+								>
+									<IoLanguageOutline /> {userStats.data?.wordCount || 0}
+								</StatNumber>
+							</Stat>
+							<Stat>
+								<StatLabel>Documents</StatLabel>
+								<StatNumber
+									color="brand.500"
+									display="flex"
+									alignItems="center"
+									gap="1"
+								>
+									<IoDocumentOutline /> {userStats.data?.documentCount || 0}
+								</StatNumber>
+							</Stat>
+							<Stat>
+								<StatLabel>Active Language</StatLabel>
 								<Select
-									minW={["100%", null, "180px"]}
 									size="md"
 									value={activeLanguage.id}
 									onChange={(e) => switchActiveLanguage(e.target.value)}
@@ -709,8 +710,8 @@ const SettingsPage: NextPageWithLayout = () => {
 										</option>
 									))}
 								</Select>
-							</Box>
-						</Box>
+							</Stat>
+						</StatGroup>
 					</Box>
 				</Box>
 				<Divider py="2" />
@@ -751,7 +752,11 @@ const SettingsPage: NextPageWithLayout = () => {
 															{language.name}
 														</Heading>
 														<Text pt="2" fontSize="sm">
-															2 Documents, 142 Words, 53 Sentences
+															{`${
+																userStats.data?.byLanguageMap[language.id]
+																	?.documents || 0
+															}
+															Documents, ${userStats.data?.byLanguageMap[language.id]?.words || 0} Words`}
 														</Text>
 													</Box>
 													<AccordionIcon />
@@ -838,6 +843,22 @@ const SettingsPage: NextPageWithLayout = () => {
 							</CardFooter>
 						</Card>
 					)}
+					<Box
+						display="flex"
+						alignItems="flex-end"
+						justifyContent="flex-end"
+						pt={4}
+					>
+						<Button
+							variant="solid"
+							colorScheme="red"
+							onClick={() => signOut()}
+							rightIcon={<IoLogOut />}
+							aria-label="Logout"
+						>
+							Sign out
+						</Button>
+					</Box>
 				</SkeletonText>
 			</Box>
 		</>
