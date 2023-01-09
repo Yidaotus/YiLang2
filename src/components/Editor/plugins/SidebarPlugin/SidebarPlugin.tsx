@@ -68,6 +68,7 @@ import {
 	SWAP_SPLIT_COLUMNS,
 } from "@components/Editor/Editor";
 import { RxColumns, RxRows } from "react-icons/rx";
+import React from "react";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -465,6 +466,59 @@ const SettingsMenu = () => {
 	);
 };
 
+const LayoutMenu = () => {
+	const [editor] = useLexicalComposerContext();
+	const layoutMode = useEditorStore(
+		(state) => state.editorSelectedBlock.layoutMode,
+		shallow
+	);
+	const swapSplitLayout = () => {
+		editor.dispatchCommand(SWAP_SPLIT_COLUMNS, undefined);
+	};
+
+	const setLayoutModeSplit = () => {
+		editor.dispatchCommand(SET_LAYOUT_MODE_SPLIT, undefined);
+	};
+
+	const setLayoutModeFull = () => {
+		editor.dispatchCommand(SET_LAYOUT_MODE_FULL, undefined);
+	};
+
+	const insertImageParagraph = () => {
+		editor.dispatchCommand(INSERT_IMAGE_PARAGRAPH, undefined);
+	};
+	return (
+		<>
+			<IconButton
+				aria-label="Appereance"
+				color="text.400"
+				onClick={() => swapSplitLayout()}
+				icon={<RiSwapBoxLine />}
+				gridColumn="span 2"
+				variant="ghost"
+			/>
+			<ButtonGroup isAttached gridColumn="span 2">
+				<IconButton
+					w="100%"
+					aria-label="multi column"
+					icon={<RxColumns />}
+					variant="ghost"
+					isActive={layoutMode === "split"}
+					onClick={setLayoutModeSplit}
+				/>
+				<IconButton
+					w="100%"
+					aria-label="single column"
+					icon={<RxRows />}
+					variant="ghost"
+					isActive={layoutMode === "full"}
+					onClick={setLayoutModeFull}
+				/>
+			</ButtonGroup>
+		</>
+	);
+};
+
 type SidebarPluginProps = {
 	documentId?: string;
 	sidebarPortal: HTMLElement;
@@ -480,9 +534,6 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
-	const editorSelectedBlockType = useEditorStore(
-		(state) => state.editorSelectedBlock
-	);
 
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
 		onMutate() {
@@ -516,22 +567,6 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 			});
 		});
 	}, [documentId, editor, selectedLanguage, upsertDocument]);
-
-	const swapSplitLayout = () => {
-		editor.dispatchCommand(SWAP_SPLIT_COLUMNS, undefined);
-	};
-
-	const setLayoutModeSplit = () => {
-		editor.dispatchCommand(SET_LAYOUT_MODE_SPLIT, undefined);
-	};
-
-	const setLayoutModeFull = () => {
-		editor.dispatchCommand(SET_LAYOUT_MODE_FULL, undefined);
-	};
-
-	const insertImageParagraph = () => {
-		editor.dispatchCommand(INSERT_IMAGE_PARAGRAPH, undefined);
-	};
 
 	return createPortal(
 		<Box
@@ -579,34 +614,7 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 				mb="0.5rem"
 				gridColumn="span 2"
 			/>
-			<IconButton
-				aria-label="Appereance"
-				color="text.400"
-				onClick={() => swapSplitLayout()}
-				icon={<RiSwapBoxLine />}
-				gridColumn="span 2"
-				variant="ghost"
-			>
-				SWAP
-			</IconButton>
-			<ButtonGroup isAttached gridColumn="span 2">
-				<IconButton
-					w="100%"
-					aria-label="multi column"
-					icon={<RxColumns />}
-					variant="ghost"
-					isActive={editorSelectedBlockType.layoutMode === "split"}
-					onClick={setLayoutModeSplit}
-				/>
-				<IconButton
-					w="100%"
-					aria-label="single column"
-					icon={<RxRows />}
-					variant="ghost"
-					isActive={editorSelectedBlockType.layoutMode === "full"}
-					onClick={setLayoutModeFull}
-				/>
-			</ButtonGroup>
+			<LayoutMenu />
 		</Box>,
 		sidebarPortal
 	);

@@ -604,7 +604,7 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
-					<TreeViewPlugin />
+					<>{!process.env.VERCEL && <TreeViewPlugin />}</>
 				</LexicalComposer>
 			</Box>
 		</Box>
