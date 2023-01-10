@@ -68,6 +68,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 
 				if ($isImageNode(imgNode)) {
 					imgNode.setSrc(imageSourceInput);
+					imgNode.setIsUploaded(false);
 				}
 			});
 		} else {

@@ -25,10 +25,14 @@ const SaveImagesPlugin = () => {
 			editor.registerMutationListener(ImageNode, (nodes) => {
 				editor.update(() => {
 					for (const [nodeKey, mutation] of nodes) {
-						if (mutation === "created") {
-							const node = $getNodeByKey(nodeKey);
-							if (!$isImageNode(node)) continue;
+						const node = $getNodeByKey(nodeKey);
+						if (!$isImageNode(node)) continue;
 
+						const isUplaoded = node.getIsUploaded();
+						if (
+							!isUplaoded &&
+							(mutation === "created" || mutation === "updated")
+						) {
 							if (!node.getIsUploaded()) {
 								fetch(node.getSrc()).then(async (imgData) => {
 									if (!imgData.ok) {

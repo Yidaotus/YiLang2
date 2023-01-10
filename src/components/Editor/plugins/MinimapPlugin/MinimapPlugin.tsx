@@ -4,6 +4,7 @@ import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Box, useToken } from "@chakra-ui/react";
 import type { LexicalNode } from "lexical";
+import { $isRootNode } from "lexical";
 import {
 	$getNearestRootOrShadowRoot,
 	$getRoot,
@@ -43,9 +44,12 @@ const outlineNodes = (
 	if (selection) {
 		const selectedNodes = selection.getNodes();
 		for (const selectionNode of selectedNodes) {
+			if ($isRootNode(selectionNode)) continue;
+
 			let parentNode = selectionNode.getParent();
 			let currentNode = selectionNode;
 			const rootNode = $getNearestRootOrShadowRoot(currentNode);
+
 			while (parentNode && parentNode !== rootNode) {
 				currentNode = parentNode;
 				parentNode = parentNode.getParent();
