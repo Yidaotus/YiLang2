@@ -7,9 +7,9 @@ import { useEffect, useRef } from "react";
 
 const shiftOnHeader: Middleware = {
 	name: "shiftByOnePixel",
-	fn({ elements }) {
+	fn({ elements, placement }) {
 		const elemY = elements.reference.getBoundingClientRect().y;
-		if (elemY < 150) {
+		if (elemY < 150 && placement === "top") {
 			return {
 				reset: {
 					placement: "bottom",
