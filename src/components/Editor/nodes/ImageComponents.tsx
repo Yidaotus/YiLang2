@@ -13,6 +13,8 @@ import type {
 	NodeSelection,
 	RangeSelection,
 } from "lexical";
+import { $isElementNode } from "lexical";
+import { $getRoot } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
@@ -34,6 +36,7 @@ import type { ImageAlignment } from "./ImageNode";
 import { $isImageNode } from "./ImageNode";
 import ImageResizer from "./ImageResizer";
 import { Box } from "@chakra-ui/react";
+import { $normalizeSelection } from "lexical/LexicalNormalization";
 
 const imageCache = new Set();
 
@@ -73,15 +76,12 @@ function LazyImage({
 	return (
 		<Box
 			my={4}
-			sx={{
-				m: 0,
-				borderRadius: "5px",
-				outline: isFocused && "1px solid #abb5c1",
-				border: "1px solid #cbd5e1",
-				boxShadow:
-					"0 5px 10px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-				userSelect: isResizing ? "none" : "default",
-			}}
+			m="0"
+			borderRadius="5px"
+			outline={isFocused ? "1px solid #abb5c1" : "none"}
+			border="1px solid #cbd5e1"
+			boxShadow="0 5px 10px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)"
+			userSelect={isResizing ? "none" : "initial"}
 			as="img"
 			src={src}
 			alt={altText}
@@ -130,7 +130,12 @@ export default function ImageComponent({
 				event.preventDefault();
 				const node = $getNodeByKey(nodeKey);
 				if ($isImageNode(node)) {
+					const sibling = node.getPreviousSibling();
+					if ($isElementNode(sibling)) {
+						sibling.select();
+					}
 					node.remove();
+					return true;
 				}
 				setSelected(false);
 			}
@@ -220,7 +225,7 @@ export default function ImageComponent({
 	const isFocused = isSelected || isResizing;
 	return (
 		<Suspense fallback={null}>
-			<Box display="flex" justifyContent={alignment}>
+			<Box display="flex" justifyContent={alignment} py={2}>
 				<Box position="relative" display="inline-block">
 					<LazyImage
 						isResizing={isResizing}

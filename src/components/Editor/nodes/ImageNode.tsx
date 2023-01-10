@@ -35,12 +35,20 @@ export interface ImagePayload {
 	width?: number;
 	alignment?: ImageAlignment;
 	captionsEnabled?: boolean;
+	uploaded?: boolean;
 }
 
 function convertImageElement(domNode: Node): null | DOMConversionOutput {
 	if (domNode instanceof HTMLImageElement) {
-		const { alt: altText, src } = domNode;
-		const node = $createImageNode({ altText, src, alignment: "center" });
+		console.debug({ domNode });
+		const { alt: altText, src, height, width } = domNode;
+		const node = $createImageNode({
+			altText,
+			src,
+			alignment: "center",
+			height,
+			width,
+		});
 		return { node };
 	}
 	return null;
@@ -57,6 +65,7 @@ export type SerializedImageNode = Spread<
 		width?: number;
 		type: "image";
 		alignment: ImageAlignment;
+		uploaded: boolean;
 		version: 1;
 	},
 	SerializedLexicalNode
@@ -72,15 +81,28 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 	__showCaption: boolean;
 	__caption: LexicalEditor;
 	__alignment: ImageAlignment = "center";
-	// Captions cannot yet be used within editor cells
 	__captionsEnabled: boolean;
+	__uploaded = false;
 
 	static getType(): string {
 		return "image";
 	}
 
+	getIsUploaded(): boolean {
+		return this.__uploaded;
+	}
+
+	setIsUploaded(isUploaded: boolean) {
+		const writable = this.getWritable();
+		writable.__uploaded = isUploaded;
+	}
+
 	getAlignment() {
 		return this.__alignment;
+	}
+
+	getTextContent(): string {
+		return "";
 	}
 
 	setAlignment(alignment: ImageAlignment) {
@@ -99,7 +121,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			node.__caption,
 			node.__captionsEnabled,
 			node.__alignment,
-			node.__key
+			node.__key,
+			node.__uploaded
 		);
 	}
 
@@ -113,6 +136,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			src,
 			showCaption,
 			alignment,
+			uploaded,
 		} = serializedNode;
 		const node = $createImageNode({
 			altText,
@@ -122,6 +146,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			src,
 			width,
 			alignment,
+			uploaded,
 		});
 		const nestedEditor = node.__caption;
 		const editorState = nestedEditor.parseEditorState(caption.editorState);
@@ -165,7 +190,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		caption?: LexicalEditor,
 		captionsEnabled?: boolean,
 		alignment?: ImageAlignment,
-		key?: NodeKey
+		key?: NodeKey,
+		uploaded?: boolean
 	) {
 		super(key);
 		this.__src = src;
@@ -177,6 +203,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		this.__caption = caption || createEditor();
 		this.__alignment = alignment || "left";
 		this.__captionsEnabled = captionsEnabled || captionsEnabled === undefined;
+		this.__uploaded = uploaded || false;
 	}
 
 	exportJSON(): SerializedImageNode {
@@ -190,6 +217,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 			type: "image",
 			version: 1,
 			alignment: this.getAlignment(),
+			uploaded: this.getIsUploaded(),
 			width: this.__width === "inherit" ? 0 : this.__width,
 		};
 	}
@@ -267,6 +295,7 @@ export function $createImageNode({
 	caption,
 	alignment,
 	key,
+	uploaded,
 }: ImagePayload): ImageNode {
 	return new ImageNode(
 		src,
@@ -278,7 +307,8 @@ export function $createImageNode({
 		caption,
 		captionsEnabled,
 		alignment,
-		key
+		key,
+		uploaded
 	);
 }
 

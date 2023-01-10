@@ -82,6 +82,10 @@ export class SplitLayoutContainerNode extends ElementNode {
 	toggleOpen(): void {
 		this.setOpen(!this.getOpen());
 	}
+
+	isInline(): boolean {
+		return false;
+	}
 }
 
 export function $createSplitLayoutContainerNode(): SplitLayoutContainerNode {

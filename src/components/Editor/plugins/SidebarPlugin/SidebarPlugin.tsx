@@ -61,14 +61,14 @@ import type { Middleware, ReferenceType } from "@floating-ui/react";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { useSession } from "next-auth/react";
 import useLoadingToast from "@components/LoadingToast/LoadingToast";
+import { INSERT_IMAGE_PARAGRAPH } from "@components/Editor/Editor";
+import { RxColumns, RxRows } from "react-icons/rx";
+import React from "react";
 import {
-	INSERT_IMAGE_PARAGRAPH,
 	SET_LAYOUT_MODE_FULL,
 	SET_LAYOUT_MODE_SPLIT,
 	SWAP_SPLIT_COLUMNS,
-} from "@components/Editor/Editor";
-import { RxColumns, RxRows } from "react-icons/rx";
-import React from "react";
+} from "../SplitLayoutPlugin/SplitLayoutPlugin";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
