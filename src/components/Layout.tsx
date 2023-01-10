@@ -4,6 +4,7 @@ import {
 	Button,
 	IconButton,
 	Spinner,
+	Text,
 	useToken,
 } from "@chakra-ui/react";
 import useEditorStore from "@store/store";
@@ -12,6 +13,7 @@ import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
+import type { IconType } from "react-icons";
 import {
 	IoChevronBack,
 	IoChevronForward,
@@ -19,6 +21,55 @@ import {
 	IoLanguageOutline,
 	IoLibraryOutline,
 } from "react-icons/io5";
+
+type SideBarButtonProps = {
+	sidebarOpen: boolean;
+	text: string;
+	Icon: IconType;
+	activeRoute: string;
+	routeId: string;
+	onClick: () => void;
+};
+const SideBarButton = ({
+	sidebarOpen,
+	text,
+	Icon,
+	activeRoute,
+	routeId,
+	onClick,
+}: SideBarButtonProps) => {
+	const [iconInactive, iconActive] = useToken("colors", [
+		"text.300",
+		"brand.500",
+	]);
+
+	return (
+		<Button
+			w="100%"
+			h="48px"
+			justifyContent="flex-start"
+			sx={{
+				"& .chakra-button__icon": {
+					marginRight: sidebarOpen ? 4 : 0,
+				},
+			}}
+			leftIcon={
+				<Icon
+					color={activeRoute === routeId ? iconActive : iconInactive}
+					style={{
+						width: "22px",
+						height: "22px",
+					}}
+				/>
+			}
+			variant="ghost"
+			aria-label={text}
+			onClick={onClick}
+		>
+			{sidebarOpen && text}
+		</Button>
+	);
+};
 
 type LayoutProps = {
 	children: React.ReactNode;
@@ -115,7 +166,7 @@ const Layout = ({ children }: LayoutProps) => {
 						onClick={() => setSidebarOpen(!sidebarOpen)}
 					/>
 					<Box fontSize="60" fontWeight="600" color="#344966" userSelect="none">
-						Y
+						{sidebarOpen ? "YiLang" : "Y"}
 					</Box>
 					<Button
 						bg="#344966"
@@ -142,72 +193,51 @@ const Layout = ({ children }: LayoutProps) => {
 						flexDir="column"
 						gap="4px"
 						h="100%"
+						w="100%"
 						alignItems={sidebarOpen ? "flex-start" : "center"}
 					>
-						<IconButton
-							w="100%"
-							h="48px"
-							icon={
-								<IoHomeOutline
-									color={activeRoute === "app" ? iconActive : iconInactive}
-									style={{
-										width: "22px",
-										height: "22px",
-									}}
-								/>
-							}
-							variant="ghost"
-							aria-label="home"
+						<SideBarButton
+							text="Home"
+							routeId="app"
+							activeRoute={activeRoute || ""}
+							Icon={IoHomeOutline}
 							onClick={openHome}
+							sidebarOpen={sidebarOpen}
 						/>
-						<IconButton
-							w="100%"
-							h="48px"
-							icon={
-								<IoLibraryOutline
-									color={
-										activeRoute === "documents" ? iconActive : iconInactive
-									}
-									style={{
-										width: "22px",
-										height: "22px",
-									}}
-								/>
-							}
-							variant="ghost"
-							aria-label="home"
+						<SideBarButton
+							text="Documents"
+							routeId="documents"
+							activeRoute={activeRoute || ""}
+							Icon={IoLibraryOutline}
 							onClick={openLibrary}
+							sidebarOpen={sidebarOpen}
 						/>
-						<IconButton
-							w="100%"
-							h="48px"
-							icon={
-								<IoLanguageOutline
-									color={
-										activeRoute === "dictionary" ? iconActive : iconInactive
-									}
-									style={{
-										width: "22px",
-										height: "22px",
-									}}
-								/>
-							}
-							variant="ghost"
-							aria-label="home"
+						<SideBarButton
+							text="Words"
+							routeId="dictionary"
+							activeRoute={activeRoute || ""}
+							Icon={IoLanguageOutline}
 							onClick={openDictionary}
+							sidebarOpen={sidebarOpen}
 						/>
-
 						{!!session ? (
 							<>
 								<Box mt="auto" />
-								<Avatar
-									referrerPolicy="no-referrer"
-									bg="text.100"
-									name={session.user?.name || "unkown"}
-									src={session.user?.image || undefined}
-									_hover={{ cursor: "pointer" }}
-									onClick={openSettings}
-								/>
+								<Box display="flex" alignItems="center" gap={2} w="100%">
+									<Avatar
+										referrerPolicy="no-referrer"
+										bg="text.100"
+										name={session.user?.name || "unkown"}
+										src={session.user?.image || undefined}
+										_hover={{ cursor: "pointer" }}
+										onClick={openSettings}
+									/>
+									{sidebarOpen && (
+										<Text fontSize="1.2rem">
+											{session.user?.name || "unknown"}
+										</Text>
+									)}
+								</Box>
 							</>
 						) : (
 							<>
