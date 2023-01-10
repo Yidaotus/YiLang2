@@ -1,13 +1,8 @@
-import {
-	ForwardRefRenderFunction,
-	KeyboardEventHandler,
-	useCallback,
-} from "react";
+import type { ForwardRefRenderFunction, KeyboardEventHandler } from "react";
 import type { RefCallBack } from "react-hook-form";
 
-import { useState } from "react";
 import { CreatableSelect } from "chakra-react-select";
-import React from "react";
+import React, { useCallback, useState } from "react";
 
 const components = {
 	DropdownIndicator: null,

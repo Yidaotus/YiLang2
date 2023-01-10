@@ -1,3 +1,5 @@
+import type { ReferenceType } from "@floating-ui/react";
+
 import {
 	Box,
 	ButtonGroup,
@@ -8,16 +10,14 @@ import {
 } from "@chakra-ui/react";
 import { $isImageNode } from "@components/Editor/nodes/ImageNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import type { ReferenceType } from "@floating-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import useEditorStore from "@store/store";
-import { FORMAT_ELEMENT_COMMAND, $getNodeByKey } from "lexical";
+import { $getNodeByKey, FORMAT_ELEMENT_COMMAND } from "lexical";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-	RiAlignLeft,
-	RiAlignJustify,
 	RiAlignCenter,
+	RiAlignLeft,
 	RiAlignRight,
 	RiEditLine,
 	RiSaveLine,
@@ -35,12 +35,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
 	);
-
-	const [text400, text100, brand500] = useToken("colors", [
-		"text.400",
-		"text.100",
-		"brand.800",
-	]);
+	const [text400, text100] = useToken("colors", ["text.400", "text.100"]);
 
 	const selectedBlock = useEditorStore(
 		(state) => state.editorSelectedBlock,

@@ -2,19 +2,19 @@ import type { EditorTag } from "@components/Editor/nodes/WordNode";
 
 import {
 	Box,
+	Button,
+	FormControl,
+	FormErrorMessage,
+	FormLabel,
+	IconButton,
 	Input,
 	Stack,
-	FormControl,
-	FormLabel,
-	FormErrorMessage,
 	Textarea,
-	IconButton,
-	Button,
 } from "@chakra-ui/react";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 import { CreatableSelect } from "chakra-react-select";
-import { useEffect, useState, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { IoSave } from "react-icons/io5";
 import { RxTrash } from "react-icons/rx";
 

@@ -1,4 +1,7 @@
+import type { Middleware, ReferenceType } from "@floating-ui/react";
+
 import {
+	Box,
 	Button,
 	ButtonGroup,
 	Divider,
@@ -23,9 +26,15 @@ import {
 	Text,
 	useToken,
 } from "@chakra-ui/react";
-import { Box } from "@chakra-ui/react";
-import { $isHeadingNode } from "@lexical/rich-text";
+import { WordNode } from "@components/Editor/nodes/WordNode";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
+import useLoadingToast from "@components/LoadingToast/LoadingToast";
+import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $isHeadingNode } from "@lexical/rich-text";
+import useEditorStore from "@store/store";
+import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { trpc } from "@utils/trpc";
 import {
 	$createNodeSelection,
@@ -34,7 +43,7 @@ import {
 	$setSelection,
 	LineBreakNode,
 } from "lexical";
-import router, { useRouter } from "next/router";
+import router from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -49,21 +58,9 @@ import {
 	RiLineHeight,
 	RiParagraph,
 	RiSwapBoxLine,
-	RiSwapFill,
 } from "react-icons/ri";
-import useEditorStore from "@store/store";
-import shallow from "zustand/shallow";
-import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
-import { WordNode } from "@components/Editor/nodes/WordNode";
-import Word from "@components/Word";
-import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import type { Middleware, ReferenceType } from "@floating-ui/react";
-import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { useSession } from "next-auth/react";
-import useLoadingToast from "@components/LoadingToast/LoadingToast";
-import { INSERT_IMAGE_PARAGRAPH } from "@components/Editor/Editor";
 import { RxColumns, RxRows } from "react-icons/rx";
-import React from "react";
+import shallow from "zustand/shallow";
 import {
 	SET_LAYOUT_MODE_FULL,
 	SET_LAYOUT_MODE_SPLIT,
@@ -166,7 +163,7 @@ const WordListPlugin = () => {
 	useEffect(() => {
 		if (targetWordId) {
 			const targetInStore = Object.entries(wordStore).find(
-				([key, wordId]) => targetWordId === wordId
+				([_, wordId]) => targetWordId === wordId
 			);
 			if (targetInStore) {
 				highlightWord(targetInStore[0]);
@@ -315,7 +312,10 @@ const FormatterMenu = () => {
 							}
 							color="#40454f"
 							onClick={() =>
-								block.formatter({ editor, editorSelectedBlockType })
+								block.formatter({
+									editor,
+									currentBlockType: editorSelectedBlockType,
+								})
 							}
 						>
 							{block.type}
@@ -324,13 +324,6 @@ const FormatterMenu = () => {
 			</MenuList>
 		</Menu>
 	);
-};
-
-type SettingsState = {
-	lineHeight: number;
-	fontSize: number;
-	backgroundOpacity: number;
-	showSpelling: boolean;
 };
 
 const SettingsMenu = () => {
@@ -484,9 +477,6 @@ const LayoutMenu = () => {
 		editor.dispatchCommand(SET_LAYOUT_MODE_FULL, undefined);
 	};
 
-	const insertImageParagraph = () => {
-		editor.dispatchCommand(INSERT_IMAGE_PARAGRAPH, undefined);
-	};
 	return (
 		<>
 			<IconButton
@@ -530,8 +520,6 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 	});
 
 	const [text400] = useToken("colors", ["text.400"]);
-	const { data: session } = useSession();
-	const router = useRouter();
 	const [editor] = useLexicalComposerContext();
 	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
 

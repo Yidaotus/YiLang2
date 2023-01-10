@@ -1,15 +1,7 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
 import splitLayoutContainerStyles from "./SplitLayoutContainer.module.scss";
 
 import type {
 	DOMConversionMap,
-	EditorConfig,
 	LexicalNode,
 	NodeKey,
 	SerializedElementNode,
@@ -38,7 +30,7 @@ export class SplitLayoutContainerNode extends ElementNode {
 		return new SplitLayoutContainerNode(node.__key);
 	}
 
-	createDOM(config: EditorConfig): HTMLElement {
+	createDOM(): HTMLElement {
 		const dom = document.createElement("div");
 		dom.classList.add(
 			splitLayoutContainerStyles.SplitLayout__Container ||
@@ -47,7 +39,7 @@ export class SplitLayoutContainerNode extends ElementNode {
 		return dom;
 	}
 
-	updateDOM(prevNode: SplitLayoutContainerNode, dom: HTMLDivElement): boolean {
+	updateDOM(): false {
 		return false;
 	}
 
@@ -55,9 +47,7 @@ export class SplitLayoutContainerNode extends ElementNode {
 		return {};
 	}
 
-	static importJSON(
-		serializedNode: SerializedSplitLayoutContainerNode
-	): SplitLayoutContainerNode {
+	static importJSON(): SplitLayoutContainerNode {
 		const node = $createSplitLayoutContainerNode();
 		return node;
 	}

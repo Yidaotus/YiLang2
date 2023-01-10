@@ -2,32 +2,27 @@ import type { ReactElement } from "react";
 
 import type { GetServerSidePropsContext } from "next";
 
+import { Box } from "@chakra-ui/react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
-import { Box, IconButton } from "@chakra-ui/react";
 
 const Editor = dynamic(() => import("../../../components/Editor/Editor"), {
 	ssr: false,
 });
 
-import { useState } from "react";
-import { IoDocumentOutline, IoPricetagsOutline } from "react-icons/io5";
 import Layout from "@components/Layout";
 import useEditorStore from "@store/store";
 import protectPage from "@utils/protectPage";
-import shallow from "zustand/shallow";
+import { useState } from "react";
+import { IoDocumentOutline } from "react-icons/io5";
 
 const EditorPage = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
 
-	const { editorBackgroundOpacity, selectedLanguage } = useEditorStore(
-		(state) => ({
-			editorBackgroundOpacity: state.editorBackgroundOpacity,
-			selectedLanguage: state.selectedLanguage,
-		}),
-		shallow
+	const editorBackgroundOpacity = useEditorStore(
+		(state) => state.editorBackgroundOpacity
 	);
 
 	const [sidebarPortalElem, setSidebarPortalElem] =

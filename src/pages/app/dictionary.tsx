@@ -2,51 +2,51 @@ import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
 
-import useEditorStore from "@store/store";
-import { trpc } from "../../utils/trpc";
-import Layout from "@components/Layout";
 import {
+	Box,
+	ButtonGroup,
+	CircularProgress,
+	IconButton,
+	Input,
 	InputGroup,
 	InputLeftElement,
 	InputRightElement,
-	IconButton,
-	ButtonGroup,
-	CircularProgress,
-	TableContainer,
-	Input,
+	Link,
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuList,
+	Skeleton,
 	Table,
-	Thead,
-	Tr,
-	Th,
+	TableContainer,
 	Tbody,
 	Td,
 	Text,
-	Menu,
-	MenuButton,
-	MenuList,
-	MenuItem,
-	Box,
+	Th,
+	Thead,
+	Tr,
 	useToken,
-	Skeleton,
-	Link,
 } from "@chakra-ui/react";
-import {
-	IoSearch,
-	IoClose,
-	IoFilter,
-	IoArrowBack,
-	IoArrowForward,
-	IoArrowDown,
-	IoArrowUp,
-	IoSwapVertical,
-	IoEllipsisVertical,
-	IoPencil,
-	IoTrashBin,
-} from "react-icons/io5";
-import { RiTranslate } from "react-icons/ri";
+import Layout from "@components/Layout";
+import useEditorStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import type { GetServerSidePropsContext } from "next";
 import NextLink from "next/link";
+import {
+	IoArrowBack,
+	IoArrowDown,
+	IoArrowForward,
+	IoArrowUp,
+	IoClose,
+	IoEllipsisVertical,
+	IoFilter,
+	IoPencil,
+	IoSearch,
+	IoSwapVertical,
+	IoTrashBin,
+} from "react-icons/io5";
+import { RiTranslate } from "react-icons/ri";
+import { trpc } from "../../utils/trpc";
 
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);

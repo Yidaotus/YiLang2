@@ -1,11 +1,6 @@
-import Word from "@components/Word";
 import { z } from "zod";
 
-import { router, protectedProcedure } from "../trpc";
-
-const filterUndefined = <T>(v: T | undefined): v is T => {
-	return v !== undefined;
-};
+import { protectedProcedure, router } from "../trpc";
 
 export const dictionaryRouter = router({
 	createLanguage: protectedProcedure

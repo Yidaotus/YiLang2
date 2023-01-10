@@ -1,11 +1,3 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
 import remarkStyles from "./Remark.module.css";
 
 import type {
@@ -39,13 +31,13 @@ export class RemarkTitleNode extends ElementNode {
 		return new RemarkTitleNode(node.__key);
 	}
 
-	createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
+	createDOM(_config: EditorConfig, _editor: LexicalEditor): HTMLElement {
 		const dom = document.createElement("div");
 		dom.classList.add(remarkStyles.Remark__Title || "Remark__Title");
 		return dom;
 	}
 
-	updateDOM(prevNode: RemarkTitleNode, dom: HTMLElement): boolean {
+	updateDOM(_prevNode: RemarkTitleNode, _dom: HTMLElement): boolean {
 		return false;
 	}
 
@@ -54,7 +46,7 @@ export class RemarkTitleNode extends ElementNode {
 	}
 
 	static importJSON(
-		serializedNode: SerializedRemarkTitleNode
+		_serializedNode: SerializedRemarkTitleNode
 	): RemarkTitleNode {
 		return $createRemarkTitleNode();
 	}

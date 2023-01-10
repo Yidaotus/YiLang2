@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { Box, Spinner } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
 import { $getRoot } from "lexical";
-import { Box, Spinner } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 
 const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
@@ -31,15 +31,6 @@ const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 			setShouldFetch(true);
 		}
 	}, [documentId]);
-
-	/*
-	useEffect(() => {
-		if (editorDocument.data && shouldFetch) {
-			if (editorDocument.data.serializedDocument) {
-			}
-		}
-	}, [editor, editorDocument, shouldFetch]);
-*/
 
 	return (
 		<>

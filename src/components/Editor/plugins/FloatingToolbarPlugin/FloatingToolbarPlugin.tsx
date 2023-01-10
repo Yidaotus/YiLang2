@@ -1,43 +1,45 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-import { $isCodeHighlightNode } from "@lexical/code";
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $wrapSelectionInMarkNode } from "@lexical/mark";
-import { mergeRegister } from "@lexical/utils";
 import {
-	Button,
 	Box,
+	Button,
 	ButtonGroup,
+	Divider,
 	IconButton,
 	Menu,
 	MenuButton,
 	MenuItem,
 	MenuList,
-	Divider,
 	useToken,
 } from "@chakra-ui/react";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
+import type { ReferenceType } from "@floating-ui/react";
+import { $isCodeHighlightNode } from "@lexical/code";
+import { $isLinkNode } from "@lexical/link";
+import { $wrapSelectionInMarkNode } from "@lexical/mark";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { mergeRegister } from "@lexical/utils";
+import useEditorStore from "@store/store";
+import { trpc } from "@utils/trpc";
 import type { LexicalEditor } from "lexical";
-import { FORMAT_ELEMENT_COMMAND } from "lexical";
-import { FORMAT_TEXT_COMMAND } from "lexical";
 import {
 	$getSelection,
 	$isRangeSelection,
 	$isTextNode,
 	COMMAND_PRIORITY_LOW,
+	FORMAT_ELEMENT_COMMAND,
+	FORMAT_TEXT_COMMAND,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { getSelectedNode } from "../../utils/getSelectedNode";
-import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
+import {
+	IoCheckmark,
+	IoChevronDown,
+	IoLanguage,
+	IoSearch,
+} from "react-icons/io5";
+
 import {
 	RiAlignCenter,
 	RiAlignJustify,
@@ -49,18 +51,9 @@ import {
 	RiParagraph,
 	RiUnderline,
 } from "react-icons/ri";
-import {
-	IoChevronDown,
-	IoSearch,
-	IoLanguage,
-	IoCheckmark,
-} from "react-icons/io5";
-import useEditorStore from "@store/store";
-import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
-import type { Middleware, ReferenceType } from "@floating-ui/react";
-import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import shallow from "zustand/shallow";
-import { trpc } from "@utils/trpc";
+import { getSelectedNode } from "../../utils/getSelectedNode";
+import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "../FloatingWordEditor/FloatingWordEditor";
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -85,15 +78,9 @@ export function getDOMRangeRect(
 
 function TextFormatFloatingToolbar({
 	editor,
-	anchorElem,
-	isLink,
 	isBold,
 	isItalic,
 	isUnderline,
-	isCode,
-	isStrikethrough,
-	isSubscript,
-	isSuperscript,
 }: {
 	editor: LexicalEditor;
 	anchorElem: HTMLElement;
@@ -106,7 +93,6 @@ function TextFormatFloatingToolbar({
 	isSuperscript: boolean;
 	isUnderline: boolean;
 }): JSX.Element {
-	const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
 	const [text400, text500, brand500] = useToken("colors", [
 		"text.400",
 		"text.500",
@@ -124,6 +110,7 @@ function TextFormatFloatingToolbar({
 		{ enabled: !!activeLanguage }
 	);
 
+	/*
 	const insertLink = useCallback(() => {
 		if (!isLink) {
 			editor.dispatchCommand(TOGGLE_LINK_COMMAND, "https://");
@@ -139,6 +126,7 @@ function TextFormatFloatingToolbar({
 	// pos
 
 	// Update pos on resize
+	*/
 
 	const showWordEditor = useCallback(() => {
 		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
@@ -149,7 +137,10 @@ function TextFormatFloatingToolbar({
 			editor.getEditorState().read(() => {
 				const selection = $getSelection();
 				const text = selection?.getTextContent();
-				const url = templateUrl.replace("{word}", encodeURIComponent(text || ''));
+				const url = templateUrl.replace(
+					"{word}",
+					encodeURIComponent(text || "")
+				);
 
 				if (text && window && url) {
 					window.open(url, "_blank")?.focus();
@@ -418,21 +409,6 @@ function TextFormatFloatingToolbar({
 }
 
 const TextFormatFloatingToolbarMemo = React.memo(TextFormatFloatingToolbar);
-
-const shiftOnHeader: Middleware = {
-	name: "shiftByOnePixel",
-	fn({ elements }) {
-		const elemY = elements.reference.getBoundingClientRect().y;
-		if (elemY < 150) {
-			return {
-				reset: {
-					placement: "bottom",
-				},
-			};
-		}
-		return {};
-	},
-};
 
 function useFloatingTextFormatToolbar(
 	editor: LexicalEditor,

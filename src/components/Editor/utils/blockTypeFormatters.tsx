@@ -2,18 +2,20 @@ import type { LexicalEditor } from "lexical";
 import { $getRoot } from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
-import { $createParagraphNode } from "lexical";
-import { $wrapNodes, $setBlocksType_experimental } from "@lexical/selection";
 import {
 	INSERT_CHECK_LIST_COMMAND,
 	INSERT_ORDERED_LIST_COMMAND,
 	INSERT_UNORDERED_LIST_COMMAND,
 	REMOVE_LIST_COMMAND,
 } from "@lexical/list";
-import { $getSelection, $isRangeSelection } from "lexical";
 import type { HeadingTagType } from "@lexical/rich-text";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
-import * as React from "react";
+import { $setBlocksType_experimental, $wrapNodes } from "@lexical/selection";
+import {
+	$createParagraphNode,
+	$getSelection,
+	$isRangeSelection,
+} from "lexical";
 import {
 	RiDoubleQuotesL,
 	RiH1,
@@ -140,7 +142,13 @@ export const formatQuote = ({ editor, currentBlockType }: FormatterParams) => {
 	}
 };
 
-export const blockTypes: Partial<Record<SelectedBlockType, any>> = {
+type Formatter = {
+	type: string;
+	icon: React.ReactElement;
+	formatter: (params: FormatterParams) => void;
+};
+
+export const blockTypes: Partial<Record<SelectedBlockType, Formatter>> = {
 	paragraph: {
 		type: "Paragraph",
 		icon: <RiParagraph size="100%" />,

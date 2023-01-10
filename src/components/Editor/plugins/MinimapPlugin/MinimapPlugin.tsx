@@ -1,32 +1,29 @@
+import type { LexicalNode } from "lexical";
+
+import { Box, useToken } from "@chakra-ui/react";
 import { $isImageNode } from "@components/Editor/nodes/ImageNode";
-import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
+import { $isSplitLayoutColumnNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutColumn";
+import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { Box, useToken } from "@chakra-ui/react";
-import type { LexicalNode } from "lexical";
-import { $isRootNode } from "lexical";
+import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
+import { mergeRegister } from "@lexical/utils";
 import {
 	$getNearestRootOrShadowRoot,
 	$getRoot,
 	$getSelection,
 	$isParagraphNode,
+	$isRootNode,
 	COMMAND_PRIORITY_NORMAL,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import {
-	mergeRegister,
-	$getNearestBlockElementAncestorOrThrow,
-} from "@lexical/utils";
-import { useRef, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
-import { $isSplitLayoutColumnNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutColumn";
 import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
 import { $isRemarkContentNode } from "../RemarkBlockPlugin/RemarkContentNode";
 
 const LINE_PADDING = 3;
 const LINE_HEIGHT = 3;
-const LINE_WIDTH = 20;
 const CANVAS_WIDTH = 90;
 const LAYOUT_PADDING = 5;
 const BLOCK_PADDING = 1;
@@ -280,7 +277,10 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 		}
 
 		const contentHeight = anchorElem.scrollHeight;
-		const clientHeight = anchorElem.offsetHeight;
+		const clientHeight = anchorElem.clientHeight;
+
+		const scrollBg = scrollBackgroundRef.current;
+		if (!scrollBg) return;
 
 		const scrollerHeight = (clientHeight / contentHeight) * height;
 

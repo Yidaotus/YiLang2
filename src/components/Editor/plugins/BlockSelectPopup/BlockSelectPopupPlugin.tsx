@@ -1,5 +1,5 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isParagraphNode } from "lexical";
+import { $getSelection } from "lexical";
 import { useCallback, useEffect } from "react";
 
 type BlockSelectPopupPluginProps = {

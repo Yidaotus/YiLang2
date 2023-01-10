@@ -1,8 +1,8 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { $getRoot } from "lexical";
-import { $isHeadingNode } from "@lexical/rich-text";
 import { useRouter } from "next/router";
 import { useCallback, useEffect } from "react";
 
@@ -16,12 +16,12 @@ const PersistStateOnPageChangePlugion = ({
 	const upsertDocument = trpc.document.upsertDocument.useMutation();
 	// probably pull out to Editor it self and prop drill?
 	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
-	const setEditorState = useEditorStore((state) => state.setEditorState);
+	// const setEditorState = useEditorStore((state) => state.setEditorState);
 	const router = useRouter();
 
 	useEffect(() => {
 		if (editorState) {
-			const savedEditorState = editor.parseEditorState(editorState);
+			// const savedEditorState = editor.parseEditorState(editorState);
 			//editor.setEditorState(savedEditorState);
 		}
 	}, [documentId, editor, editorState]);

@@ -1,8 +1,8 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { $getRoot } from "lexical";
-import { $isHeadingNode } from "@lexical/rich-text";
 import { useCallback, useEffect } from "react";
 
 const SaveOnBlurPlugin = ({ documentId }: { documentId: string }) => {

@@ -13,8 +13,8 @@ import {
 	IoChevronBack,
 	IoChevronForward,
 	IoHome,
-	IoLibrary,
 	IoJournal,
+	IoLibrary,
 	IoSettings,
 } from "react-icons/io5";
 

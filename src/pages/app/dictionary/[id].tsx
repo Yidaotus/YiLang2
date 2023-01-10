@@ -1,50 +1,46 @@
-import type { ReactElement } from "react";
-import { useRef } from "react";
-import { useCallback, useState } from "react";
-
+import type { ReferenceType } from "@floating-ui/react";
+import type { Tag } from "@prisma/client";
+import type { RouterTypes } from "@utils/trpc";
 import type { GetServerSidePropsContext } from "next";
+import type { ReactElement } from "react";
 
-import { useRouter } from "next/router";
 import {
 	Box,
+	ButtonGroup,
 	Divider,
+	IconButton,
+	Input,
+	InputGroup,
+	InputRightElement,
 	Link,
 	Text,
-	Input,
-	useToken,
-	InputRightElement,
-	InputGroup,
-	ButtonGroup,
-	IconButton,
 	Textarea,
+	useToken,
 } from "@chakra-ui/react";
+import { useRouter } from "next/router";
+import { useCallback, useRef, useState } from "react";
 
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Layout from "@components/Layout";
+import useEditorStore from "@store/store";
+import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import protectPage from "@utils/protectPage";
+import { trpc } from "@utils/trpc";
+import { CreatableSelect } from "chakra-react-select";
+import NextLink from "next/link";
+import {
+	IoChatbubbleEllipses,
+	IoDocumentOutline,
+	IoPricetagsOutline,
+	IoSaveOutline,
+} from "react-icons/io5";
 import {
 	RiAddLine,
 	RiCloseLine,
 	RiTranslate,
 	RiTranslate2,
 } from "react-icons/ri";
-import type { RouterTypes } from "@utils/trpc";
-import { trpc } from "@utils/trpc";
 import { RxCalendar, RxPencil1, RxPlus } from "react-icons/rx";
-import {
-	IoChatbubble,
-	IoChatbubbleEllipses,
-	IoDocumentOutline,
-	IoPricetagsOutline,
-	IoSaveOutline,
-} from "react-icons/io5";
-import NextLink from "next/link";
-import type { ReferenceType } from "@floating-ui/react";
-import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { CreatableSelect } from "chakra-react-select";
-import type { Tag } from "@prisma/client";
-import useEditorStore from "@store/store";
-import { EditorTag } from "@components/Editor/nodes/WordNode";
 
 type DataRowProps = {
 	title: React.ReactNode;

@@ -1,7 +1,6 @@
 import type { SelectedBlock } from "@components/Editor/plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 import create from "zustand";
-import { devtools } from "zustand/middleware";
-import { persist } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 
 type SelectedLanguage = {
 	name: string;

@@ -1,10 +1,3 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
 import remarkStyles from "./Remark.module.css";
 
 import type {
@@ -41,7 +34,7 @@ export class RemarkContainerNode extends ElementNode {
 		return new RemarkContainerNode(node.__open, node.__key);
 	}
 
-	createDOM(config: EditorConfig): HTMLElement {
+	createDOM(_config: EditorConfig): HTMLElement {
 		const dom = document.createElement("div");
 		dom.classList.add(remarkStyles.Remark__Container || "Remark__Container");
 		return dom;
@@ -60,7 +53,7 @@ export class RemarkContainerNode extends ElementNode {
 	}
 
 	static importJSON(
-		serializedNode: SerializedRemarkContainerNode
+		_serializedNode: SerializedRemarkContainerNode
 	): RemarkContainerNode {
 		const node = $createRemarkContainerNode();
 		return node;

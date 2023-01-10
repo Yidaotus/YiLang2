@@ -13,11 +13,11 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import {
-	IoHomeOutline,
-	IoLibraryOutline,
-	IoLanguageOutline,
 	IoChevronBack,
 	IoChevronForward,
+	IoHomeOutline,
+	IoLanguageOutline,
+	IoLibraryOutline,
 } from "react-icons/io5";
 
 type LayoutProps = {

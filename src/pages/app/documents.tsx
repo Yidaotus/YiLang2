@@ -2,58 +2,58 @@ import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 
-import Layout from "@components/Layout";
-import { trpc } from "@utils/trpc";
-import { useRouter } from "next/router";
-import { useCallback } from "react";
 import {
-	Table,
-	Thead,
-	Tr,
-	Th,
-	Tbody,
-	Td,
-	TableContainer,
 	Box,
+	Button,
+	ButtonGroup,
+	CircularProgress,
+	IconButton,
 	Input,
 	InputGroup,
-	Button,
 	InputLeftElement,
-	IconButton,
-	Text,
+	InputRightElement,
 	Menu,
 	MenuButton,
 	MenuItem,
 	MenuList,
-	ButtonGroup,
-	CircularProgress,
-	InputRightElement,
-	useToken,
 	Skeleton,
+	Table,
+	TableContainer,
+	Tbody,
+	Td,
+	Text,
+	Th,
+	Thead,
+	Tr,
+	useToken,
 } from "@chakra-ui/react";
+import Layout from "@components/Layout";
+import { trpc } from "@utils/trpc";
+import { useRouter } from "next/router";
+import { useCallback } from "react";
 
-import {
-	IoSearch,
-	IoFilter,
-	IoArrowForward,
-	IoArrowBack,
-	IoEllipsisVertical,
-	IoTrashBin,
-	IoPencil,
-	IoClose,
-	IoArrowDown,
-	IoArrowUp,
-	IoSwapVertical,
-	IoLibrary,
-} from "react-icons/io5";
-import protectPage from "@utils/protectPage";
-import { GetServerSidePropsContext } from "next";
 import useEditorStore from "@store/store";
+import protectPage from "@utils/protectPage";
+import type { GetServerSidePropsContext } from "next";
+import {
+	IoArrowBack,
+	IoArrowDown,
+	IoArrowForward,
+	IoArrowUp,
+	IoClose,
+	IoEllipsisVertical,
+	IoFilter,
+	IoLibrary,
+	IoPencil,
+	IoSearch,
+	IoSwapVertical,
+	IoTrashBin,
+} from "react-icons/io5";
 
 const MAX_PAGINATION_BUTTONS = 5;
 
 const DocumentsPage: NextPageWithLayout = () => {
-	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
+	const [brand500] = useToken("colors", ["brand.500"]);
 	const router = useRouter();
 	const utils = trpc.useContext();
 	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);

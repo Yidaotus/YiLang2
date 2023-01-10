@@ -22,6 +22,7 @@ export type EditorWord = {
 	documentId?: string;
 };
 
+import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
 import type {
 	EditorConfig,
 	LexicalNode,
@@ -29,15 +30,18 @@ import type {
 	SerializedLexicalNode,
 	Spread,
 } from "lexical";
-import { $getNodeByKey } from "lexical";
-import { CLICK_COMMAND, COMMAND_PRIORITY_LOW, DecoratorNode } from "lexical";
-import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
+import {
+	$getNodeByKey,
+	CLICK_COMMAND,
+	COMMAND_PRIORITY_LOW,
+	DecoratorNode,
+} from "lexical";
 
-import React, { useEffect, useRef } from "react";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { trpc } from "@utils/trpc";
 import { Box } from "@chakra-ui/react";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import useEditorStore from "@store/store";
+import { trpc } from "@utils/trpc";
+import React, { useEffect, useRef } from "react";
 
 export type SerializedWordNode = Spread<
 	{
@@ -59,7 +63,6 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 		(state) => state.editorShowSpelling
 	);
 	const [editor] = useLexicalComposerContext();
-	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
 	const dbWord = trpc.dictionary.getWord.useQuery(
 		{ id: id || "" },
 		{ enabled: !!id }
@@ -206,17 +209,13 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		this.__id = id;
 	}
 
-	createDOM(config: EditorConfig): HTMLElement {
+	createDOM(_config: EditorConfig): HTMLElement {
 		const div = document.createElement("div");
 		div.style.display = "inline-block";
 		return div;
 	}
 
-	updateDOM(
-		_prevNode: unknown,
-		_dom: HTMLElement,
-		_config: EditorConfig
-	): boolean {
+	updateDOM(): false {
 		return false;
 	}
 

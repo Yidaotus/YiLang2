@@ -1,22 +1,21 @@
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-	$getSelection,
-	$isRangeSelection,
-	$isRootOrShadowRoot,
-	$isNodeSelection,
-	SELECTION_CHANGE_COMMAND,
-	COMMAND_PRIORITY_LOW,
-} from "lexical";
+import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 import { $isListNode, ListNode } from "@lexical/list";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
 import {
-	mergeRegister,
 	$findMatchingParent,
 	$getNearestNodeOfType,
+	mergeRegister,
 } from "@lexical/utils";
+import {
+	$getSelection,
+	$isNodeSelection,
+	$isRangeSelection,
+	$isRootOrShadowRoot,
+	COMMAND_PRIORITY_LOW,
+	SELECTION_CHANGE_COMMAND,
+} from "lexical";
 import { useCallback, useEffect } from "react";
-import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
-import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",

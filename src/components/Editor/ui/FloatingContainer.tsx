@@ -1,5 +1,6 @@
-import type { Middleware, Placement, ReferenceType } from "@floating-ui/react";
 import type { ChakraProps } from "@chakra-ui/react";
+import type { Middleware, Placement, ReferenceType } from "@floating-ui/react";
+
 import { Box, chakra } from "@chakra-ui/react";
 import { arrow, flip, offset, shift, useFloating } from "@floating-ui/react";
 import { useEffect, useRef } from "react";

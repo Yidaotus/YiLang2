@@ -1,5 +1,5 @@
-import { trpc } from "@utils/trpc";
 import { Box, Link } from "@chakra-ui/react";
+import { trpc } from "@utils/trpc";
 import { IoChatboxEllipses } from "react-icons/io5";
 
 type WordProps = {

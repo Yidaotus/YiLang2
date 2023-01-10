@@ -1,6 +1,4 @@
-import { z } from "zod";
-
-import { router, protectedProcedure } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 
 export const userRouter = router({
 	stats: protectedProcedure.query(async ({ ctx: { prisma, session } }) => {

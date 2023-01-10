@@ -1,38 +1,40 @@
-import type { LexicalEditor, RangeSelection } from "lexical";
-import { $insertNodes, $setSelection } from "lexical";
+import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
+import type { ReferenceType } from "@floating-ui/react";
+import type { LexicalCommand, LexicalEditor, RangeSelection } from "lexical";
+import type { WordFormType } from "./WordForm";
 
+import { Box, Spinner } from "@chakra-ui/react";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import { $createWordNode } from "@editor/nodes/WordNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
+import useEditorStore from "@store/store";
+import useOnClickOutside from "@ui/hooks/useOnClickOutside";
+import { trpc } from "@utils/trpc";
 import {
 	$getSelection,
+	$insertNodes,
 	$isRangeSelection,
+	$setSelection,
 	COMMAND_PRIORITY_EDITOR,
+	createCommand,
 } from "lexical";
-import {
-	useState,
-	useRef,
-	useMemo,
+import React, {
 	useCallback,
-	useLayoutEffect,
 	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
 } from "react";
-import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
-import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "@editor/Editor";
-import { trpc } from "@utils/trpc";
-import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
-import { $createWordNode } from "@editor/nodes/WordNode";
 import { createPortal } from "react-dom";
-import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { Box, Spinner } from "@chakra-ui/react";
-import React from "react";
-
-import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import type { ReferenceType } from "@floating-ui/react";
-import useEditorStore from "@store/store";
 import TagForm from "./TagForm";
-import type { WordFormType } from "./WordForm";
 import WordForm from "./WordForm";
 
 type TagOption = EditorTag;
+
+export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
+	createCommand("SHOW_FLOATING_WORD_EDITOR_COMMAN");
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,

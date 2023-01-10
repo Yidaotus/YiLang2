@@ -1,9 +1,13 @@
 import type { LexicalCommand } from "lexical";
 
-import { $getSelection, COMMAND_PRIORITY_NORMAL, PASTE_COMMAND } from "lexical";
 import { $createImageNode } from "@components/Editor/nodes/ImageNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { createCommand } from "lexical";
+import {
+	$getSelection,
+	COMMAND_PRIORITY_NORMAL,
+	createCommand,
+	PASTE_COMMAND,
+} from "lexical";
 import { useEffect } from "react";
 
 export const SET_UPLOADED_IMAGE_SRC: LexicalCommand<{

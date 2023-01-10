@@ -1,17 +1,15 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $wrapNodeInElement, mergeRegister } from "@lexical/utils";
+import { mergeRegister } from "@lexical/utils";
 import type { ElementFormatType, LexicalCommand } from "lexical";
-import { $getNearestRootOrShadowRoot } from "lexical";
-import { COMMAND_PRIORITY_NORMAL } from "lexical";
-import { FORMAT_ELEMENT_COMMAND } from "lexical";
 import {
-	$createParagraphNode,
+	$getNearestRootOrShadowRoot,
 	$getSelection,
 	$insertNodes,
 	$isNodeSelection,
-	$isRootOrShadowRoot,
 	COMMAND_PRIORITY_LOW,
+	COMMAND_PRIORITY_NORMAL,
 	createCommand,
+	FORMAT_ELEMENT_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
 import type { ImageAlignment, ImagePayload } from "../../nodes/ImageNode";

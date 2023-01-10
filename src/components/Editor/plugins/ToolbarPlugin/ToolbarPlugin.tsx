@@ -1,18 +1,15 @@
-import type { NodeKey } from "lexical";
 import type { HeadingTagType } from "@lexical/rich-text";
-
-import { $getRoot } from "lexical";
-import { FORMAT_ELEMENT_COMMAND } from "lexical";
+import type { NodeKey } from "lexical";
 
 import {
+	Box,
 	Button,
 	ButtonGroup,
-	Menu,
-	MenuItem,
-	MenuButton,
-	MenuList,
-	Box,
 	IconButton,
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuList,
 } from "@chakra-ui/react";
 import {
 	$isListNode,
@@ -23,35 +20,34 @@ import {
 	REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { trpc } from "@utils/trpc";
 import {
-	$getSelection,
-	$isRangeSelection,
-	$isRootOrShadowRoot,
-	$isNodeSelection,
-	SELECTION_CHANGE_COMMAND,
-	COMMAND_PRIORITY_CRITICAL,
-	$createParagraphNode,
-	$createNodeSelection,
-	$setSelection,
-} from "lexical";
+	$createHeadingNode,
+	$createQuoteNode,
+	$isHeadingNode,
+} from "@lexical/rich-text";
+import { $wrapNodes } from "@lexical/selection";
 import {
 	$findMatchingParent,
 	$getNearestNodeOfType,
 	mergeRegister,
 } from "@lexical/utils";
+import { trpc } from "@utils/trpc";
 import {
-	$createHeadingNode,
-	$isHeadingNode,
-	$createQuoteNode,
-} from "@lexical/rich-text";
-import { $wrapNodes } from "@lexical/selection";
-import React, { useState, useCallback, useEffect } from "react";
+	$createNodeSelection,
+	$createParagraphNode,
+	$getRoot,
+	$getSelection,
+	$isNodeSelection,
+	$isRangeSelection,
+	$isRootOrShadowRoot,
+	$setSelection,
+	COMMAND_PRIORITY_CRITICAL,
+	FORMAT_ELEMENT_COMMAND,
+	SELECTION_CHANGE_COMMAND,
+} from "lexical";
 import { useRouter } from "next/router";
-import {
-	INSERT_IMAGE_PARAGRAPH,
-	SET_LAYOUT_MODE_SPLIT,
-} from "@components/Editor/Editor";
+import { useCallback, useEffect, useState } from "react";
+import { SET_LAYOUT_MODE_SPLIT } from "../SplitLayoutPlugin/SplitLayoutPlugin";
 
 const blockTypeToBlockName = {
 	bullet: "Bulleted List",
@@ -246,10 +242,6 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 		editor.dispatchCommand(SET_LAYOUT_MODE_SPLIT, undefined);
 	};
 
-	const insertImageParagraph = () => {
-		editor.dispatchCommand(INSERT_IMAGE_PARAGRAPH, undefined);
-	};
-
 	const formatCheckList = () => {
 		if (blockType !== "check") {
 			editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
@@ -345,9 +337,6 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 				</Menu>
 				<Button onClick={() => saveDocument()} as={Button}>
 					Save
-				</Button>
-				<Button onClick={() => insertImageParagraph()} as={Button}>
-					DEBUG
 				</Button>
 				<Button onClick={() => splitParagraph()} as={Button}>
 					SPLIT

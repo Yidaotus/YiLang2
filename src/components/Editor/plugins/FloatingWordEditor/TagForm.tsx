@@ -1,18 +1,18 @@
 import type { EditorTag } from "@components/Editor/nodes/WordNode";
 
 import {
-	Stack,
-	FormControl,
-	FormLabel,
-	FormErrorMessage,
-	IconButton,
-	Button,
 	Box,
+	Button,
+	FormControl,
+	FormErrorMessage,
+	FormLabel,
+	IconButton,
 	Input,
+	Stack,
 } from "@chakra-ui/react";
-import { useEffect, useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { CirclePicker } from "react-color";
-import { useForm, Controller } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { IoSave } from "react-icons/io5";
 import { RxExit } from "react-icons/rx";
 

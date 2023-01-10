@@ -2,7 +2,6 @@ import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 import { useCallback } from "react";
 
-import Layout from "@components/Layout";
 import {
 	Avatar,
 	Box,
@@ -12,8 +11,6 @@ import {
 	CardHeader,
 	Divider,
 	Link,
-	List,
-	ListItem,
 	Select,
 	SkeletonText,
 	Stat,
@@ -32,23 +29,21 @@ import {
 	useToast,
 	useToken,
 } from "@chakra-ui/react";
-import NextLink from "next/link";
-import { useSession } from "next-auth/react";
-import type { GetServerSidePropsContext } from "next";
+import Layout from "@components/Layout";
+import useEditorStore from "@store/store";
 import protectPage from "@utils/protectPage";
+import { trpc } from "@utils/trpc";
+import type { GetServerSidePropsContext } from "next";
+import { useSession } from "next-auth/react";
+import NextLink from "next/link";
 import {
 	IoDocumentOutline,
 	IoLanguageOutline,
 	IoMailOutline,
 } from "react-icons/io5";
-import { trpc } from "@utils/trpc";
-import useEditorStore from "@store/store";
 
 const DashboardPage: NextPageWithLayout = () => {
-	const [iconInactive, iconActive] = useToken("colors", [
-		"text.300",
-		"brand.500",
-	]);
+	const [iconActive] = useToken("colors", ["brand.500"]);
 
 	const toast = useToast();
 

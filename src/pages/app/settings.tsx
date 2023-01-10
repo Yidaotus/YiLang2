@@ -1,10 +1,8 @@
+import { signOut } from "next-auth/react";
 import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
-import { useRef } from "react";
-import { useCallback, useState } from "react";
-import { signOut } from "next-auth/react";
+import { useCallback, useRef, useState } from "react";
 
-import Layout from "@components/Layout";
 import {
 	Accordion,
 	AccordionButton,
@@ -42,9 +40,13 @@ import {
 	useToast,
 	useToken,
 } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
-import type { GetServerSidePropsContext } from "next";
+import Layout from "@components/Layout";
+import useEditorStore from "@store/store";
 import protectPage from "@utils/protectPage";
+import type { RouterTypes } from "@utils/trpc";
+import { trpc } from "@utils/trpc";
+import type { GetServerSidePropsContext } from "next";
+import { useSession } from "next-auth/react";
 import {
 	IoAdd,
 	IoClose,
@@ -59,9 +61,6 @@ import {
 	IoTrashBin,
 } from "react-icons/io5";
 import { RxPencil1 } from "react-icons/rx";
-import type { RouterTypes } from "@utils/trpc";
-import { trpc } from "@utils/trpc";
-import useEditorStore from "@store/store";
 
 type InlineLanguageNameInputProps = {
 	name: string;

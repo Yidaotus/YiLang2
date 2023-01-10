@@ -1,22 +1,20 @@
 import type { ReferenceType } from "@floating-ui/react";
 
+import { Box } from "@chakra-ui/react";
 import { $isWordNode } from "@components/Editor/nodes/WordNode";
-
-import { mergeRegister } from "@lexical/utils";
+import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-
+import { mergeRegister } from "@lexical/utils";
 import {
 	$getSelection,
 	$isNodeSelection,
-	SELECTION_CHANGE_COMMAND,
 	COMMAND_PRIORITY_LOW,
+	SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import { useState, useCallback, useEffect } from "react";
-import { createPortal } from "react-dom";
-import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import Word from "@components/Word";
-import { Box } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const [wordNode, setWordNode] = useState<{

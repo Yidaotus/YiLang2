@@ -1,30 +1,31 @@
 import type { ElementNode, LexicalCommand, TextNode } from "lexical";
-import { createCommand } from "lexical";
+
 import {
-	SplitLayoutColumnNode,
 	$createSplitLayoutColumnNode,
 	$isSplitLayoutColumnNode,
+	SplitLayoutColumnNode,
 } from "@components/Editor/nodes/SplitLayout/SplitLayoutColumn";
 import {
-	SplitLayoutContainerNode,
-	$isSplitLayoutContainerNode,
 	$createSplitLayoutContainerNode,
+	$isSplitLayoutContainerNode,
+	SplitLayoutContainerNode,
 } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import {
-	$isDecoratorNode,
 	$createParagraphNode,
 	$createTextNode,
-	KEY_ARROW_UP_COMMAND,
-	$getSelection,
-	$isRangeSelection,
-	COMMAND_PRIORITY_LOW,
-	KEY_ENTER_COMMAND,
-	$isTextNode,
-	$isLeafNode,
 	$getRoot,
+	$getSelection,
+	$isDecoratorNode,
+	$isLeafNode,
+	$isRangeSelection,
+	$isTextNode,
+	COMMAND_PRIORITY_LOW,
+	createCommand,
+	KEY_ARROW_UP_COMMAND,
+	KEY_ENTER_COMMAND,
 } from "lexical";
-import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import { useEffect } from "react";
 
 export const SWAP_SPLIT_COLUMNS: LexicalCommand<void> =

@@ -1,8 +1,8 @@
 import { router } from "../trpc";
 import { authRouter } from "./auth";
-import { exampleRouter } from "./example";
 import { dictionaryRouter } from "./dictionary";
 import { documentRouter } from "./document";
+import { exampleRouter } from "./example";
 import { userRouter } from "./user";
 
 export const appRouter = router({

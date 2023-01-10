@@ -1,11 +1,3 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
 import type {
 	GridSelection,
 	LexicalEditor,
@@ -14,7 +6,6 @@ import type {
 	RangeSelection,
 } from "lexical";
 import { $isElementNode } from "lexical";
-import { $getRoot } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
@@ -29,14 +20,12 @@ import {
 	KEY_DELETE_COMMAND,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import * as React from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
+import { Box } from "@chakra-ui/react";
 import type { ImageAlignment } from "./ImageNode";
 import { $isImageNode } from "./ImageNode";
 import ImageResizer from "./ImageResizer";
-import { Box } from "@chakra-ui/react";
-import { $normalizeSelection } from "lexical/LexicalNormalization";
 
 const imageCache = new Set();
 
@@ -221,7 +210,7 @@ export default function ImageComponent({
 		setIsResizing(true);
 	};
 
-	const draggable = isSelected && $isNodeSelection(selection);
+	//const draggable = isSelected && $isNodeSelection(selection);
 	const isFocused = isSelected || isResizing;
 	return (
 		<Suspense fallback={null}>

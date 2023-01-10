@@ -1,18 +1,11 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
+import type { NodeKey } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
-import type { NodeKey } from "lexical";
-import { $getNearestRootOrShadowRoot } from "lexical";
-import { $createTextNode } from "lexical";
 import {
 	$createParagraphNode,
+	$createTextNode,
+	$getNearestRootOrShadowRoot,
 	$getNodeByKey,
 	$getSelection,
 	$isRangeSelection,
@@ -23,7 +16,6 @@ import {
 	KEY_ARROW_DOWN_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
-
 import {
 	$createRemarkContainerNode,
 	$isRemarkContainerNode,

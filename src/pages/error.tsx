@@ -1,23 +1,23 @@
 import type { GetServerSidePropsContext } from "next";
 import type { ClientSafeProvider } from "next-auth/react";
 
-import { unstable_getServerSession } from "next-auth";
-import { getProviders, signIn } from "next-auth/react";
-import { authOptions } from "./api/auth/[...nextauth]";
 import {
 	Box,
 	Button,
 	Divider,
-	Text,
 	Input,
 	InputGroup,
 	InputLeftElement,
+	Text,
 	useToken,
 } from "@chakra-ui/react";
-import { FaGoogle, FaGithub } from "react-icons/fa";
-import { RiLockPasswordLine, RiMailFill } from "react-icons/ri";
+import { unstable_getServerSession } from "next-auth";
+import { getProviders, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useCallback, useState } from "react";
+import { FaGithub, FaGoogle } from "react-icons/fa";
+import { RiLockPasswordLine, RiMailFill } from "react-icons/ri";
+import { authOptions } from "./api/auth/[...nextauth]";
 
 const ProviderIcons = {
 	google: <FaGoogle />,
@@ -54,11 +54,7 @@ type SignInPageProps = {
 };
 
 export default function SignIn({ providers, callbackUrl }: SignInPageProps) {
-	const [text100, text500, brand500] = useToken("colors", [
-		"text.100",
-		"text.500",
-		"brand.800",
-	]);
+	const [text100] = useToken("colors", ["text.100"]);
 
 	const router = useRouter();
 	const [error, setError] = useState<ErrorCode | null>(null);
@@ -192,8 +188,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 				callbackUrl: context.query.target,
 			},
 		};
-	} 
-	
+	}
+
 	/*else {
 		return {
 			redirect: {

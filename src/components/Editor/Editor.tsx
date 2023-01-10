@@ -1,73 +1,59 @@
-import type { Klass, LexicalCommand, LexicalNode } from "lexical";
+import type { Klass, LexicalNode } from "lexical";
 
-import {
-	COMMAND_PRIORITY_LOW,
-	$createParagraphNode,
-	$getSelection,
-	$createTextNode,
-} from "lexical";
+import { ListItemNode, ListNode } from "@lexical/list";
 
-import { ListNode, ListItemNode } from "@lexical/list";
-
-import React, { useEffect, useState } from "react";
-import { createCommand } from "lexical";
+import React, { useState } from "react";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
 
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { MarkNode } from "@lexical/mark";
 import { OverflowNode } from "@lexical/overflow";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 
-import YiLangTheme from "./themes/YiLangEditorTheme";
-import ErrorBoundary from "./ui/ErrorBoundary";
+import { ImageNode } from "./nodes/ImageNode";
 import { WordNode } from "./nodes/WordNode";
+import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/FloatingToolbarPlugin";
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
-import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
-import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
-import { $createImageNode, ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
+import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
+import YiLangTheme from "./themes/YiLangEditorTheme";
+import ErrorBoundary from "./ui/ErrorBoundary";
 
-import RemarkPlugin from "./plugins/RemarkBlockPlugin/RemarkPlugin";
 import { RemarkContainerNode } from "./plugins/RemarkBlockPlugin/RemarkContainerNode";
 import { RemarkContentNode } from "./plugins/RemarkBlockPlugin/RemarkContentNode";
+import RemarkPlugin from "./plugins/RemarkBlockPlugin/RemarkPlugin";
 import { RemarkTitleNode } from "./plugins/RemarkBlockPlugin/RemarkTitleNode";
-
-import { TreeView } from "@lexical/react/LexicalTreeView";
 
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
 
-import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
+import useEditorStore from "@store/store";
 import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocumentTitlePlugin";
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
-import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
-import useEditorStore from "@store/store";
 import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
+import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
+import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
 import shallow from "zustand/shallow";
+import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
+import { SplitLayoutContainerNode } from "./nodes/SplitLayout/SplitLayoutContainer";
+import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
-import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
-import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-	$createSplitLayoutContainerNode,
-	SplitLayoutContainerNode,
-} from "./nodes/SplitLayout/SplitLayoutContainer";
-import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
-import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
-import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
 import PasteImageFromClipboardPlugin from "./plugins/PasteImageFromClipboardPlugin/PasteImageFromClipboardPlugin";
+import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
+import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
+import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -100,59 +86,6 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 function onError(error: Error) {
 	console.error(error);
 }
-
-export const INSERT_IMAGE_PARAGRAPH: LexicalCommand<void> = createCommand(
-	"INSERT_IMAGE_PARAGRAPH"
-);
-
-const TreeViewPlugin = () => {
-	const [editor] = useLexicalComposerContext();
-	return (
-		<TreeView
-			viewClassName="tree-view-output"
-			timeTravelPanelClassName="debug-timetravel-panel"
-			timeTravelButtonClassName="debug-timetravel-button"
-			timeTravelPanelSliderClassName="debug-timetravel-panel-slider"
-			timeTravelPanelButtonClassName="debug-timetravel-panel-button"
-			editor={editor}
-		/>
-	);
-};
-
-const ImageParagraphPlugin = () => {
-	const [editor] = useLexicalComposerContext();
-
-	useEffect(() => {
-		return editor.registerCommand(
-			INSERT_IMAGE_PARAGRAPH,
-			() => {
-				const imageNode = $createImageNode({
-					altText: "image node",
-					src: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Test.svg",
-				});
-				const paragraphNode = $createParagraphNode().append(
-					$createTextNode("test paragraph node!")
-				);
-				const imageParagraphContainerNode = $createSplitLayoutContainerNode();
-
-				imageParagraphContainerNode.append(paragraphNode, imageNode);
-
-				const selection = $getSelection();
-				if (selection) {
-					selection.insertNodes([imageParagraphContainerNode]);
-				}
-
-				return true;
-			},
-			COMMAND_PRIORITY_LOW
-		);
-	}, [editor]);
-
-	return null;
-};
-
-export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
-	createCommand("SHOW_FLOATING_WORD_EDITOR_COMMAN");
 
 type EditorProps = {
 	documentId: string;
@@ -272,7 +205,6 @@ export default React.memo(function Editor({
 					<HistoryPlugin />
 					<PersistStateOnPageChangePlugion documentId={documentId} />
 					<FetchDocumentPlugin documentId={documentId} />
-					<ImageParagraphPlugin />
 					<SplitLayoutPlugin />
 					<TabIndentationPlugin />
 					<ListMaxIndentLevelPlugin maxDepth={4} />
@@ -314,7 +246,6 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
-					<TreeViewPlugin />
 				</LexicalComposer>
 			</Box>
 		</Box>

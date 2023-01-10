@@ -1,12 +1,12 @@
-import type { AppProps } from "next/app";
-import { type Session } from "next-auth";
 import type { NextPage } from "next";
+import { type Session } from "next-auth";
+import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
 
-import { SessionProvider } from "next-auth/react";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
-import { withProse } from "@nikolovlazar/chakra-ui-prose";
 import Fonts from "@components/fonts";
+import { withProse } from "@nikolovlazar/chakra-ui-prose";
+import { SessionProvider } from "next-auth/react";
 
 import { trpc } from "../utils/trpc";
 

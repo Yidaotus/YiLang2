@@ -1,22 +1,22 @@
 import type { GetServerSidePropsContext } from "next";
 import type { ClientSafeProvider } from "next-auth/react";
 
-import { unstable_getServerSession } from "next-auth";
-import { getProviders, signIn } from "next-auth/react";
-import { authOptions } from "./api/auth/[...nextauth]";
 import {
 	Box,
 	Button,
 	Divider,
-	Text,
 	Input,
 	InputGroup,
 	InputLeftElement,
+	Text,
 	useToken,
 } from "@chakra-ui/react";
-import { FaGoogle, FaGithub } from "react-icons/fa";
-import { RiLockPasswordLine, RiMailFill } from "react-icons/ri";
+import { unstable_getServerSession } from "next-auth";
+import { getProviders, signIn } from "next-auth/react";
 import { useCallback } from "react";
+import { FaGithub, FaGoogle } from "react-icons/fa";
+import { RiLockPasswordLine, RiMailFill } from "react-icons/ri";
+import { authOptions } from "./api/auth/[...nextauth]";
 
 const ProviderIcons = {
 	google: <FaGoogle />,
