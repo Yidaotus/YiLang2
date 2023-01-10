@@ -54,6 +54,7 @@ import PasteImageFromClipboardPlugin from "./plugins/PasteImageFromClipboardPlug
 import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
+import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -210,6 +211,7 @@ export default React.memo(function Editor({
 					<ListMaxIndentLevelPlugin maxDepth={4} />
 					<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
 					<ListPlugin />
+					<WordPlugin />
 					<ImagesPlugin />
 					<SaveOnBlurPlugin documentId={documentId} />
 					<SaveImagesPlugin />

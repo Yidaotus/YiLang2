@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
-import type { ElementFormatType, LexicalCommand } from "lexical";
+import type { ElementFormatType } from "lexical";
 import {
 	$getNearestRootOrShadowRoot,
 	$getSelection,
@@ -22,8 +22,9 @@ import {
 
 export type InsertImagePayload = Readonly<ImagePayload>;
 
-export const INSERT_IMAGE_COMMAND: LexicalCommand<InsertImagePayload> =
-	createCommand("INSERT_IMAGE_COMMAND");
+export const INSERT_IMAGE_COMMAND = createCommand<InsertImagePayload>(
+	"INSERT_IMAGE_COMMAND"
+);
 
 /*
 export function InsertImageUriDialogBody({

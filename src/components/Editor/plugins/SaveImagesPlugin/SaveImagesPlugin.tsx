@@ -1,5 +1,3 @@
-import type { LexicalCommand } from "lexical";
-
 import { useToast } from "@chakra-ui/react";
 import { $isImageNode, ImageNode } from "@components/Editor/nodes/ImageNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -9,11 +7,11 @@ import { $getNodeByKey, COMMAND_PRIORITY_LOW, createCommand } from "lexical";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
-export const SET_UPLOADED_IMAGE_SRC: LexicalCommand<{
+export const SET_UPLOADED_IMAGE_SRC = createCommand<{
 	key: string;
 	url: string;
 	freeObjectUrl: boolean;
-}> = createCommand("SET_IMAGE_SRC");
+}>("SET_IMAGE_SRC");
 
 const SaveImagesPlugin = () => {
 	const [editor] = useLexicalComposerContext();

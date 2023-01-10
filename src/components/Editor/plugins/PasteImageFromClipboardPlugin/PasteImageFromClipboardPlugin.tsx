@@ -1,5 +1,3 @@
-import type { LexicalCommand } from "lexical";
-
 import { $createImageNode } from "@components/Editor/nodes/ImageNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -10,11 +8,11 @@ import {
 } from "lexical";
 import { useEffect } from "react";
 
-export const SET_UPLOADED_IMAGE_SRC: LexicalCommand<{
+export const SET_UPLOADED_IMAGE_SRC = createCommand<{
 	key: string;
 	url: string;
 	freeObjectUrl: boolean;
-}> = createCommand("SET_IMAGE_SRC");
+}>("SET_IMAGE_SRC");
 
 const PasteImageFromClipboardPlugin = () => {
 	const [editor] = useLexicalComposerContext();

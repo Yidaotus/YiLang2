@@ -47,6 +47,7 @@ export type SerializedWordNode = Spread<
 	{
 		word: string;
 		translations: Array<string>;
+		isAutoFill: boolean;
 		id?: string;
 		type: "word";
 	},
@@ -182,6 +183,7 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 export class WordNode extends DecoratorNode<React.ReactElement> {
 	__word: string;
 	__translations: Array<string>;
+	__isAutoFill: boolean;
 	__id?: string;
 
 	static getType(): string {
@@ -193,7 +195,8 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 			node.__translations,
 			node.__word,
 			node.__id,
-			node.__key
+			node.__key,
+			node.__isAutoFill
 		);
 	}
 
@@ -201,12 +204,14 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		translations: Array<string>,
 		word: string,
 		id?: string,
-		key?: NodeKey
+		key?: NodeKey,
+		isAutoFill?: boolean
 	) {
 		super(key);
 		this.__translations = translations;
 		this.__word = word;
 		this.__id = id;
+		this.__isAutoFill = isAutoFill || false;
 	}
 
 	createDOM(_config: EditorConfig): HTMLElement {
@@ -217,6 +222,15 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 
 	updateDOM(): false {
 		return false;
+	}
+
+	setIsAutoFill(isAutoFill: boolean) {
+		const self = this.getWritable();
+		self.__isAutoFill = isAutoFill;
+	}
+	getIsAutoFill(): boolean {
+		const self = this.getLatest();
+		return self.__isAutoFill;
 	}
 
 	setId(id: string) {
@@ -251,6 +265,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 			word: this.getWord(),
 			translations: this.getTranslations(),
 			id: this.getId(),
+			isAutoFill: this.getIsAutoFill(),
 			type: "word",
 			version: 1,
 		};
@@ -260,7 +275,8 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		const node = $createWordNode(
 			serializedNode.translations,
 			serializedNode.word,
-			serializedNode.id
+			serializedNode.id,
+			serializedNode.isAutoFill
 		);
 		return node;
 	}
@@ -290,7 +306,8 @@ export function $isWordNode(
 export function $createWordNode(
 	translations: Array<string>,
 	word: string,
-	id?: string
+	id?: string,
+	isAutoFill?: boolean
 ): WordNode {
-	return new WordNode(translations, word, id);
+	return new WordNode(translations, word, id, undefined, isAutoFill);
 }

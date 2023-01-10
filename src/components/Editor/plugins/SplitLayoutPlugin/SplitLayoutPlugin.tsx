@@ -1,4 +1,4 @@
-import type { ElementNode, LexicalCommand, TextNode } from "lexical";
+import type { ElementNode, TextNode } from "lexical";
 
 import {
 	$createSplitLayoutColumnNode,
@@ -28,14 +28,11 @@ import {
 } from "lexical";
 import { useEffect } from "react";
 
-export const SWAP_SPLIT_COLUMNS: LexicalCommand<void> =
-	createCommand("SWAP_SPLIT_COLUMNS");
-export const SET_LAYOUT_MODE_SPLIT: LexicalCommand<void> = createCommand(
+export const SWAP_SPLIT_COLUMNS = createCommand<void>("SWAP_SPLIT_COLUMNS");
+export const SET_LAYOUT_MODE_SPLIT = createCommand<void>(
 	"SET_LAYOUT_MODE_SPLIT"
 );
-export const SET_LAYOUT_MODE_FULL: LexicalCommand<void> = createCommand(
-	"SET_LAYOUT_MODE_FULL"
-);
+export const SET_LAYOUT_MODE_FULL = createCommand<void>("SET_LAYOUT_MODE_FULL");
 
 const SplitLayoutPlugin = () => {
 	const [editor] = useLexicalComposerContext();

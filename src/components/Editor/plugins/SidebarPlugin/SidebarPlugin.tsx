@@ -47,6 +47,7 @@ import router from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+	IoCheckmarkDone,
 	IoChevronDown,
 	IoGridOutline,
 	IoLanguageOutline,
@@ -123,6 +124,8 @@ const WordListPlugin = () => {
 					editor.getEditorState().read(() => {
 						const wordNode = $getNodeByKey(nodeKey) as WordNode;
 						const wordId = wordNode.getId();
+						if (wordNode.getIsAutoFill()) return;
+
 						setWordStore((currentStore) => ({
 							...currentStore,
 							[nodeKey]: wordId,
@@ -332,20 +335,24 @@ const SettingsMenu = () => {
 		setEditorFontSize,
 		setEditorBackgroundOpacity,
 		setEditorShowSpelling,
+		setEditorMarkAllInstances,
 		editorShowSpelling,
 		editorFontSize,
 		editorBackgroundOpacity,
 		editorLineHeight,
+		editorMarkAllInstances,
 	} = useEditorStore(
 		(state) => ({
 			setEditorLineHeight: state.setEditorLineHeight,
 			setEditorFontSize: state.setEditorFontSize,
 			setEditorBackgroundOpacity: state.setEditorBackgroundOpacity,
 			setEditorShowSpelling: state.setEditorShowSpelling,
+			setEditorMarkAllInstances: state.setEditorMarkAllInstances,
 			editorShowSpelling: state.editorShowSpelling,
 			editorFontSize: state.editorFontSize,
 			editorBackgroundOpacity: state.editorBackgroundOpacity,
 			editorLineHeight: state.editorLineHeight,
+			editorMarkAllInstances: state.editorMarkAllInstances,
 		}),
 		shallow
 	);
@@ -449,8 +456,38 @@ const SettingsMenu = () => {
 						<Switch
 							colorScheme="brand"
 							id="show-spelling"
-							checked={editorShowSpelling}
+							isChecked={editorShowSpelling}
 							onChange={(e) => setEditorShowSpelling(e.target.checked)}
+						/>
+					</FormControl>
+					<FormControl
+						display="flex"
+						alignItems="center"
+						my={4}
+						justifyContent="space-between"
+					>
+						<FormLabel
+							htmlFor="show-spelling"
+							mb="0"
+							display="flex"
+							gap={2}
+							alignItems="center"
+						>
+							<IoCheckmarkDone size={16} color={text400} />
+							<Text
+								textTransform="uppercase"
+								fontWeight="500"
+								fontSize="14"
+								color="text.300"
+							>
+								Mark all matches
+							</Text>
+						</FormLabel>
+						<Switch
+							colorScheme="brand"
+							id="mark-all-instances"
+							isChecked={editorMarkAllInstances}
+							onChange={(e) => setEditorMarkAllInstances(e.target.checked)}
 						/>
 					</FormControl>
 				</PopoverBody>

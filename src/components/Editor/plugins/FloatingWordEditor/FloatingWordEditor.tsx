@@ -1,11 +1,10 @@
 import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
 import type { ReferenceType } from "@floating-ui/react";
-import type { LexicalCommand, LexicalEditor, RangeSelection } from "lexical";
+import type { LexicalEditor, RangeSelection } from "lexical";
 import type { WordFormType } from "./WordForm";
 
 import { Box, Spinner } from "@chakra-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
-import { $createWordNode } from "@editor/nodes/WordNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
 import useEditorStore from "@store/store";
@@ -13,7 +12,6 @@ import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { trpc } from "@utils/trpc";
 import {
 	$getSelection,
-	$insertNodes,
 	$isRangeSelection,
 	$setSelection,
 	COMMAND_PRIORITY_EDITOR,
@@ -28,13 +26,15 @@ import React, {
 	useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { INSERT_WORD } from "../WordPlugin/WordPlugin";
 import TagForm from "./TagForm";
 import WordForm from "./WordForm";
 
 type TagOption = EditorTag;
 
-export const SHOW_FLOATING_WORD_EDITOR_COMMAND: LexicalCommand<void> =
-	createCommand("SHOW_FLOATING_WORD_EDITOR_COMMAN");
+export const SHOW_FLOATING_WORD_EDITOR_COMMAND = createCommand<void>(
+	"SHOW_FLOATING_WORD_EDITOR_COMMAN"
+);
 
 export function getDOMRangeRect(
 	nativeSelection: Selection,
@@ -319,16 +319,8 @@ const FloatingWordEditorPlugin = ({
 				// other methods will modify the editorstate so if we don't first 'import' our saved selection in the editor state
 				// things will fall apart if other methods try to modify the 'current selection'
 				$setSelection(selection);
-
-				if ($isRangeSelection(selection)) {
-					const newWordNode = $createWordNode(
-						newWord.translations,
-						newWord.word,
-						newWord.id
-					);
-					$insertNodes([newWordNode]);
-					setPopupReference(null);
-				}
+				editor.dispatchCommand(INSERT_WORD, newWord);
+				setPopupReference(null);
 			});
 		},
 		[editor, selection]

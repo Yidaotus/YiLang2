@@ -13,11 +13,13 @@ interface EditorStore {
 	editorLineHeight: number;
 	editorBackgroundOpacity: number;
 	editorShowSpelling: boolean;
+	editorMarkAllInstances: boolean;
 	setEditorState: (state: string) => void;
 	setEditorFontSize: (state: number) => void;
 	setEditorLineHeight: (state: number) => void;
 	setEditorBackgroundOpacity: (state: number) => void;
 	setEditorShowSpelling: (state: boolean) => void;
+	setEditorMarkAllInstances: (state: boolean) => void;
 	editorSelectedBlock: SelectedBlock;
 	setEditorSelectedBlock: (selectedBlock: SelectedBlock) => void;
 	selectedLanguage: { id: string; name: string };
@@ -45,6 +47,9 @@ const useEditorStore = create<EditorStore>()(
 				editorShowSpelling: false,
 				setEditorShowSpelling: (showSpelling: boolean) =>
 					set(() => ({ editorShowSpelling: showSpelling })),
+				editorMarkAllInstances: false,
+				setEditorMarkAllInstances: (markAll: boolean) =>
+					set(() => ({ editorMarkAllInstances: markAll })),
 				editorSelectedBlock: { type: "paragraph", key: "", layoutMode: "full" },
 				setEditorSelectedBlock: (selectedBlock: SelectedBlock) =>
 					set(() => ({ editorSelectedBlock: selectedBlock })),
