@@ -752,16 +752,14 @@ const DictionaryEntryPag = () => {
 									</Box>
 								}
 								value={
-									<NextLink
+									<Link
+										as={NextLink}
 										href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
-										passHref
 									>
-										<Link>
-											<Text textDecoration="underline" color="text.400">
-												{dbWord.data.sourceDocument?.title}
-											</Text>
-										</Link>
-									</NextLink>
+										<Text textDecoration="underline" color="text.400">
+											{dbWord.data.sourceDocument?.title}
+										</Text>
+									</Link>
 								}
 							/>
 							<DataRow
