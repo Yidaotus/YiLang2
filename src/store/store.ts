@@ -14,6 +14,7 @@ interface EditorStore {
 	editorBackgroundOpacity: number;
 	editorShowSpelling: boolean;
 	editorMarkAllInstances: boolean;
+	editorHideAutoFillWords: boolean;
 	setEditorState: (state: string) => void;
 	setEditorFontSize: (state: number) => void;
 	setEditorLineHeight: (state: number) => void;
@@ -24,6 +25,7 @@ interface EditorStore {
 	setEditorSelectedBlock: (selectedBlock: SelectedBlock) => void;
 	selectedLanguage: { id: string; name: string };
 	setSelectedLanguage: (language: SelectedLanguage) => void;
+	setEditorHideAutoFillWords: (hideAutoFill: boolean) => void;
 }
 
 const useEditorStore = create<EditorStore>()(
@@ -50,6 +52,9 @@ const useEditorStore = create<EditorStore>()(
 				editorMarkAllInstances: false,
 				setEditorMarkAllInstances: (markAll: boolean) =>
 					set(() => ({ editorMarkAllInstances: markAll })),
+				editorHideAutoFillWords: false,
+				setEditorHideAutoFillWords: (hideAutoFill: boolean) =>
+					set(() => ({ editorHideAutoFillWords: hideAutoFill })),
 				editorSelectedBlock: { type: "paragraph", key: "", layoutMode: "full" },
 				setEditorSelectedBlock: (selectedBlock: SelectedBlock) =>
 					set(() => ({ editorSelectedBlock: selectedBlock })),

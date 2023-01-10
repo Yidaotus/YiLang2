@@ -52,6 +52,7 @@ const FloatingContainer = ({
 		placement,
 		middlewareData,
 		refs,
+		update,
 	} = useFloating({
 		placement: popupPlacement,
 		middleware: [
@@ -63,6 +64,10 @@ const FloatingContainer = ({
 			showArrow && arrow({ element: arrowRef, padding: 0 }),
 		],
 	});
+
+	useEffect(() => {
+		update();
+	}, [children, update]);
 
 	useEffect(() => {
 		reference(popupReference);

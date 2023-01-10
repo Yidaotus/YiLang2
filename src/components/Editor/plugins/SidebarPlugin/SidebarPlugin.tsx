@@ -85,9 +85,16 @@ const WordListPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 	const { highlight: targetWord } = router.query;
 	const targetWordId = Array.isArray(targetWord) ? targetWord[0] : targetWord;
+	const { hideAutoFillWords, setHideAutoFillWords } = useEditorStore(
+		(state) => ({
+			hideAutoFillWords: state.editorHideAutoFillWords,
+			setHideAutoFillWords: state.setEditorHideAutoFillWords,
+		}),
+		shallow
+	);
 	//@TODO Idea pull out wordStore into plugin so other plugins can hook into it by bear
 	const [wordStore, setWordStore] = useState<
-		Record<string, string | undefined>
+		Record<string, { wordId: string; isAutoFill: boolean }>
 	>({});
 	const buttonRef = useRef(null);
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
@@ -123,12 +130,18 @@ const WordListPlugin = () => {
 				if (mutation === "created") {
 					editor.getEditorState().read(() => {
 						const wordNode = $getNodeByKey(nodeKey) as WordNode;
+
 						const wordId = wordNode.getId();
-						if (wordNode.getIsAutoFill()) return;
+						if (!wordId) return;
+
+						const isAutoFill = wordNode.getIsAutoFill();
 
 						setWordStore((currentStore) => ({
 							...currentStore,
-							[nodeKey]: wordId,
+							[nodeKey]: {
+								wordId,
+								isAutoFill,
+							},
 						}));
 					});
 				}
@@ -166,7 +179,7 @@ const WordListPlugin = () => {
 	useEffect(() => {
 		if (targetWordId) {
 			const targetInStore = Object.entries(wordStore).find(
-				([_, wordId]) => targetWordId === wordId
+				([_, node]) => targetWordId === node.wordId
 			);
 			if (targetInStore) {
 				highlightWord(targetInStore[0]);
@@ -203,20 +216,62 @@ const WordListPlugin = () => {
 						gap={4}
 						maxW="350px"
 						p={2}
-						maxH="80vh"
+						maxH="70vh"
 						overflow="auto"
+						marginBottom="60px"
 					>
-						{Object.entries(wordStore).map(([nodeKey, wordId]) =>
-							wordId ? (
+						{Object.entries(wordStore)
+							.filter(([_, word]) => !(hideAutoFillWords && word.isAutoFill))
+							.map(([nodeKey, node]) => (
 								<Word
 									border
 									key={nodeKey}
-									wordId={wordId}
+									wordId={node.wordId}
 									wordKey={nodeKey}
 									clickHandler={() => highlightWord(nodeKey)}
 								/>
-							) : null
-						)}
+							))}
+					</Box>
+					<Box
+						pos="absolute"
+						bottom="0"
+						w="100%"
+						bg="white"
+						px={4}
+						borderTopWidth="1px"
+						borderTopColor="text.100"
+						borderRadius="0px 0px 3px 3px"
+					>
+						<FormControl
+							display="flex"
+							alignItems="center"
+							my={4}
+							justifyContent="space-between"
+						>
+							<FormLabel
+								htmlFor="hide-auto-fill-words"
+								mb="0"
+								display="flex"
+								gap={2}
+								alignItems="center"
+							>
+								<IoLanguageOutline size={16} color={text400} />
+								<Text
+									textTransform="uppercase"
+									fontWeight="500"
+									fontSize="14"
+									color="text.300"
+								>
+									Hide Autofill Words
+								</Text>
+							</FormLabel>
+							<Switch
+								colorScheme="brand"
+								id="hide-auto-fill-words"
+								isChecked={hideAutoFillWords}
+								onChange={(e) => setHideAutoFillWords(e.target.checked)}
+							/>
+						</FormControl>
 					</Box>
 				</FloatingContainer>
 			</div>
@@ -467,7 +522,7 @@ const SettingsMenu = () => {
 						justifyContent="space-between"
 					>
 						<FormLabel
-							htmlFor="show-spelling"
+							htmlFor="mark-all-matches"
 							mb="0"
 							display="flex"
 							gap={2}
@@ -485,7 +540,7 @@ const SettingsMenu = () => {
 						</FormLabel>
 						<Switch
 							colorScheme="brand"
-							id="mark-all-instances"
+							id="mark-all-matches"
 							isChecked={editorMarkAllInstances}
 							onChange={(e) => setEditorMarkAllInstances(e.target.checked)}
 						/>
