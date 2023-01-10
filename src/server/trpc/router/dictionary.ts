@@ -357,6 +357,46 @@ export const dictionaryRouter = router({
 				});
 			}
 		),
+	findWord: protectedProcedure
+		.input(z.object({ word: z.string(), language: z.string() }))
+		.query(async ({ ctx: { prisma, session }, input: { word, language } }) => {
+			const foundWord = await prisma.word.findFirst({
+				where: {
+					word: {
+						equals: word,
+					},
+					user: {
+						id: session.user.id,
+					},
+					language: {
+						id: language,
+					},
+				},
+				include: {
+					sourceDocument: {
+						select: {
+							title: true,
+							id: true,
+						},
+					},
+					tags: {
+						include: {
+							tag: true,
+						},
+					},
+				},
+			});
+
+			if (foundWord) {
+				const { translation, ...rest } = foundWord;
+				return {
+					...rest,
+					tags: foundWord.tags.map((tOnW) => tOnW.tag),
+					translations: !!translation.trim() ? translation.split(";") : [],
+				};
+			}
+			return foundWord;
+		}),
 	findTags: protectedProcedure
 		.input(z.object({ searchString: z.string(), language: z.string() }))
 		.query(

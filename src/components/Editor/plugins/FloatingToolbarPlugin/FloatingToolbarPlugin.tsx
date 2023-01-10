@@ -8,8 +8,10 @@ import {
 	MenuButton,
 	MenuItem,
 	MenuList,
+	Spinner,
 	useToken,
 } from "@chakra-ui/react";
+import { $createWordNode } from "@components/Editor/nodes/WordNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { ReferenceType } from "@floating-ui/react";
@@ -23,6 +25,7 @@ import { trpc } from "@utils/trpc";
 import type { LexicalEditor } from "lexical";
 import {
 	$getSelection,
+	$insertNodes,
 	$isRangeSelection,
 	$isTextNode,
 	COMMAND_PRIORITY_LOW,
@@ -76,6 +79,8 @@ export function getDOMRangeRect(
 	return rect;
 }
 
+const useWordEditorDispatch = () => {};
+
 function TextFormatFloatingToolbar({
 	editor,
 	isBold,
@@ -109,6 +114,19 @@ function TextFormatFloatingToolbar({
 		{ languageId: activeLanguage.id },
 		{ enabled: !!activeLanguage }
 	);
+	const [searchWord, setSearchWord] = useState<string | null>(null);
+	const trpcUtils = trpc.useContext();
+	const findWord = trpc.dictionary.findWord.useQuery(
+		{ word: searchWord || "", language: activeLanguage.id },
+		{
+			enabled: !!searchWord,
+			onSuccess: (word) => {
+				if (word) {
+					trpcUtils.dictionary.getWord.setData(word, { id: word.id });
+				}
+			},
+		}
+	);
 
 	/*
 	const insertLink = useCallback(() => {
@@ -128,8 +146,36 @@ function TextFormatFloatingToolbar({
 	// Update pos on resize
 	*/
 
+	useEffect(() => {
+		if (findWord.status === "success") {
+			const word = findWord.data;
+			if (word) {
+				editor.update(() => {
+					const selection = $getSelection();
+					if (!selection) return;
+
+					const wordNode = $createWordNode(
+						word.translations,
+						word.word,
+						word.id
+					);
+					$insertNodes([wordNode]);
+				});
+				console.debug({ data: findWord.data });
+			} else {
+				editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
+			}
+			setSearchWord(null);
+		}
+	}, [editor, findWord.data, findWord.status]);
+
 	const showWordEditor = useCallback(() => {
-		editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
+		editor.getEditorState().read(async () => {
+			const selection = $getSelection();
+			if (!selection || !$isRangeSelection(selection)) return;
+			const text = selection.getTextContent();
+			setSearchWord(text);
+		});
 	}, [editor]);
 
 	const openExternalDictionary = useCallback(
@@ -153,6 +199,23 @@ function TextFormatFloatingToolbar({
 	const iconSize = "18px";
 	return (
 		<Box pos="relative" zIndex={50} display="flex">
+			{findWord.isFetching && (
+				<Box
+					w="100%"
+					h="100%"
+					pos="absolute"
+					left="0"
+					top="0"
+					bg="#00000040"
+					borderRadius={4}
+					zIndex={50}
+					display="flex"
+					justifyContent="center"
+					alignItems="center"
+				>
+					<Spinner color="white" />
+				</Box>
+			)}
 			<ButtonGroup
 				size="sm"
 				isAttached
