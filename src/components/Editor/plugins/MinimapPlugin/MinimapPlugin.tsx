@@ -3,7 +3,9 @@ import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Box, useToken } from "@chakra-ui/react";
+import type { LexicalNode } from "lexical";
 import {
+	$getNearestRootOrShadowRoot,
 	$getRoot,
 	$getSelection,
 	$isParagraphNode,
@@ -16,13 +18,234 @@ import {
 } from "@lexical/utils";
 import { useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
+import { $isSplitLayoutColumnNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutColumn";
+import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
+import { $isRemarkContentNode } from "../RemarkBlockPlugin/RemarkContentNode";
 
-type MinimapItem =
-	| { type: "h1" }
-	| { type: "h2" }
-	| { type: "quote" }
-	| { type: "image" }
-	| { type: "paragraph"; contentLength: number };
+const LINE_PADDING = 3;
+const LINE_HEIGHT = 3;
+const LINE_WIDTH = 20;
+const CANVAS_WIDTH = 90;
+const LAYOUT_PADDING = 5;
+const BLOCK_PADDING = 1;
+
+const outlineNodes = (
+	nodes: Array<LexicalNode>,
+	ctx: CanvasRenderingContext2D,
+	brandColor: string,
+	startOffsetX: number,
+	startOffsetY: number,
+	canvasWidth: number
+) => {
+	const selection = $getSelection();
+	const selectedKeys: Array<string> = [];
+	if (selection) {
+		const selectedNodes = selection.getNodes();
+		for (const selectionNode of selectedNodes) {
+			let parentNode = selectionNode.getParent();
+			let currentNode = selectionNode;
+			const rootNode = $getNearestRootOrShadowRoot(currentNode);
+			while (parentNode && parentNode !== rootNode) {
+				currentNode = parentNode;
+				parentNode = parentNode.getParent();
+			}
+			if ($isRemarkContentNode(rootNode)) {
+				const remarkParent = rootNode.getParent();
+				if (remarkParent) {
+					selectedKeys.push(remarkParent.getKey());
+				}
+			}
+			selectedKeys.push(currentNode.getKey());
+		}
+	}
+
+	const x = startOffsetX;
+	let y = startOffsetY;
+
+	const currentCtxStrokeStyle = ctx.strokeStyle;
+	const currentCtxFillStyle = ctx.fillStyle;
+
+	for (const node of nodes) {
+		if (selectedKeys.includes(node.getKey())) {
+			ctx.fillStyle = brandColor;
+			ctx.strokeStyle = brandColor;
+		} else {
+			ctx.fillStyle = "#A9AfC0";
+			ctx.strokeStyle = "#A9AfC0";
+		}
+		if ($isParagraphNode(node)) {
+			const linesToDraw = Math.ceil(node.getTextContentSize() / 50);
+
+			for (let i = 0; i < linesToDraw; i++) {
+				const lineWidth = i + 1 >= linesToDraw ? canvasWidth - 10 : canvasWidth;
+				ctx.fillRect(x, y, lineWidth, LINE_HEIGHT);
+				y += LINE_HEIGHT + LINE_PADDING;
+			}
+		} else if ($isImageNode(node)) {
+			const containerHeight = 20;
+			const containerWidth = canvasWidth;
+			const containerPadding = 0;
+
+			ctx.strokeRect(
+				x + containerPadding,
+				y + 1,
+				containerWidth - containerPadding,
+				containerHeight
+			);
+			ctx.beginPath();
+			ctx.moveTo(containerPadding + x + 0, y + containerHeight);
+			ctx.lineTo(
+				containerPadding + x + containerWidth / 4,
+				y + containerHeight / 3
+			);
+			ctx.lineTo(
+				containerPadding + x + (containerWidth / 4) * 2,
+				y + containerHeight
+			);
+			ctx.lineTo(
+				containerPadding + x + (containerWidth / 4) * 3,
+				y + containerHeight / 2
+			);
+			ctx.lineTo(
+				containerPadding + x + (containerWidth / 4) * 4,
+				y + containerHeight
+			);
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.arc(
+				containerPadding + x + containerWidth / 2 - 2,
+				y + containerHeight / 2 - 2,
+				3,
+				0,
+				2 * Math.PI
+			);
+			ctx.stroke();
+
+			y += containerHeight + 2;
+		} else if ($isListNode(node)) {
+			const childrenSize = node.getChildrenSize();
+			for (let i = 0; i < childrenSize; i++) {
+				const listPaddingLeft = 10;
+				ctx.fillStyle = "#5e6169";
+				ctx.fillRect(
+					x + listPaddingLeft,
+					y + i * LINE_HEIGHT + i * LINE_PADDING,
+					4,
+					LINE_HEIGHT
+				);
+				ctx.fillStyle = "#a9afc0";
+				ctx.fillRect(
+					x + listPaddingLeft + 6,
+					y + LINE_HEIGHT * i + LINE_PADDING * i,
+					canvasWidth - 35,
+					LINE_HEIGHT
+				);
+			}
+			y +=
+				LINE_HEIGHT * childrenSize +
+				LINE_PADDING * Math.max(childrenSize - 1, 0) +
+				2;
+		} else if ($isHeadingNode(node)) {
+			ctx.fillRect(x, y, canvasWidth * 0.8, LINE_HEIGHT * 2);
+			y += LINE_HEIGHT * 2 + LINE_PADDING;
+		} else if ($isQuoteNode(node)) {
+			const quotePaddingLeft = 10;
+			ctx.fillRect(x + quotePaddingLeft, y, 4, LINE_HEIGHT * 2 + LINE_PADDING);
+
+			// ctx.fillRect(x + quotePaddingLeft + 6, y, LINE_HEIGHT - 25, LINE_PADDING);
+			ctx.fillRect(
+				x + quotePaddingLeft + 6,
+				y + LINE_HEIGHT,
+				canvasWidth - 35,
+				LINE_HEIGHT
+			);
+
+			y += LINE_HEIGHT * 2 + LINE_PADDING + 2;
+		} else if ($isSplitLayoutContainerNode(node)) {
+			const childNodes = node.getChildren();
+			const leftNodes = childNodes[0];
+			const rightNodes = childNodes[1];
+
+			if (
+				$isSplitLayoutColumnNode(leftNodes) &&
+				$isSplitLayoutColumnNode(rightNodes)
+			) {
+				const drawnHeightLeft = outlineNodes(
+					leftNodes.getChildren(),
+					ctx,
+					brandColor,
+					x,
+					y,
+					canvasWidth / 2 - LAYOUT_PADDING
+				);
+				const drawnHeightRight = outlineNodes(
+					rightNodes.getChildren(),
+					ctx,
+					brandColor,
+					x + LAYOUT_PADDING + canvasWidth / 2,
+					y,
+					canvasWidth / 2 - LAYOUT_PADDING
+				);
+
+				y += Math.max(drawnHeightLeft, drawnHeightRight) + LINE_PADDING;
+			}
+		} else if ($isRemarkContainerNode(node)) {
+			const childNodes = node.getChildren();
+			const remarkContent = childNodes[1];
+			let drawnHeight = 0;
+			if ($isRemarkContentNode(remarkContent)) {
+				drawnHeight = outlineNodes(
+					remarkContent.getChildren(),
+					ctx,
+					brandColor,
+					x + 15,
+					y + LINE_PADDING,
+					canvasWidth - 15
+				);
+			}
+			ctx.strokeRect(x, y, canvasWidth, drawnHeight + 5);
+			y += drawnHeight + LINE_PADDING * 3;
+		}
+		y += BLOCK_PADDING;
+	}
+
+	ctx.strokeStyle = currentCtxStrokeStyle;
+	ctx.fillStyle = currentCtxFillStyle;
+
+	return y - startOffsetY;
+};
+
+const indexLexicalNodesToContext = (
+	nodes: Array<LexicalNode>,
+	highLightColor: string
+) => {
+	const canvas = document.createElement("canvas");
+	canvas.height = 1000;
+	const ctx = canvas.getContext("2d");
+
+	const canvas2 = document.createElement("canvas");
+	const ctx2 = canvas2.getContext("2d");
+
+	if (!ctx || !ctx2) return;
+
+	const drawnHeight = outlineNodes(
+		nodes,
+		ctx,
+		highLightColor,
+		0,
+		0,
+		CANVAS_WIDTH
+	);
+	if (drawnHeight > 0) {
+		canvas2.height = drawnHeight;
+		const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, drawnHeight);
+		ctx2.putImageData(imageData, 0, 0);
+	}
+
+	return canvas2;
+};
 
 type MinimapPluginProps = {
 	anchorElem: HTMLElement;
@@ -42,8 +265,9 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 		anchorTop: 0,
 		backgroundTop: 0,
 	});
+
 	const height = 200;
-	const width = 100;
+	const width = CANVAS_WIDTH + 10;
 
 	const updateMinimap = useCallback(() => {
 		const scrollerElem = scrollIndicatorRef.current;
@@ -104,206 +328,14 @@ const MinimapPlugin = ({ anchorElem, sidebarPortal }: MinimapPluginProps) => {
 
 	const indexEditorToOutline = useCallback(() => {
 		editor.getEditorState().read(() => {
-			const editorOutline: Array<MinimapItem> = [];
 			const root = $getRoot();
 			const children = root.getChildren();
-
-			let canvasHeight = 0;
-			const drawPadding = 4;
-			const x = 0;
-			const drawWidth = width - 10;
-			const drawHeight = 3;
-			const linePadding = 2;
-			const headingHeight = drawHeight * 2;
-			let y = 0;
-
-			for (const topLevelChild of children) {
-				if ($isParagraphNode(topLevelChild)) {
-					const linesToDraw = Math.ceil(
-						topLevelChild.getTextContentSize() / 50
-					);
-
-					for (let i = 0; i < linesToDraw; i++) {
-						canvasHeight += drawHeight + linePadding;
-					}
-
-					editorOutline.push({
-						type: "paragraph",
-						contentLength: topLevelChild.getTextContentSize(),
-					});
-				} else if ($isImageNode(topLevelChild)) {
-					canvasHeight += 22;
-					editorOutline.push({ type: "image" });
-				} else if ($isListNode(topLevelChild)) {
-					const childrenSize = topLevelChild.getChildrenSize();
-					canvasHeight +=
-						drawHeight * childrenSize + linePadding * childrenSize + 2;
-				} else if ($isHeadingNode(topLevelChild)) {
-					canvasHeight += headingHeight;
-					const level = topLevelChild.getTag();
-					if (level === "h1") {
-						editorOutline.push({ type: "h1" });
-					} else {
-						editorOutline.push({ type: "h2" });
-					}
-				} else if ($isQuoteNode(topLevelChild)) {
-					editorOutline.push({ type: "quote" });
-					canvasHeight += drawHeight;
-				}
-				canvasHeight += drawPadding;
+			const canvas = indexLexicalNodesToContext(children, brandColor);
+			if (canvas) {
+				scrollBackgroundRef.current?.replaceChildren(canvas);
 			}
-
-			const canvas = document.createElement("canvas");
-			const ctx = canvas.getContext("2d");
-
-			if (!ctx) {
-				return;
-			}
-
-			canvas.height = canvasHeight;
-
-			const selection = $getSelection();
-			let selectedKeys: Array<string> = [];
-			if (selection) {
-				const selectedNodes = selection.getNodes();
-				selectedKeys = selectedNodes.map((selectionNode) => {
-					let parentNode = selectionNode.getParent();
-					let currentNode = selectionNode;
-					const rootNode = $getRoot();
-					while (parentNode && parentNode !== rootNode) {
-						currentNode = parentNode;
-						parentNode = parentNode.getParent();
-					}
-					return currentNode?.getKey() || "";
-				});
-			}
-
-			y = 0;
-			for (const topLevelChild of children) {
-				if (selectedKeys.includes(topLevelChild.getKey())) {
-					ctx.fillStyle = brandColor;
-					ctx.strokeStyle = brandColor;
-				} else {
-					ctx.fillStyle = "#A9AfC0";
-					ctx.strokeStyle = "#A9AfC0";
-				}
-				if ($isParagraphNode(topLevelChild)) {
-					const linesToDraw = Math.ceil(
-						topLevelChild.getTextContentSize() / 50
-					);
-
-					for (let i = 0; i < linesToDraw; i++) {
-						const lineWidth = i + 1 >= linesToDraw ? drawWidth - 10 : drawWidth;
-						ctx.fillRect(x, y, lineWidth, drawHeight);
-						y += drawHeight + linePadding;
-					}
-
-					editorOutline.push({
-						type: "paragraph",
-						contentLength: topLevelChild.getTextContentSize(),
-					});
-				} else if ($isImageNode(topLevelChild)) {
-					const containerHeight = 20;
-					const containerWidth = 60;
-					const containerPadding = 16;
-
-					ctx.strokeRect(
-						x + containerPadding,
-						y + 1,
-						containerWidth,
-						containerHeight
-					);
-					ctx.beginPath();
-					ctx.moveTo(containerPadding + x + 0, y + containerHeight);
-					ctx.lineTo(
-						containerPadding + x + containerWidth / 4,
-						y + containerHeight / 3
-					);
-					ctx.lineTo(
-						containerPadding + x + (containerWidth / 4) * 2,
-						y + containerHeight
-					);
-					ctx.lineTo(
-						containerPadding + x + (containerWidth / 4) * 3,
-						y + containerHeight / 2
-					);
-					ctx.lineTo(
-						containerPadding + x + (containerWidth / 4) * 4,
-						y + containerHeight
-					);
-					ctx.stroke();
-
-					ctx.beginPath();
-					ctx.arc(
-						containerPadding + x + containerWidth / 2 - 2,
-						y + containerHeight / 2 - 2,
-						3,
-						0,
-						2 * Math.PI
-					);
-					ctx.stroke();
-
-					y += containerHeight + 2;
-					editorOutline.push({ type: "image" });
-				} else if ($isListNode(topLevelChild)) {
-					const childrenSize = topLevelChild.getChildrenSize();
-					for (let i = 0; i < childrenSize; i++) {
-						const listPaddingLeft = 10;
-						ctx.fillStyle = "#5e6169";
-						ctx.fillRect(
-							x + listPaddingLeft,
-							y + i * drawHeight + i * linePadding,
-							4,
-							drawHeight
-						);
-						ctx.fillStyle = "#a9afc0";
-						ctx.fillRect(
-							x + listPaddingLeft + 6,
-							y + drawHeight * i + linePadding * i,
-							drawWidth - 35,
-							drawHeight
-						);
-					}
-					y +=
-						drawHeight * childrenSize +
-						linePadding * Math.max(childrenSize - 1, 0) +
-						2;
-				} else if ($isHeadingNode(topLevelChild)) {
-					ctx.fillRect(x, y, drawWidth * 0.8, headingHeight);
-
-					y += headingHeight;
-					const level = topLevelChild.getTag();
-					if (level === "h1") {
-						editorOutline.push({ type: "h1" });
-					} else {
-						editorOutline.push({ type: "h2" });
-					}
-				} else if ($isQuoteNode(topLevelChild)) {
-					const quotePaddingLeft = 10;
-					ctx.fillRect(
-						x + quotePaddingLeft,
-						y,
-						4,
-						drawHeight * 2 + linePadding
-					);
-
-					ctx.fillRect(x + quotePaddingLeft + 6, y, drawWidth - 25, drawHeight);
-					ctx.fillRect(
-						x + quotePaddingLeft + 6,
-						y + linePadding + drawHeight,
-						drawWidth - 35,
-						drawHeight
-					);
-
-					editorOutline.push({ type: "quote" });
-					y += drawHeight * 2 + linePadding + 2;
-				}
-				y += drawPadding;
-			}
-
-			scrollBackgroundRef.current?.replaceChildren(canvas);
 		});
-	}, [editor]);
+	}, [brandColor, editor]);
 
 	useEffect(() => {
 		return mergeRegister(

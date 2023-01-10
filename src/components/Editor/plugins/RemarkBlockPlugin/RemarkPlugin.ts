@@ -9,6 +9,7 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import type { NodeKey } from "lexical";
+import { $getNearestRootOrShadowRoot } from "lexical";
 import { $createTextNode } from "lexical";
 import {
 	$createParagraphNode,
@@ -88,6 +89,12 @@ export default function RemarkPlugin(): JSX.Element | null {
 						node.insertBefore(child);
 					}
 					node.remove();
+				}
+
+				const parent = node.getParent();
+				if (!parent) return;
+				if (parent != $getNearestRootOrShadowRoot(node)) {
+					parent.insertAfter(node);
 				}
 			}),
 			// This handles the case when container is collapsed and we delete its previous sibling

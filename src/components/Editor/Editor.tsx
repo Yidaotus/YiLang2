@@ -49,7 +49,7 @@ import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChan
 import { $createImageNode, ImageNode } from "./nodes/ImageNode";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 
-import RemarkPlugin from "./plugins/RemarkBlockPlugin";
+import RemarkPlugin from "./plugins/RemarkBlockPlugin/RemarkPlugin";
 import { RemarkContainerNode } from "./plugins/RemarkBlockPlugin/RemarkContainerNode";
 import { RemarkContentNode } from "./plugins/RemarkBlockPlugin/RemarkContentNode";
 import { RemarkTitleNode } from "./plugins/RemarkBlockPlugin/RemarkTitleNode";

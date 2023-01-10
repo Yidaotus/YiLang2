@@ -92,6 +92,7 @@ const SelectedBlockTypePlugin = ({
 						layoutMode,
 					});
 				} else {
+					/*
 					const container = $findMatchingParent(
 						selection.anchor.getNode(),
 						$isRemarkContainerNode
@@ -106,6 +107,7 @@ const SelectedBlockTypePlugin = ({
 
 						return;
 					}
+					*/
 
 					const type = $isHeadingNode(topLevelElement)
 						? topLevelElement.getTag()
