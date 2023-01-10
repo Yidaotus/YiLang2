@@ -208,12 +208,12 @@ const DashboardPage: NextPageWithLayout = () => {
 										{recentWords.data?.map((word) => (
 											<Tr key={word.id}>
 												<Td color="brand.500" fontWeight="semibold">
-													<NextLink
+													<Link
+														as={NextLink}
 														href={`/app/dictionary/${word.id}`}
-														passHref
 													>
-														<Link>{word.word}</Link>
-													</NextLink>
+														{word.word}
+													</Link>
 												</Td>
 												<Td>{word.translations.join(", ")}</Td>
 												<Td>{word.language.name}</Td>
@@ -261,9 +261,13 @@ const DashboardPage: NextPageWithLayout = () => {
 										{recentDocuments.data?.map((doc) => (
 											<Tr key={doc.id}>
 												<Td color="brand.500" fontWeight="semibold">
-													<NextLink href={`/app/editor/${doc.id}`} passHref>
-														<Link>{doc.title}</Link>
-													</NextLink>
+													<Link
+														as={NextLink}
+														href={`/app/editor/${doc.id}`}
+														passHref
+													>
+														{doc.title}
+													</Link>
 												</Td>
 												<Td>{doc.language.name}</Td>
 												<Td>{doc.createdAt.toLocaleDateString()}</Td>

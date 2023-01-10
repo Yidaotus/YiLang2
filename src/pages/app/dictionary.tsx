@@ -295,9 +295,9 @@ const DictionaryPage: NextPageWithLayout = () => {
 									<Tr key={entry.id}>
 										<Td>{page * pageSize + index + 1}</Td>
 										<Td>
-											<NextLink href={`/app/dictionary/${entry.id}`} passHref>
-												<Link>{entry.word}</Link>
-											</NextLink>
+											<Link as={NextLink} href={`/app/dictionary/${entry.id}`}>
+												{entry.word}
+											</Link>
 										</Td>
 										<Td>{entry.translations.join(", ")}</Td>
 										<Td>{entry.tags.map((tag) => tag.tag.name).join(", ")}</Td>
