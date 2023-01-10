@@ -772,9 +772,13 @@ const DictionaryEntryPag = () => {
 									</Box>
 								}
 								value={
-									<Textarea color="text.400" maxW="500px" readOnly zIndex={-1}>
-										{dbWord.data.comment}
-									</Textarea>
+									<Textarea
+										color="text.400"
+										maxW="500px"
+										readOnly
+										zIndex={-1}
+										value={dbWord.data.comment || ""}
+									/>
 								}
 							/>
 						</Box>
