@@ -65,12 +65,6 @@ const SaveImagesPlugin = () => {
 											url: publicUrl.data.publicUrl,
 											freeObjectUrl: true,
 										});
-										toast({
-											title: "Image uploaded!",
-											description: "Image uploaded successfully and saved.",
-											status: "success",
-											isClosable: true,
-										});
 									}
 								});
 							}

@@ -1,5 +1,6 @@
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 
+import type { ToastId } from "@chakra-ui/react";
 import {
 	Box,
 	Button,
@@ -24,12 +25,12 @@ import {
 	SliderTrack,
 	Switch,
 	Text,
+	useToast,
 	useToken,
 } from "@chakra-ui/react";
 import { WordNode } from "@components/Editor/nodes/WordNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
-import useLoadingToast from "@components/LoadingToast/LoadingToast";
 import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
@@ -605,25 +606,53 @@ type SidebarPluginProps = {
 	documentId?: string;
 	sidebarPortal: HTMLElement;
 };
+const DELAY = 1000;
 const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
-	const [, setLoading] = useLoadingToast(false, {
-		title: "Saving",
-		position: "bottom-right",
-	});
+	const toast = useToast();
 
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
+	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
 	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
 
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
 		onMutate() {
-			setLoading(true);
+			const id = toast({
+				title: "Saving",
+				description: "Saving document",
+				status: "loading",
+				isClosable: true,
+			});
+			toastState.current = { id, timestamp: Date.now() };
 		},
 		onError() {
-			setLoading(false);
+			if (toastState.current) {
+				toast.close(toastState.current.id);
+			}
+			toast({
+				title: "Saving",
+				description: "Error while saving document.",
+				status: "error",
+				isClosable: true,
+			});
 		},
 		onSuccess() {
-			setLoading(false);
+			if (toastState.current) {
+				const delta = Math.max(
+					0,
+					DELAY - (Date.now() - toastState.current.timestamp)
+				);
+				const toastId = toastState.current.id;
+				setTimeout(() => {
+					toast.close(toastId);
+					toast({
+						title: "Saving",
+						description: "Document saved.",
+						status: "success",
+						isClosable: true,
+					});
+				}, delta);
+			}
 		},
 	});
 
