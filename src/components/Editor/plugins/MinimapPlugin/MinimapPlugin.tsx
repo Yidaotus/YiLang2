@@ -21,6 +21,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
 import { $isRemarkContentNode } from "../RemarkBlockPlugin/RemarkContentNode";
+import { $isRemarkTitleNode } from "../RemarkBlockPlugin/RemarkTitleNode";
 
 const LINE_PADDING = 3;
 const LINE_HEIGHT = 3;
@@ -194,20 +195,42 @@ const outlineNodes = (
 			}
 		} else if ($isRemarkContainerNode(node)) {
 			const childNodes = node.getChildren();
+			const remarkTitle = childNodes[0];
 			const remarkContent = childNodes[1];
 			let drawnHeight = 0;
-			if ($isRemarkContentNode(remarkContent)) {
+			if (
+				$isRemarkContentNode(remarkContent) &&
+				$isRemarkTitleNode(remarkTitle)
+			) {
 				drawnHeight = outlineNodes(
 					remarkContent.getChildren(),
 					ctx,
 					brandColor,
-					x + 15,
+					x,
 					y + LINE_PADDING,
-					canvasWidth - 15
+					canvasWidth
 				);
+
+				const currentFillStyle = ctx.fillStyle;
+				ctx.fillStyle = "#fef5cf";
+				ctx.fillRect(x, y, canvasWidth, drawnHeight + 5 + LINE_HEIGHT * 2);
+
+				ctx.fillStyle = currentFillStyle;
+				ctx.fillRect(x + 2, y + 2, canvasWidth * 0.8, LINE_HEIGHT * 2);
+				y += LINE_HEIGHT * 2 + LINE_PADDING;
+
+				if ($isRemarkContentNode(remarkContent)) {
+					drawnHeight = outlineNodes(
+						remarkContent.getChildren(),
+						ctx,
+						brandColor,
+						x + 2,
+						y + LINE_PADDING,
+						canvasWidth - 8
+					);
+				}
+				y += drawnHeight + LINE_PADDING * 3;
 			}
-			ctx.strokeRect(x, y, canvasWidth, drawnHeight + 5);
-			y += drawnHeight + LINE_PADDING * 3;
 		}
 		y += BLOCK_PADDING;
 	}
