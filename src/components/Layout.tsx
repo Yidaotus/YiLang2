@@ -213,7 +213,7 @@ const Layout = ({ children }: LayoutProps) => {
 							sidebarOpen={sidebarOpen}
 						/>
 						<SideBarButton
-							text="Words"
+							text="Dictionary"
 							routeId="dictionary"
 							activeRoute={activeRoute || ""}
 							Icon={IoLanguageOutline}

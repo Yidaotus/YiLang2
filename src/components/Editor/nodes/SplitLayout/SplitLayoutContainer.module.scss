@@ -11,11 +11,12 @@
 	> div:first-child {
 		justify-self: flex-start;
 		margin-right: 0.5em;
+		padding-right: 0.5em;
 		border-right: 1px solid #eef1f6;
 	}
 
 	> div:last-child {
 		justify-self: flex-end;
-		margin-left: 0.5em;
+		padding-right: 0.5em;
 	}
 }

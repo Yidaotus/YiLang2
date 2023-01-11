@@ -21,9 +21,10 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { mergeRegister } from "@lexical/utils";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
-import type { LexicalEditor } from "lexical";
+import type { ElementFormatType, LexicalEditor } from "lexical";
 import {
 	$getSelection,
+	$isElementNode,
 	$isRangeSelection,
 	$isTextNode,
 	COMMAND_PRIORITY_LOW,
@@ -115,6 +116,7 @@ function TextFormatFloatingToolbar({
 	isBold,
 	isItalic,
 	isUnderline,
+	alignment,
 }: {
 	editor: LexicalEditor;
 	anchorElem: HTMLElement;
@@ -126,6 +128,7 @@ function TextFormatFloatingToolbar({
 	isSubscript: boolean;
 	isSuperscript: boolean;
 	isUnderline: boolean;
+	alignment: ElementFormatType | null;
 }): JSX.Element {
 	const [text400, text500, brand500] = useToken("colors", [
 		"text.400",
@@ -331,6 +334,7 @@ function TextFormatFloatingToolbar({
 							}}
 						/>
 					}
+					bg={alignment === "left" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")}
@@ -345,6 +349,7 @@ function TextFormatFloatingToolbar({
 							}}
 						/>
 					}
+					bg={alignment === "justify" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() =>
@@ -361,6 +366,7 @@ function TextFormatFloatingToolbar({
 							}}
 						/>
 					}
+					bg={alignment === "center" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() =>
@@ -377,6 +383,7 @@ function TextFormatFloatingToolbar({
 							}}
 						/>
 					}
+					bg={alignment === "right" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() =>
@@ -480,6 +487,7 @@ function useFloatingTextFormatToolbar(
 	const [isSubscript, setIsSubscript] = useState(false);
 	const [isSuperscript, setIsSuperscript] = useState(false);
 	const [isCode, setIsCode] = useState(false);
+	const [alignment, setAlignment] = useState<ElementFormatType | null>(null);
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
 	);
@@ -561,8 +569,12 @@ function useFloatingTextFormatToolbar(
 			setIsSuperscript(selection.hasFormat("superscript"));
 			setIsCode(selection.hasFormat("code"));
 
-			// Update links
 			const parent = node.getParent();
+			if ($isElementNode(parent)) {
+				const format = parent.getFormatType();
+				setAlignment(format);
+			}
+
 			if ($isLinkNode(parent) || $isLinkNode(node)) {
 				setIsLink(true);
 			} else {
@@ -617,6 +629,7 @@ function useFloatingTextFormatToolbar(
 				isSuperscript={isSuperscript}
 				isUnderline={isUnderline}
 				isCode={isCode}
+				alignment={alignment}
 			/>
 		</FloatingContainer>,
 		anchorElem

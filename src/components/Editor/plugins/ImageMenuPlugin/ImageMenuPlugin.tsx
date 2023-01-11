@@ -8,6 +8,7 @@ import {
 	Input,
 	useToken,
 } from "@chakra-ui/react";
+import type { ImageAlignment } from "@components/Editor/nodes/ImageNode";
 import { $isImageNode } from "@components/Editor/nodes/ImageNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -36,6 +37,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 		null
 	);
 	const [text400, text100] = useToken("colors", ["text.400", "text.100"]);
+	const [alignment, setAlignment] = useState<ImageAlignment | null>(null);
 
 	const selectedBlock = useEditorStore(
 		(state) => state.editorSelectedBlock,
@@ -82,6 +84,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 				const node = $getNodeByKey(selectedBlock.key);
 				if (node && $isImageNode(node)) {
 					setImageSourceInput(node.getSrc());
+					setAlignment(node.getAlignment());
 				} else {
 					setSourceEditorVisible(false);
 				}
@@ -148,6 +151,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							}
 							aria-label="Bold"
 							variant="ghost"
+							bg={alignment === "left" ? "text.100" : "inherit"}
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
 							}
@@ -164,6 +168,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							}
 							aria-label="Bold"
 							variant="ghost"
+							bg={alignment === "center" ? "text.100" : "inherit"}
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
 							}
@@ -180,6 +185,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							}
 							aria-label="Bold"
 							variant="ghost"
+							bg={alignment === "right" ? "text.100" : "inherit"}
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
 							}
