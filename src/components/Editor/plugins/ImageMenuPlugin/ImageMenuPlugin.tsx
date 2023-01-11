@@ -142,7 +142,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 						<IconButton
 							icon={
 								<RiAlignLeft
-									color={text400}
+									color={alignment === "left" ? "#000000" : text400}
 									style={{
 										height: iconSize,
 										width: iconSize,
@@ -151,7 +151,6 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							}
 							aria-label="Bold"
 							variant="ghost"
-							bg={alignment === "left" ? "text.100" : "inherit"}
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
 							}
@@ -159,7 +158,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 						<IconButton
 							icon={
 								<RiAlignCenter
-									color={text400}
+									color={alignment === "center" ? "#000000" : text400}
 									style={{
 										height: iconSize,
 										width: iconSize,
@@ -168,7 +167,6 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							}
 							aria-label="Bold"
 							variant="ghost"
-							bg={alignment === "center" ? "text.100" : "inherit"}
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
 							}
@@ -176,7 +174,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 						<IconButton
 							icon={
 								<RiAlignRight
-									color={text400}
+									color={alignment === "right" ? "#000000" : text400}
 									style={{
 										height: iconSize,
 										width: iconSize,
@@ -185,7 +183,6 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							}
 							aria-label="Bold"
 							variant="ghost"
-							bg={alignment === "right" ? "text.100" : "inherit"}
 							onClick={() =>
 								editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
 							}

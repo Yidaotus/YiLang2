@@ -130,11 +130,13 @@ function TextFormatFloatingToolbar({
 	isUnderline: boolean;
 	alignment: ElementFormatType | null;
 }): JSX.Element {
-	const [text400, text500, brand500] = useToken("colors", [
+	const [text400, text500] = useToken("colors", [
 		"text.400",
 		"text.500",
-		"brand.800",
+		"brand.500",
 	]);
+
+	const brand500 = "#000000";
 
 	const { type: currentBlockType } = useEditorStore(
 		(state) => state.editorSelectedBlock,
@@ -327,14 +329,13 @@ function TextFormatFloatingToolbar({
 				<IconButton
 					icon={
 						<RiAlignLeft
-							color={isUnderline ? brand500 : text400}
+							color={alignment === "left" ? brand500 : text400}
 							style={{
 								height: iconSize,
 								width: iconSize,
 							}}
 						/>
 					}
-					bg={alignment === "left" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")}
@@ -342,14 +343,13 @@ function TextFormatFloatingToolbar({
 				<IconButton
 					icon={
 						<RiAlignJustify
-							color={isUnderline ? brand500 : text400}
+							color={alignment === "justify" ? brand500 : text400}
 							style={{
 								height: iconSize,
 								width: iconSize,
 							}}
 						/>
 					}
-					bg={alignment === "justify" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() =>
@@ -359,14 +359,13 @@ function TextFormatFloatingToolbar({
 				<IconButton
 					icon={
 						<RiAlignCenter
-							color={isUnderline ? brand500 : text400}
+							color={alignment === "center" ? brand500 : text400}
 							style={{
 								height: iconSize,
 								width: iconSize,
 							}}
 						/>
 					}
-					bg={alignment === "center" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() =>
@@ -376,14 +375,13 @@ function TextFormatFloatingToolbar({
 				<IconButton
 					icon={
 						<RiAlignRight
-							color={isUnderline ? brand500 : text400}
+							color={alignment === "right" ? brand500 : text400}
 							style={{
 								height: iconSize,
 								width: iconSize,
 							}}
 						/>
 					}
-					bg={alignment === "right" ? "text.100" : "inherit"}
 					aria-label="Bold"
 					variant="ghost"
 					onClick={() =>
