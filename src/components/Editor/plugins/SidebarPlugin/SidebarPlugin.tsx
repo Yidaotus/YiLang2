@@ -161,14 +161,14 @@ const WordListPlugin = () => {
 				editor.update(() => {
 					const nodeElem = editor.getElementByKey(key);
 					if (nodeElem) {
-						setPopupReference(null);
-						const newSelection = $createNodeSelection();
-						newSelection.add(key);
-						$setSelection(newSelection);
 						nodeElem.scrollIntoView({
 							block: "center",
 							inline: "nearest",
 						});
+						setPopupReference(null);
+						const newSelection = $createNodeSelection();
+						newSelection.add(key);
+						$setSelection(newSelection);
 					}
 				});
 			}
