@@ -44,6 +44,7 @@ const WordList = () => {
 	const [editor] = useLexicalComposerContext();
 	const { highlight: targetWord } = router.query;
 	const targetWordId = Array.isArray(targetWord) ? targetWord[0] : targetWord;
+	const previousTargetWordId = useRef<typeof targetWordId>();
 	const { hideAutoFillWords, setHideAutoFillWords } = useEditorStore(
 		(state) => ({
 			hideAutoFillWords: state.editorHideAutoFillWords,
@@ -136,15 +137,16 @@ const WordList = () => {
 	);
 
 	useEffect(() => {
-		if (targetWordId) {
+		if (targetWordId && targetWordId !== previousTargetWordId.current) {
 			const targetInStore = Object.entries(wordStore).find(
 				([_, node]) => targetWordId === node.wordId
 			);
 			if (targetInStore) {
 				highlightWord(targetInStore[0]);
+				previousTargetWordId.current = targetWordId;
 			}
 		}
-	}, [highlightWord, targetWordId, wordStore]);
+	}, [highlightWord, previousTargetWordId, targetWordId, wordStore]);
 
 	return (
 		<>

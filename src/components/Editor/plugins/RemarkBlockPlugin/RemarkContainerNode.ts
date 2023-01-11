@@ -36,7 +36,12 @@ export class RemarkContainerNode extends ElementNode {
 
 	createDOM(_config: EditorConfig): HTMLElement {
 		const dom = document.createElement("div");
+		const domIcon = document.createElement("div");
+		domIcon.classList.add(
+			remarkStyles.Remark__ContainerIcon || "Remark__ContainerIcon"
+		);
 		dom.classList.add(remarkStyles.Remark__Container || "Remark__Container");
+		dom.appendChild(domIcon);
 		return dom;
 	}
 

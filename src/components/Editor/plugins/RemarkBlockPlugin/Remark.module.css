@@ -1,6 +1,5 @@
 .Remark__Container {
-	border: 1px solid #344966;
-	border-left: 20px solid #344966;
+	background-color: #fef5cf;
 	border-radius: 5px;
 	padding-left: 1em;
 	padding-right: 0.5em;
@@ -9,25 +8,25 @@
 	position: relative;
 }
 
-.Remark__Container::before {
-	content: "!";
+.Remark__ContainerIcon {
 	position: absolute;
-	font-size: 3em;
-	left: -0.325em;
-	top: 50%;
-	transform: translateY(-50%);
-	color: white;
+	background-image: url("/icons/attention-block.svg");
+	transform: translateX(50%);
+	height: 32px;
+	width: 32px;
+	right: 0px;
+	top: 10px;
+	user-select: none;
+	pointer-events: none;
 }
 
 .Remark__Title {
 	color: #40454f;
-	font-size: 1.5em;
+	font-size: 1.1em;
 	padding-bottom: 0.5em;
 	font-weight: bold;
-	padding-left: 0.5em;
 }
 
 .Remark__Content {
 	font-size: 1em;
-	padding-left: 1em;
 }

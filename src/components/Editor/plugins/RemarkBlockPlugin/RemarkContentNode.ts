@@ -26,13 +26,13 @@ export class RemarkContentNode extends ElementNode {
 		return new RemarkContentNode(node.__key);
 	}
 
-	createDOM(config: EditorConfig): HTMLElement {
+	createDOM(_config: EditorConfig): HTMLElement {
 		const dom = document.createElement("div");
 		dom.classList.add(remarkStyles.Remark__Content || "Remark__Content");
 		return dom;
 	}
 
-	updateDOM(prevNode: RemarkContentNode, dom: HTMLElement): boolean {
+	updateDOM(_prevNode: RemarkContentNode, _dom: HTMLElement): boolean {
 		return false;
 	}
 
@@ -41,7 +41,7 @@ export class RemarkContentNode extends ElementNode {
 	}
 
 	static importJSON(
-		serializedNode: SerializedRemarkContentNode
+		_serializedNode: SerializedRemarkContentNode
 	): RemarkContentNode {
 		return $createRemarkContentNode();
 	}
