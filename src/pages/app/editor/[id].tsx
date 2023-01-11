@@ -76,7 +76,6 @@ const EditorPage = () => {
 					top="0"
 					zIndex="20"
 					pos={["static", null, "sticky"]}
-					w="100%"
 					boxShadow="0px 1px 12px rgba(0, 0, 0, 0.05)"
 				>
 					<Box display="flex" gap="12px" fontSize="20px" alignItems="center">
@@ -95,9 +94,15 @@ const EditorPage = () => {
 						</Box>
 					</Box>
 				</Box>
-				<Box display="flex" alignItems="center" justifyContent="center">
+				<Box
+					display="grid"
+					alignItems="start"
+					justifyContent="center"
+					gridTemplateColumns={["1fr minmax(400px, 800px) 1fr"]}
+					px={2}
+				>
+					<div />
 					<Box
-						w={["100%", null, "800px"]}
 						px={[4, 4, 0]}
 						pt="2rem"
 						pb="4rem"
@@ -113,28 +118,24 @@ const EditorPage = () => {
 						)}
 						{!id && <Box>Something went wrong, no document ID specified!</Box>}
 					</Box>
-				</Box>
-			</Box>
-			<Box display={["none", null, "flex"]} pl="60px" pos="absolute" w="100%">
-				<Box flexGrow="1" bg="yellow.100" flexShrink="0" />
-				<Box w="800px" />
-				<Box
-					flexGrow="1"
-					bg="yellow.100"
-					display="flex"
-					alignItems="center"
-					justifyContent="center"
-				>
 					<Box
-						w="100px"
-						h="100px"
-						pos="absolute"
-						mt="400px"
-						mr={{
-							base: "0rem",
-						}}
-						ref={onSidebarPortalRef}
-					/>
+						flexGrow="1"
+						bg="yellow.100"
+						alignItems="center"
+						justifyContent="center"
+						display={["none", null, null, "flex"]}
+					>
+						<Box
+							w="100px"
+							h="100px"
+							pos="fixed"
+							mt="400px"
+							mr={{
+								base: "0rem",
+							}}
+							ref={onSidebarPortalRef}
+						/>
+					</Box>
 				</Box>
 			</Box>
 		</Box>

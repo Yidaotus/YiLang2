@@ -122,7 +122,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 			<FloatingContainer
 				popupReference={popupReference}
 				popupPlacement="top"
-				popupOffset={10}
+				popupOffset={0}
 			>
 				<Box pos="relative" zIndex={50} display="flex">
 					<ButtonGroup

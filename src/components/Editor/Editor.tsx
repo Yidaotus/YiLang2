@@ -152,7 +152,6 @@ export default React.memo(function Editor({
 			<Box
 				display="flex"
 				justifyContent="center"
-				w="100%"
 				pos="relative"
 				flexDir="column"
 			>
@@ -166,7 +165,6 @@ export default React.memo(function Editor({
 										borderRadius: "5px",
 									},
 								}}
-								width="100%"
 								minH="200px"
 								ref={onFloatingRef}
 								contentEditable={false}
@@ -175,7 +173,6 @@ export default React.memo(function Editor({
 									semiReadOnly={isSemiReadOnly}
 									autoFocus
 									style={{
-										width: "100%",
 										minHeight: "100px",
 										transition:
 											"100ms font-size ease-out, 300ms line-height ease-out",
