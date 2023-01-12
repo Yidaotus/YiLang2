@@ -110,8 +110,8 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 				<PopoverAnchor>
 					<InputGroup w={width}>
 						<Input
-							defaultValue="Search..."
 							value={searchString}
+							placeholder="Search..."
 							onChange={(e) => setSearchString(e.target.value)}
 							onFocus={() => setHasInputFocus(true)}
 							onBlur={() => setHasInputFocus(false)}
