@@ -19,9 +19,13 @@ import {
 } from "lexical";
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { $isRemarkContainerNode } from "../RemarkBlockPlugin/RemarkContainerNode";
-import { $isRemarkContentNode } from "../RemarkBlockPlugin/RemarkContentNode";
-import { $isRemarkTitleNode } from "../RemarkBlockPlugin/RemarkTitleNode";
+import { $isRemarkContainerNode } from "../../nodes/Remark/RemarkContainerNode";
+import { $isRemarkContentNode } from "../../nodes/Remark/RemarkContentNode";
+import { $isRemarkTitleNode } from "../../nodes/Remark/RemarkTitleNode";
+
+import { $isGrammarPointContainerNode } from "../../nodes/GrammarPoint/GrammarPointContainerNode";
+import { $isGrammarPointContentNode } from "../../nodes/GrammarPoint/GrammarPointContentNode";
+import { $isGrammarPointTitleNode } from "../../nodes/GrammarPoint/GrammarPointTitleNode";
 
 const LINE_PADDING = 3;
 const LINE_HEIGHT = 3;
@@ -222,6 +226,44 @@ const outlineNodes = (
 				if ($isRemarkContentNode(remarkContent)) {
 					drawnHeight = outlineNodes(
 						remarkContent.getChildren(),
+						ctx,
+						brandColor,
+						x + 2,
+						y + LINE_PADDING,
+						canvasWidth - 8
+					);
+				}
+				y += drawnHeight + LINE_PADDING * 3;
+			}
+		} else if ($isGrammarPointContainerNode(node)) {
+			const childNodes = node.getChildren();
+			const grammarPointTitle = childNodes[0];
+			const grammarPointContent = childNodes[1];
+			let drawnHeight = 0;
+			if (
+				$isGrammarPointContentNode(grammarPointContent) &&
+				$isGrammarPointTitleNode(grammarPointTitle)
+			) {
+				drawnHeight = outlineNodes(
+					grammarPointContent.getChildren(),
+					ctx,
+					brandColor,
+					x,
+					y + LINE_PADDING,
+					canvasWidth
+				);
+
+				const currentFillStyle = ctx.fillStyle;
+				ctx.fillStyle = "#eff7ff";
+				ctx.fillRect(x, y, canvasWidth, drawnHeight + 5 + LINE_HEIGHT * 2);
+
+				ctx.fillStyle = currentFillStyle;
+				ctx.fillRect(x + 2, y + 2, canvasWidth * 0.8, LINE_HEIGHT * 2);
+				y += LINE_HEIGHT * 2 + LINE_PADDING;
+
+				if ($isGrammarPointContentNode(grammarPointContent)) {
+					drawnHeight = outlineNodes(
+						grammarPointContent.getChildren(),
 						ctx,
 						brandColor,
 						x + 2,

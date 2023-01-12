@@ -1,6 +1,6 @@
 import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import {
 	Avatar,
@@ -30,6 +30,7 @@ import {
 	useToken,
 } from "@chakra-ui/react";
 import Layout from "@components/Layout";
+import UniversalSearchInput from "@components/UniversalSearchInput";
 import useEditorStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import { trpc } from "@utils/trpc";
@@ -55,6 +56,8 @@ const DashboardPage: NextPageWithLayout = () => {
 	);
 
 	const userStats = trpc.user.stats.useQuery();
+
+	const [searchString, setSearchString] = useState("");
 
 	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
 	const recentWords = trpc.dictionary.getRecentWords.useQuery({ take: 10 });
@@ -159,6 +162,12 @@ const DashboardPage: NextPageWithLayout = () => {
 									</option>
 								))}
 							</Select>
+						</Box>
+						<Box minW={["100%", null, "180px"]}>
+							<Text fontSize="0.875rem" fontWeight="medium">
+								Search
+							</Text>
+							<UniversalSearchInput width="350px" />
 						</Box>
 					</Box>
 				</Box>

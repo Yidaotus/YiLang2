@@ -1,13 +1,9 @@
-import type { ToastId } from "@chakra-ui/react";
-import { Box, Divider, IconButton, useToast, useToken } from "@chakra-ui/react";
+import { Box, Divider, IconButton, useToken } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $isHeadingNode } from "@lexical/rich-text";
-import useEditorStore from "@store/store";
-import { trpc } from "@utils/trpc";
-import { $getRoot } from "lexical";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { IoSaveOutline } from "react-icons/io5";
+import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
 import FormatterMenu from "./FormatterMenu";
 import LayoutMenu from "./LayoutMenu";
 import SettingsMenu from "./SettingsMenu";
@@ -15,78 +11,14 @@ import WordList from "./WordList";
 
 type SidebarPluginProps = {
 	sidebarPortal: HTMLElement;
-	documentId?: string;
 };
-const DELAY = 1000;
-const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
-	const toast = useToast();
-
+const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
-	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
-
-	const upsertDocument = trpc.document.upsertDocument.useMutation({
-		onMutate() {
-			const id = toast({
-				title: "Saving",
-				description: "Saving document",
-				status: "loading",
-				isClosable: true,
-			});
-			toastState.current = { id, timestamp: Date.now() };
-		},
-		onError() {
-			if (toastState.current) {
-				toast.close(toastState.current.id);
-			}
-			toast({
-				title: "Saving",
-				description: "Error while saving document.",
-				status: "error",
-				isClosable: true,
-			});
-		},
-		onSuccess() {
-			if (toastState.current) {
-				const delta = Math.max(
-					0,
-					DELAY - (Date.now() - toastState.current.timestamp)
-				);
-				const toastId = toastState.current.id;
-				setTimeout(() => {
-					toast.close(toastId);
-					toast({
-						title: "Saving",
-						description: "Document saved.",
-						status: "success",
-						isClosable: true,
-					});
-				}, delta);
-			}
-		},
-	});
 
 	const saveDocument = useCallback(async () => {
-		const serializedState = JSON.stringify(editor.getEditorState());
-		editor.getEditorState().read(() => {
-			const root = $getRoot();
-			const rootElements = root.getChildren();
-			let title = "";
-			for (const node of rootElements) {
-				if ($isHeadingNode(node)) {
-					title = node.getTextContent();
-					break;
-				}
-			}
-			upsertDocument.mutate({
-				id: documentId,
-				title,
-				serializedDocument: serializedState,
-				language: selectedLanguage.id,
-			});
-		});
-	}, [documentId, editor, selectedLanguage, upsertDocument]);
+		editor.dispatchCommand(SAVE_EDITOR, undefined);
+	}, [editor]);
 
 	return createPortal(
 		<Box
@@ -106,7 +38,6 @@ const SidebarPlugin = ({ sidebarPortal, documentId }: SidebarPluginProps) => {
 			<FormatterMenu />
 			<SettingsMenu />
 			<IconButton
-				disabled={upsertDocument.isLoading}
 				icon={
 					<IoSaveOutline
 						color={text400}

@@ -2,6 +2,11 @@ import { z } from "zod";
 
 import { protectedProcedure, router } from "../trpc";
 
+const isString = <T>(input: T | string): input is string =>
+	typeof input === "string";
+const isNotString = <T>(input: T | string): input is T =>
+	typeof input !== "string";
+
 export const dictionaryRouter = router({
 	createLanguage: protectedProcedure
 		.input(z.object({ name: z.string() }))
@@ -63,26 +68,20 @@ export const dictionaryRouter = router({
 							  }
 							: undefined,
 						tags: {
-							create: tags.map((tag) => ({
-								tag:
-									typeof tag === "string"
-										? { connect: { id: tag } }
-										: {
-												create: {
-													name: tag.name,
-													color: tag.color,
-													user: { connect: { id: session.user.id } },
-													language: {
-														connect: {
-															userLanguageId: {
-																userId: session.user.id,
-																id: language,
-															},
-														},
-													},
-												},
-										  },
+							create: tags.filter(isNotString).map((newTag) => ({
+								name: newTag.name,
+								color: newTag.color,
+								user: { connect: { id: session.user.id } },
+								language: {
+									connect: {
+										userLanguageId: {
+											userId: session.user.id,
+											id: language,
+										},
+									},
+								},
 							})),
+							connect: tags.filter(isString).map((tagId) => ({ id: tagId })),
 						},
 						comment,
 					},
@@ -99,7 +98,6 @@ export const dictionaryRouter = router({
 						? dbWord.translation.split(";")
 						: [],
 					documentId: dbWord.documentId || undefined,
-					tags: dbWord.tags.map((tagOnWord) => tagOnWord.tagId),
 				};
 				return wordWithDeserializedTranslations;
 			}
@@ -131,9 +129,14 @@ export const dictionaryRouter = router({
 				input: { id, comment, spelling, tags, translations, language },
 			}) => {
 				if (tags) {
-					await prisma.tagsOnWords.deleteMany({
+					await prisma.word.update({
 						where: {
-							wordId: id,
+							id,
+						},
+						data: {
+							tags: {
+								set: [],
+							},
 						},
 					});
 				}
@@ -145,28 +148,24 @@ export const dictionaryRouter = router({
 						translation: !!translations ? translations.join(";") : undefined,
 						tags: tags
 							? {
-									create: tags.reverse().map((tag) => ({
-										tag:
-											typeof tag === "string"
-												? { connect: { id: tag } }
-												: {
-														create: {
-															name: tag.name,
-															color: tag.color,
-															user: { connect: { id: session.user.id } },
-															language: {
-																connect: {
-																	userLanguageId: {
-																		userId: session.user.id,
-																		id: language,
-																	},
-																},
-															},
-														},
-												  },
+									create: tags.filter(isNotString).map((newTag) => ({
+										name: newTag.name,
+										color: newTag.color,
+										user: { connect: { id: session.user.id } },
+										language: {
+											connect: {
+												userLanguageId: {
+													userId: session.user.id,
+													id: language,
+												},
+											},
+										},
 									})),
+									connect: tags
+										.filter(isString)
+										.map((tagId) => ({ id: tagId })),
 							  }
-							: undefined,
+							: { set: [] },
 					},
 				});
 			}
@@ -379,11 +378,7 @@ export const dictionaryRouter = router({
 							id: true,
 						},
 					},
-					tags: {
-						include: {
-							tag: true,
-						},
-					},
+					tags: true,
 				},
 			});
 
@@ -391,7 +386,6 @@ export const dictionaryRouter = router({
 				const { translation, ...rest } = foundWord;
 				return {
 					...rest,
-					tags: foundWord.tags.map((tOnW) => tOnW.tag),
 					translations: !!translation.trim() ? translation.split(";") : [],
 				};
 			}
@@ -455,23 +449,110 @@ export const dictionaryRouter = router({
 							id: true,
 						},
 					},
-					tags: {
-						include: {
-							tag: true,
-						},
-					},
+					tags: true,
 				},
 			});
 			if (dbResult) {
 				const { translation, ...rest } = dbResult;
 				return {
 					...rest,
-					tags: dbResult.tags.map((tOnW) => tOnW.tag),
 					translations: !!translation.trim() ? translation.split(";") : [],
 				};
 			}
 			return null;
 		}),
+	searchWord: protectedProcedure
+		.input(
+			z.object({
+				search: z.string(),
+				languageId: z.string(),
+			})
+		)
+		.query(
+			async ({ ctx: { prisma, session }, input: { languageId, search } }) => {
+				const foundWords = await prisma.word.findMany({
+					where: {
+						user: { id: session.user.id },
+						language: { id: languageId },
+						OR: [
+							{ word: { contains: search, mode: "insensitive" } },
+							{ translation: { contains: search, mode: "insensitive" } },
+						],
+					},
+					include: { sourceDocument: { select: { title: true } } },
+				});
+				return foundWords;
+			}
+		),
+	searchGrammarPoints: protectedProcedure
+		.input(
+			z.object({
+				search: z.string(),
+				languageId: z.string(),
+			})
+		)
+		.query(
+			async ({ ctx: { prisma, session }, input: { languageId, search } }) => {
+				const foundGrammarPoints = await prisma.grammarPoint.findMany({
+					where: {
+						user: { id: session.user.id },
+						sourceDocument: { languageId },
+						title: { contains: search, mode: "insensitive" },
+					},
+					include: { sourceDocument: { select: { title: true, id: true } } },
+				});
+				return foundGrammarPoints;
+			}
+		),
+	getAllGrammarPointsForLanguage: protectedProcedure
+		.input(
+			z.object({
+				languageId: z.string(),
+			})
+		)
+		.query(async ({ ctx: { prisma, session }, input: { languageId } }) => {
+			const allGrammarPoints = prisma.grammarPoint.findMany({
+				where: {
+					user: { id: session.user.id },
+					sourceDocument: { languageId },
+				},
+				include: { sourceDocument: { select: { title: true } } },
+			});
+			return allGrammarPoints;
+		}),
+	upsertGrammarPoint: protectedProcedure
+		.input(
+			z.object({
+				id: z.string().optional(),
+				title: z.string(),
+				sourceDocumentId: z.string(),
+			})
+		)
+		.mutation(
+			async ({
+				ctx: { prisma, session },
+				input: { id, title, sourceDocumentId },
+			}) => {
+				const grammarPoint = await prisma.grammarPoint.upsert({
+					where: {
+						id: id || "",
+					},
+					create: {
+						title,
+						user: { connect: { id: session.user.id } },
+						sourceDocument: {
+							connect: {
+								id: sourceDocumentId,
+							},
+						},
+					},
+					update: {
+						title,
+					},
+				});
+				return grammarPoint;
+			}
+		),
 	getAll: protectedProcedure
 		.input(z.object({ language: z.string() }))
 		.query(async ({ ctx: { prisma, session }, input: { language } }) => {
@@ -485,11 +566,7 @@ export const dictionaryRouter = router({
 					},
 				},
 				include: {
-					tags: {
-						include: {
-							tag: true,
-						},
-					},
+					tags: true,
 				},
 			});
 			return allWords.map(({ translation, ...rest }) => ({

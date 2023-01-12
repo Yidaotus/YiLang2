@@ -1,0 +1,32 @@
+.GrammarPoint__Container {
+	background-color: #eff7ff;
+	border-radius: 5px;
+	padding-left: 1em;
+	padding-right: 0.5em;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	position: relative;
+}
+
+.GrammarPoint__ContainerIcon {
+	position: absolute;
+	background-image: url("/icons/open-book.svg");
+	transform: translateX(50%);
+	height: 38px;
+	width: 38px;
+	right: 0px;
+	top: 10px;
+	user-select: none;
+	pointer-events: none;
+}
+
+.GrammarPoint__Title {
+	color: #40454f;
+	font-size: 1.1em;
+	padding-bottom: 0.5em;
+	font-weight: bold;
+}
+
+.GrammarPoint__Content {
+	font-size: 1em;
+}

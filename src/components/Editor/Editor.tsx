@@ -1,10 +1,8 @@
 import type { Klass, LexicalNode } from "lexical";
 
-import { ListItemNode, ListNode } from "@lexical/list";
-
-import React, { useState } from "react";
-
 import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { ListItemNode, ListNode } from "@lexical/list";
+import React, { useState } from "react";
 
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
@@ -31,10 +29,14 @@ import TableCellActionMenuPlugin from "./plugins/TableActionMenuPlugin";
 import YiLangTheme from "./themes/YiLangEditorTheme";
 import ErrorBoundary from "./ui/ErrorBoundary";
 
-import { RemarkContainerNode } from "./plugins/RemarkBlockPlugin/RemarkContainerNode";
-import { RemarkContentNode } from "./plugins/RemarkBlockPlugin/RemarkContentNode";
+import { RemarkContainerNode } from "./nodes/Remark/RemarkContainerNode";
+import { RemarkContentNode } from "./nodes/Remark/RemarkContentNode";
+import { RemarkTitleNode } from "./nodes/Remark/RemarkTitleNode";
 import RemarkPlugin from "./plugins/RemarkBlockPlugin/RemarkPlugin";
-import { RemarkTitleNode } from "./plugins/RemarkBlockPlugin/RemarkTitleNode";
+
+import { GrammarPointContainerNode } from "./nodes/GrammarPoint/GrammarPointContainerNode";
+import { GrammarPointContentNode } from "./nodes/GrammarPoint/GrammarPointContentNode";
+import { GrammarPointTitleNode } from "./nodes/GrammarPoint/GrammarPointTitleNode";
 
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
@@ -51,10 +53,12 @@ import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
 import { SplitLayoutContainerNode } from "./nodes/SplitLayout/SplitLayoutContainer";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
+import GrammarPointPlugin from "./plugins/GrammarPointPlugin/GrammarPointPlugin";
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 import PasteImageFromClipboardPlugin from "./plugins/PasteImageFromClipboardPlugin/PasteImageFromClipboardPlugin";
 import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
+import SaveToDBPlugin from "./plugins/SaveToDBPlugin/SaveToDBPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import TableCellResizerPlugin from "./plugins/TableCellResizer";
 import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
@@ -81,6 +85,9 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	RemarkContainerNode,
 	RemarkContentNode,
 	RemarkTitleNode,
+	GrammarPointContainerNode,
+	GrammarPointContentNode,
+	GrammarPointTitleNode,
 	SplitLayoutContainerNode,
 	SplitLayoutColumnNode,
 ];
@@ -204,8 +211,9 @@ export default React.memo(function Editor({
 						ErrorBoundary={ErrorBoundary}
 					/>
 					<RemarkPlugin />
+					<GrammarPointPlugin />
 					<HistoryPlugin />
-					<PersistStateOnPageChangePlugion documentId={documentId} />
+					<PersistStateOnPageChangePlugion />
 					<FetchDocumentPlugin documentId={documentId} />
 					<SplitLayoutPlugin />
 					<TabIndentationPlugin />
@@ -214,7 +222,8 @@ export default React.memo(function Editor({
 					<ListPlugin />
 					<WordPlugin />
 					<ImagesPlugin />
-					<SaveOnBlurPlugin documentId={documentId} />
+					<SaveToDBPlugin documentId={documentId} />
+					<SaveOnBlurPlugin />
 					<SaveImagesPlugin />
 					<PasteImageFromClipboardPlugin />
 					<SelectedBlockTypePlugin
@@ -229,10 +238,7 @@ export default React.memo(function Editor({
 									anchorElem={scrollAnchor}
 									sidebarPortal={sidebarPortal}
 								/>
-								<SidebarPlugin
-									sidebarPortal={sidebarPortal}
-									documentId={documentId}
-								/>
+								<SidebarPlugin sidebarPortal={sidebarPortal} />
 							</>
 						)}
 						{floatingAnchorElem && (

@@ -32,6 +32,7 @@ const blockTypeToBlockName = {
 	quote: "Quote",
 	image: "Image",
 	remark: "Remark",
+	grammarPoint: "Grammar Point",
 	table: "Table",
 };
 

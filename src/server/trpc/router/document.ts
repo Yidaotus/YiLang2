@@ -91,4 +91,23 @@ export const documentRouter = router({
 				where: { user: { id: session.user.id }, language: { id: language } },
 			});
 		}),
+	search: protectedProcedure
+		.input(
+			z.object({
+				search: z.string(),
+				languageId: z.string(),
+			})
+		)
+		.query(
+			async ({ ctx: { prisma, session }, input: { languageId, search } }) => {
+				const foundDocuments = await prisma.document.findMany({
+					where: {
+						user: { id: session.user.id },
+						language: { id: languageId },
+						title: { contains: search, mode: "insensitive" },
+					},
+				});
+				return foundDocuments;
+			}
+		),
 });

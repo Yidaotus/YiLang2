@@ -300,7 +300,7 @@ const DictionaryPage: NextPageWithLayout = () => {
 											</Link>
 										</Td>
 										<Td>{entry.translations.join(", ")}</Td>
-										<Td>{entry.tags.map((tag) => tag.tag.name).join(", ")}</Td>
+										<Td>{entry.tags.map((tag) => tag.name).join(", ")}</Td>
 										<Td>{entry.createdAt.toLocaleDateString()}</Td>
 										<Td w="50px">
 											<Menu isLazy>

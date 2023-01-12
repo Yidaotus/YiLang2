@@ -18,36 +18,36 @@ import {
 } from "lexical";
 import { useEffect } from "react";
 import {
-	$createRemarkContainerNode,
-	$isRemarkContainerNode,
-	RemarkContainerNode,
-} from "../../nodes/Remark/RemarkContainerNode";
+	$createGrammarPointContainerNode,
+	$isGrammarPointContainerNode,
+	GrammarPointContainerNode,
+} from "../../nodes/GrammarPoint/GrammarPointContainerNode";
 import {
-	$createRemarkContentNode,
-	$isRemarkContentNode,
-	RemarkContentNode,
-} from "../../nodes/Remark/RemarkContentNode";
+	$createGrammarPointContentNode,
+	$isGrammarPointContentNode,
+	GrammarPointContentNode,
+} from "../../nodes/GrammarPoint/GrammarPointContentNode";
 import {
-	$createRemarkTitleNode,
-	$isRemarkTitleNode,
-	RemarkTitleNode,
-} from "../../nodes/Remark/RemarkTitleNode";
+	$createGrammarPointTitleNode,
+	$isGrammarPointTitleNode,
+	GrammarPointTitleNode,
+} from "../../nodes/GrammarPoint/GrammarPointTitleNode";
 
 export const INSERT_REMARK_COMMAND = createCommand<string>();
 export const TOGGLE_REMARK_COMMAND = createCommand<NodeKey>();
 
-export default function RemarkPlugin(): JSX.Element | null {
+export default function GrammarPointPlugin(): JSX.Element | null {
 	const [editor] = useLexicalComposerContext();
 	useEffect(() => {
 		if (
 			!editor.hasNodes([
-				RemarkContainerNode,
-				RemarkTitleNode,
-				RemarkContentNode,
+				GrammarPointContainerNode,
+				GrammarPointTitleNode,
+				GrammarPointContentNode,
 			])
 		) {
 			throw new Error(
-				"CollapsiblePlugin: CollapsibleContainerNode, CollapsibleTitleNode, or CollapsibleContentNode not registered on editor"
+				"GrammarPointPlugin: GrammarPointContainerNode, GrammarPointTitleNode, or GrammarPointContentNode not registered on editor"
 			);
 		}
 
@@ -55,9 +55,9 @@ export default function RemarkPlugin(): JSX.Element | null {
 			// Structure enforcing transformers for each node type. In case nesting structure is not
 			// "Container > Title + Content" it'll unwrap nodes and convert it back
 			// to regular content.
-			editor.registerNodeTransform(RemarkContentNode, (node) => {
+			editor.registerNodeTransform(GrammarPointContentNode, (node) => {
 				const parent = node.getParent();
-				if (!$isRemarkContainerNode(parent)) {
+				if (!$isGrammarPointContainerNode(parent)) {
 					const children = node.getChildren();
 					for (const child of children) {
 						node.insertBefore(child);
@@ -65,18 +65,18 @@ export default function RemarkPlugin(): JSX.Element | null {
 					node.remove();
 				}
 			}),
-			editor.registerNodeTransform(RemarkTitleNode, (node) => {
+			editor.registerNodeTransform(GrammarPointTitleNode, (node) => {
 				const parent = node.getParent();
-				if (!$isRemarkContainerNode(parent)) {
+				if (!$isGrammarPointContainerNode(parent)) {
 					node.replace($createParagraphNode());
 				}
 			}),
-			editor.registerNodeTransform(RemarkContainerNode, (node) => {
+			editor.registerNodeTransform(GrammarPointContainerNode, (node) => {
 				const children = node.getChildren();
 				if (
 					children.length !== 2 ||
-					!$isRemarkTitleNode(children[0]) ||
-					!$isRemarkContentNode(children[1])
+					!$isGrammarPointTitleNode(children[0]) ||
+					!$isGrammarPointContentNode(children[1])
 				) {
 					for (const child of children) {
 						node.insertBefore(child);
@@ -113,7 +113,7 @@ export default function RemarkPlugin(): JSX.Element | null {
 					}
 
 					const container = topLevelElement.getPreviousSibling();
-					if (!$isRemarkContainerNode(container) || container.getOpen()) {
+					if (!$isGrammarPointContainerNode(container) || container.getOpen()) {
 						return false;
 					}
 
@@ -136,10 +136,10 @@ export default function RemarkPlugin(): JSX.Element | null {
 
 					const container = $findMatchingParent(
 						selection.anchor.getNode(),
-						$isRemarkContainerNode
+						$isGrammarPointContainerNode
 					);
 
-					if (!$isRemarkContainerNode(container)) {
+					if (!$isGrammarPointContainerNode(container)) {
 						return false;
 					}
 
@@ -162,11 +162,11 @@ export default function RemarkPlugin(): JSX.Element | null {
 							return;
 						}
 
-						const title = $createRemarkTitleNode();
-						const content = $createRemarkContentNode().append(
+						const title = $createGrammarPointTitleNode();
+						const content = $createGrammarPointContentNode().append(
 							$createParagraphNode().append($createTextNode(payload))
 						);
-						const container = $createRemarkContainerNode().append(
+						const container = $createGrammarPointContainerNode().append(
 							title,
 							content
 						);
@@ -183,7 +183,7 @@ export default function RemarkPlugin(): JSX.Element | null {
 				(key: NodeKey) => {
 					editor.update(() => {
 						const containerNode = $getNodeByKey(key);
-						if ($isRemarkContainerNode(containerNode)) {
+						if ($isGrammarPointContainerNode(containerNode)) {
 							containerNode.toggleOpen();
 						}
 					});
@@ -212,9 +212,9 @@ export default function RemarkPlugin(): JSX.Element | null {
 
 					const remarkContent = $findMatchingParent(
 						anchorNode,
-						$isRemarkContentNode
+						$isGrammarPointContentNode
 					);
-					if (!$isRemarkContentNode(remarkContent)) return false;
+					if (!$isGrammarPointContentNode(remarkContent)) return false;
 
 					const targetChild = remarkContent.getLastChild();
 					if (!targetChild) return false;

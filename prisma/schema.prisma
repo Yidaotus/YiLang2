@@ -61,6 +61,7 @@ model User {
   languages     Language[]
   lookupSources LookupSource[]
   sentences     Sentence[]
+  GrammarPoint  GrammarPoint[]
 }
 
 model VerificationToken {
@@ -133,7 +134,18 @@ model Sentence {
   languageId     String
   words          Word[]
 
-  @@unique(fields: [userId, id], name: "userWordId")
+  @@unique(fields: [userId, id], name: "userSentenceId")
+}
+
+model GrammarPoint {
+  id             String   @id @default(cuid())
+  title          String
+  sourceDocument Document @relation(fields: [documentId], references: [id])
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId     String
+
+  @@unique(fields: [userId, id], name: "userGrammarPointId")
 }
 
 model Word {
@@ -157,18 +169,19 @@ model Word {
 }
 
 model Document {
-  id                 String     @id @default(cuid())
+  id                 String         @id @default(cuid())
   serializedDocument String?
   title              String
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   words              Word[]
   userId             String
-  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  language           Language   @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language           Language       @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId         String
   tags               Tag[]
   sentences          Sentence[]
+  GrammarPoint       GrammarPoint[]
 
   @@unique(fields: [userId, id], name: "userDocumentId")
 }
