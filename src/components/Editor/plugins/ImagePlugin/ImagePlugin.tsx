@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { mergeRegister } from "@lexical/utils";
 import type { ElementFormatType } from "lexical";
 import {
+	$createParagraphNode,
+	$createTextNode,
 	$getNearestRootOrShadowRoot,
 	$getSelection,
 	$insertNodes,
@@ -10,6 +12,7 @@ import {
 	COMMAND_PRIORITY_NORMAL,
 	createCommand,
 	FORMAT_ELEMENT_COMMAND,
+	KEY_ENTER_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
 import type { ImageAlignment, ImagePayload } from "../../nodes/ImageNode";
@@ -237,6 +240,28 @@ export default function ImagesPlugin({
 					return true;
 				},
 				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand(
+				KEY_ENTER_COMMAND,
+				(e) => {
+					const selection = $getSelection();
+					if (!$isNodeSelection(selection)) return false;
+
+					const nodes = selection.getNodes();
+
+					for (const node of nodes) {
+						if ($isImageNode(node)) {
+							const newTextNode = $createTextNode("");
+							const newParagraph = $createParagraphNode().append(newTextNode);
+							node.insertAfter(newParagraph, false);
+							newTextNode.select();
+							e?.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
 			),
 			editor.registerCommand<InsertImagePayload>(
 				INSERT_IMAGE_COMMAND,

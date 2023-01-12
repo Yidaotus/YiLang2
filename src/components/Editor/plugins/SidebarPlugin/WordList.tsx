@@ -175,7 +175,7 @@ const WordList = () => {
 						display="flex"
 						flexDir="column"
 						gap={4}
-						maxW="350px"
+						w="350px"
 						p={2}
 						maxH="70vh"
 						overflow="auto"

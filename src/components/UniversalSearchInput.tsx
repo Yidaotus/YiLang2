@@ -80,15 +80,15 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 	const [searchString, setSearchString] = useState("");
 	const foundDocuments = trpc.document.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 1 }
+		{ enabled: searchString.length > 0, cacheTime: 1 }
 	);
 	const foundWords = trpc.dictionary.searchWord.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 1 }
+		{ enabled: searchString.length > 0, cacheTime: 1 }
 	);
 	const foundGrammarPoints = trpc.dictionary.searchGrammarPoints.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 1 }
+		{ enabled: searchString.length > 0, cacheTime: 1 }
 	);
 
 	const foundDocumentsLength = foundDocuments.data?.length || 0;

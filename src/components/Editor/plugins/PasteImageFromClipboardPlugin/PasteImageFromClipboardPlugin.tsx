@@ -30,7 +30,7 @@ const PasteImageFromClipboardPlugin = () => {
 						const clipBoardImageNode = $createImageNode({
 							altText: "clipboard image",
 							src,
-							height: 400,
+							alignment: "center",
 						});
 						$getSelection()?.insertNodes([clipBoardImageNode]);
 					}

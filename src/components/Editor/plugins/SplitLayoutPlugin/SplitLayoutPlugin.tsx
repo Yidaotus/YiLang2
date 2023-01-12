@@ -15,7 +15,6 @@ import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import {
 	$createParagraphNode,
 	$createTextNode,
-	$getRoot,
 	$getSelection,
 	$isDecoratorNode,
 	$isLeafNode,
@@ -251,7 +250,7 @@ const SplitLayoutPlugin = () => {
 					const parentIndex = parentSplitContainer.getIndexWithinParent();
 					const splitParent = parentSplitContainer.getParent();
 
-					if (splitParent !== $getRoot()) return true;
+					if (!splitParent) return true;
 
 					splitParent.splice(parentIndex, 1, [
 						...currentLeft.getChildren(),

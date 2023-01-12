@@ -1,12 +1,17 @@
 import type { LexicalEditor } from "lexical";
-import { $createTextNode, $getRoot, $insertNodes } from "lexical";
+import {
+	$createTextNode,
+	$getNearestRootOrShadowRoot,
+	$getRoot,
+	$insertNodes,
+} from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import {
 	INSERT_CHECK_LIST_COMMAND,
 	INSERT_ORDERED_LIST_COMMAND,
 	INSERT_UNORDERED_LIST_COMMAND,
-	REMOVE_LIST_COMMAND
+	REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import type { HeadingTagType } from "@lexical/rich-text";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
@@ -15,7 +20,7 @@ import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import {
 	$createParagraphNode,
 	$getSelection,
-	$isRangeSelection
+	$isRangeSelection,
 } from "lexical";
 import {
 	RiDoubleQuotesL,
@@ -26,7 +31,7 @@ import {
 	RiListUnordered,
 	RiParagraph,
 	RiPencilLine,
-	RiTabletLine
+	RiTabletLine,
 } from "react-icons/ri";
 import { $createRemarkContainerNode } from "../nodes/Remark/RemarkContainerNode";
 import { $createRemarkContentNode } from "../nodes/Remark/RemarkContentNode";
@@ -78,7 +83,7 @@ export const formatGrammarPoint = ({
 				const anchorParent = anchorNode.getParent();
 				if (!anchorParent) return false;
 
-				if (anchorParent === $getRoot()) {
+				if (anchorParent === $getNearestRootOrShadowRoot(anchorNode)) {
 					const title = $createGrammarPointTitleNode();
 					const content = $createGrammarPointContentNode().append(
 						$createParagraphNode().append($createTextNode(""))

@@ -4,6 +4,8 @@ import type { LexicalNode, RootNode } from "lexical";
 import { useToast } from "@chakra-ui/react";
 import { $isGrammarPointContainerNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointContainerNode";
 import { $isGrammarPointTitleNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointTitleNode";
+import { $isSplitLayoutColumnNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutColumn";
+import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorStore from "@store/store";
@@ -17,7 +19,7 @@ import {
 import { useEffect, useRef } from "react";
 
 const $getAllNodesOfType = <T extends LexicalNode>(
-	root: RootNode,
+	root: LexicalNode,
 	finder: (node: LexicalNode) => node is T
 ) => {
 	const foundNodes: Array<T> = [];
@@ -26,6 +28,19 @@ const $getAllNodesOfType = <T extends LexicalNode>(
 		if ($isRootOrShadowRoot(node)) {
 			const subNodes = $getAllNodesOfType(node as RootNode, finder);
 			foundNodes.push(...subNodes);
+		}
+		if ($isSplitLayoutContainerNode(node)) {
+			const children = node.getChildren();
+			const leftColumn = children[0];
+			const rightColumn = children[1];
+			if (
+				$isSplitLayoutColumnNode(leftColumn) &&
+				$isSplitLayoutColumnNode(rightColumn)
+			) {
+				const subNodesLeft = $getAllNodesOfType(leftColumn, finder);
+				const subNodesRight = $getAllNodesOfType(rightColumn, finder);
+				foundNodes.push(...subNodesLeft, ...subNodesRight);
+			}
 		}
 		if (finder(node)) {
 			foundNodes.push(node);
@@ -40,6 +55,7 @@ const DELAY = 1000;
 const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
 	const toast = useToast();
+	const trcpUtils = trpc.useContext();
 	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
 	const upsertGrammarPoint = trpc.dictionary.upsertGrammarPoint.useMutation();
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
@@ -122,15 +138,20 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 							editor.update(() => {
 								grammarNode.setId(gp.id);
 							});
+							trcpUtils.dictionary.searchGrammarPoints.invalidate();
 						});
 				}
 
-				upsertDocument.mutate({
-					id: documentId,
-					title,
-					serializedDocument: serializedState,
-					language: selectedLanguage.id,
-				});
+				upsertDocument
+					.mutateAsync({
+						id: documentId,
+						title,
+						serializedDocument: serializedState,
+						language: selectedLanguage.id,
+					})
+					.then(() => {
+						trcpUtils.document.search.invalidate();
+					});
 
 				return true;
 			},
@@ -140,6 +161,8 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 		documentId,
 		editor,
 		selectedLanguage.id,
+		trcpUtils.dictionary.searchGrammarPoints,
+		trcpUtils.document.search,
 		upsertDocument,
 		upsertGrammarPoint,
 	]);
