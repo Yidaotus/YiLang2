@@ -61,7 +61,6 @@ import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SaveToDBPlugin from "./plugins/SaveToDBPlugin/SaveToDBPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import TableCellResizerPlugin from "./plugins/TableCellResizer";
-import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
@@ -260,7 +259,6 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
-					<TreeViewPlugin />
 				</LexicalComposer>
 			</Box>
 		</Box>
