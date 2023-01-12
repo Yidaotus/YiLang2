@@ -11,6 +11,7 @@ import {
 import type { HeadingTagType } from "@lexical/rich-text";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
 import { $setBlocksType_experimental, $wrapNodes } from "@lexical/selection";
+import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import {
 	$createParagraphNode,
 	$getSelection,
@@ -24,6 +25,7 @@ import {
 	RiListOrdered,
 	RiListUnordered,
 	RiParagraph,
+	RiTabletLine,
 } from "react-icons/ri";
 import { $createRemarkContainerNode } from "../plugins/RemarkBlockPlugin/RemarkContainerNode";
 import { $createRemarkContentNode } from "../plugins/RemarkBlockPlugin/RemarkContentNode";
@@ -77,6 +79,21 @@ export const formatRemark = ({ editor, currentBlockType }: FormatterParams) => {
 				const container = $createRemarkContainerNode().append(title, content);
 				anchorParent.replace(container);
 				container.selectStart();
+			}
+		});
+	}
+};
+
+export const formatTable = ({ editor, currentBlockType }: FormatterParams) => {
+	if (currentBlockType !== "table") {
+		editor.update(() => {
+			const selection = $getSelection();
+
+			if ($isRangeSelection(selection)) {
+				editor.dispatchCommand(INSERT_TABLE_COMMAND, {
+					columns: "2",
+					rows: "2",
+				});
 			}
 		});
 	}
@@ -196,5 +213,11 @@ export const blockTypes: Partial<Record<SelectedBlockType, Formatter>> = {
 		icon: <RiInformationLine size="100%" />,
 		formatter: ({ editor, currentBlockType }: FormatterParams) =>
 			formatRemark({ editor, currentBlockType }),
+	},
+	table: {
+		type: "Table",
+		icon: <RiTabletLine size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatTable({ editor, currentBlockType }),
 	},
 };

@@ -16,6 +16,7 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
+import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 
@@ -26,6 +27,7 @@ import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/Flo
 import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
+import TableCellActionMenuPlugin from "./plugins/TableActionMenuPlugin";
 import YiLangTheme from "./themes/YiLangEditorTheme";
 import ErrorBoundary from "./ui/ErrorBoundary";
 
@@ -54,6 +56,8 @@ import PasteImageFromClipboardPlugin from "./plugins/PasteImageFromClipboardPlug
 import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
+import TableCellResizerPlugin from "./plugins/TableCellResizer";
+import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
@@ -216,6 +220,8 @@ export default React.memo(function Editor({
 					<SelectedBlockTypePlugin
 						setSelectedBlockType={setEditorSelectedBlockType}
 					/>
+					<TablePlugin />
+					<TableCellResizerPlugin />
 					<>
 						{scrollAnchor && sidebarPortal && (
 							<>
@@ -231,6 +237,9 @@ export default React.memo(function Editor({
 						)}
 						{floatingAnchorElem && (
 							<>
+								<TableCellActionMenuPlugin
+									floatingAnchorElem={floatingAnchorElem}
+								/>
 								<BlockSelectPopupPlugin anchorElem={floatingAnchorElem} />
 								<ImageMenuPlugin anchorElem={floatingAnchorElem} />
 								<FloatingTextFormatToolbarPlugin
@@ -245,6 +254,7 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
+					<TreeViewPlugin />
 				</LexicalComposer>
 			</Box>
 		</Box>

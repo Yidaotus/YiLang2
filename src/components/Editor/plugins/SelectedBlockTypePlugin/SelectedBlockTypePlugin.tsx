@@ -32,6 +32,7 @@ const blockTypeToBlockName = {
 	quote: "Quote",
 	image: "Image",
 	remark: "Remark",
+	table: "Table",
 };
 
 export type SelectedBlockType = keyof typeof blockTypeToBlockName;

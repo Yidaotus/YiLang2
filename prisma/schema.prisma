@@ -55,11 +55,12 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  Tag           Tag[]
-  Word          Word[]
-  Document      Document[]
-  Language      Language[]
-  LookupSource  LookupSource[]
+  tags          Tag[]
+  words         Word[]
+  documents     Document[]
+  languages     Language[]
+  lookupSources LookupSource[]
+  sentences     Sentence[]
 }
 
 model VerificationToken {
@@ -92,73 +93,82 @@ model Language {
   lookupSources LookupSource[]
   userId        String
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Word          Word[]
-  Document      Document[]
-  Tag           Tag[]
+  words         Word[]
+  documents     Document[]
+  tags          Tag[]
+  sentences     Sentence[]
 
   @@id(fields: [userId, id], name: "userLanguageId")
 }
 
 model Tag {
-  id         String        @id @default(cuid())
+  id         String     @id @default(cuid())
   color      String
   name       String
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  words      TagsOnWords[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
   userId     String
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  language   Language      @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language   Language   @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId String
-  Document   Document[]
-  documentId String?
+  sentences  Sentence[]
+  words      Word[]
+  documents  Document[]
 
   @@unique(fields: [userId, id], name: "userTagId")
 }
 
-model Word {
-  id             String        @id @default(cuid())
-  word           String
+model Sentence {
+  id             String    @id @default(cuid())
+  sentence       String
   translation    String
-  spelling       String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  comment        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   documentId     String?
-  sourceDocument Document?     @relation(fields: [documentId], references: [id])
-  tags           TagsOnWords[]
+  sourceDocument Document? @relation(fields: [documentId], references: [id])
+  tags           Tag[]
   userId         String
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  language       Language      @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language       Language  @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId     String
+  words          Word[]
 
   @@unique(fields: [userId, id], name: "userWordId")
 }
 
-model TagsOnWords {
-  tag            Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagId          String
-  word           Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
-  wordId         String
-  assignedAt     DateTime @default(now())
-  languageId     String?
-  lookupSourceId String?
+model Word {
+  id             String     @id @default(cuid())
+  word           String
+  translation    String
+  spelling       String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  comment        String?
+  documentId     String?
+  sourceDocument Document?  @relation(fields: [documentId], references: [id])
+  tags           Tag[]
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language       Language   @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  languageId     String
+  sentences      Sentence[]
 
-  @@id([tagId, wordId])
+  @@unique(fields: [userId, id], name: "userWordId")
 }
 
 model Document {
-  id                 String   @id @default(cuid())
+  id                 String     @id @default(cuid())
   serializedDocument String?
   title              String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  Word               Word[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  words              Word[]
   userId             String
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  language           Language @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language           Language   @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId         String
   tags               Tag[]
+  sentences          Sentence[]
 
   @@unique(fields: [userId, id], name: "userDocumentId")
 }

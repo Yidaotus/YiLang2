@@ -1,4 +1,5 @@
-import type { NodeKey } from "lexical";
+import type { ElementNode, NodeKey, TextNode } from "lexical";
+import { $isTextNode, KEY_ENTER_COMMAND } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
@@ -190,6 +191,51 @@ export default function RemarkPlugin(): JSX.Element | null {
 					return true;
 				},
 				COMMAND_PRIORITY_EDITOR
+			),
+			editor.registerCommand(
+				KEY_ENTER_COMMAND,
+				(e) => {
+					const selection = $getSelection();
+					if (!$isRangeSelection(selection) || !selection.isCollapsed())
+						return false;
+
+					let anchorNode: ElementNode | TextNode | null =
+						selection.anchor.getNode();
+					if ($isTextNode(anchorNode)) {
+						anchorNode = anchorNode.getParent();
+					}
+
+					if (!anchorNode) return false;
+					if (anchorNode.getTextContentSize() > 0) {
+						return false;
+					}
+
+					const remarkContent = $findMatchingParent(
+						anchorNode,
+						$isRemarkContentNode
+					);
+					if (!$isRemarkContentNode(remarkContent)) return false;
+
+					const targetChild = remarkContent.getLastChild();
+					if (!targetChild) return false;
+
+					if (anchorNode !== targetChild) return false;
+
+					if (selection.anchor.offset < targetChild.getTextContentSize())
+						return false;
+
+					const remarkContainer = remarkContent.getParent();
+					if (!remarkContainer) return false;
+
+					const newTextNode = $createTextNode("");
+					const newParagraph = $createParagraphNode().append(newTextNode);
+					remarkContainer.insertAfter(newParagraph, false);
+					newTextNode.select();
+					anchorNode.remove();
+					e?.preventDefault();
+					return true;
+				},
+				COMMAND_PRIORITY_LOW
 			)
 		);
 	}, [editor]);

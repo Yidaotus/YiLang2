@@ -29,6 +29,7 @@ type FloatingContainerProps = {
 	popupOffset?: number;
 	showArrow?: boolean;
 	unMountOnHide?: boolean;
+	showBackground?: boolean;
 } & ChakraProps;
 
 const FloatingContainer = ({
@@ -40,6 +41,7 @@ const FloatingContainer = ({
 	popupOffset = 10,
 	showArrow = false,
 	unMountOnHide = false,
+	showBackground = true,
 	...rest
 }: FloatingContainerProps) => {
 	const arrowRef = useRef(null);
@@ -102,7 +104,6 @@ const FloatingContainer = ({
 	return (
 		<Box
 			ref={floating}
-			overflow="hidden"
 			userSelect={visible ? "inherit" : "none"}
 			pointerEvents={visible ? "inherit" : "none"}
 			opacity={visible ? 1 : 0}
@@ -119,9 +120,11 @@ const FloatingContainer = ({
 			<Box
 				zIndex={30}
 				borderRadius="5px"
-				bg="white"
-				border="1px solid #e2e8f0"
-				boxShadow="0px 0px 8px 4px rgba(0, 0, 0, 0.05)"
+				bg={showBackground ? "white" : "inherit"}
+				border={showBackground ? "1px solid #e2e8f0" : "none"}
+				boxShadow={
+					showBackground ? "0px 0px 8px 4px rgba(0, 0, 0, 0.05)" : "none"
+				}
 				{...rest}
 			>
 				<Box>{children}</Box>
