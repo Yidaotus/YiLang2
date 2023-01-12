@@ -102,11 +102,13 @@ const FloatingContainer = ({
 	return (
 		<Box
 			ref={floating}
+			overflow="hidden"
 			userSelect={visible ? "inherit" : "none"}
 			pointerEvents={visible ? "inherit" : "none"}
 			opacity={visible ? 1 : 0}
 			transform={visible ? "scale(1)" : "scale(0.9)"}
 			transition="100ms transform ease-out, 100ms opacity ease-out, 0ms left linear"
+			maxW="100vw"
 			width={stretchOnMobile ? ["100vw", null, "max-content"] : "max-content"}
 			style={{
 				position: strategy,

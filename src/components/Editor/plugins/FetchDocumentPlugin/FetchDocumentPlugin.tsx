@@ -36,14 +36,14 @@ const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 		<>
 			{documentQuery.isLoading && (
 				<Box
-					w="100vw"
+					w="100%"
 					h="100vh"
 					bg="rgba(0,0,0,0.4)"
 					display="flex"
 					alignItems="center"
 					justifyContent="center"
 					pos="fixed"
-					left="60px"
+					left={[0, null, "60px"]}
 					top="0"
 					zIndex={50}
 				>
