@@ -8,7 +8,7 @@ const PersistStateOnPageChangePlugion = () => {
 	const router = useRouter();
 
 	const handleRouteChange = useCallback(() => {
-		editor.dispatchCommand(SAVE_EDITOR, undefined);
+		editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast: true });
 	}, [editor]);
 
 	useEffect(() => {

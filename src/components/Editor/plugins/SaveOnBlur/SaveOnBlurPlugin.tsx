@@ -6,7 +6,7 @@ const SaveOnBlurPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 
 	const saveOnBlurHandler = useCallback(() => {
-		editor.dispatchCommand(SAVE_EDITOR, undefined);
+		editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast: false });
 	}, [editor]);
 
 	useEffect(() => {

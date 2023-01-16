@@ -5,6 +5,9 @@ import { useCallback, useMemo, useState } from "react";
 import {
 	Box,
 	ButtonGroup,
+	Card,
+	CardBody,
+	CardHeader,
 	CircularProgress,
 	IconButton,
 	Input,
@@ -152,183 +155,207 @@ const DictionaryPage: NextPageWithLayout = () => {
 	);
 
 	return (
-		<Box px={[6, 8, 12]} maxH="100vh" overflow="auto" pos="relative">
-			<Box
-				display="flex"
-				justifyContent="flex-end"
-				alignItems="center"
-				gap={5}
-				pos="sticky"
-				top="0"
-				bg="white"
-				pt={4}
-			>
-				<Box pb={4} display="flex" gap={4} alignItems="center" zIndex={50}>
-					<RiTranslate size="3em" color={brand500} />
-					<Text as="h1" fontSize="3em" color="brand.500">
-						Dictionary
-					</Text>
-				</Box>
-				<InputGroup>
-					<InputLeftElement pointerEvents="none">
-						<IoSearch />
-					</InputLeftElement>
-					<Input
-						variant="filled"
-						type="text"
-						placeholder="Search for documents"
-						value={searchTerm}
-						onChange={(e) => updateSearchTerm(e.target.value)}
-					/>
-					<InputRightElement>
-						<IconButton
-							icon={<IoClose />}
-							onClick={() => setSearchTerm("")}
-							aria-label="Clear Search"
-							variant="link"
-						/>
-					</InputRightElement>
-				</InputGroup>
-				<ButtonGroup variant="outline" isAttached>
-					<IconButton icon={<IoFilter />} aria-label="Filter" />
-					<IconButton
-						icon={<IoArrowBack />}
-						isDisabled={page <= 0}
-						onClick={() => setPage(page - 1)}
-						aria-label="Backward"
-					/>
-					<IconButton
-						isDisabled={page + 1 >= pageCount}
-						onClick={() => setPage(page + 1)}
-						icon={<IoArrowForward />}
-						aria-label="Forward"
-					/>
-				</ButtonGroup>
-				<Box>
-					<CircularProgress
-						value={((page + 1) / pageCount) * 100}
-						size="35px"
-						color="brand.500"
-					/>
-				</Box>
-			</Box>
-			<Skeleton isLoaded={!allWords.isLoading}>
-				<TableContainer pt={5}>
-					<Table size="md">
-						<Thead>
-							<Tr>
-								<Th w="100px">#</Th>
-								<Th flexGrow="1">
-									<Box display="flex">
-										<Text>Word</Text>
-										<IconButton
-											onClick={() => addSortColumn("word")}
-											variant="link"
-											aria-label="Sort by Date"
-											icon={
-												sortByColumn?.column === "word" ? (
-													sortByColumn.order === "asc" ? (
-														<IoArrowDown />
-													) : (
-														<IoArrowUp />
-													)
-												) : (
-													<IoSwapVertical />
-												)
-											}
-										/>
-									</Box>
-								</Th>
-								<Th flexGrow="1">
-									<Box display="flex">
-										<Text>Translations</Text>
-										<IconButton
-											onClick={() => addSortColumn("translations")}
-											variant="link"
-											aria-label="Sort by Date"
-											icon={
-												sortByColumn?.column === "translations" ? (
-													sortByColumn.order === "asc" ? (
-														<IoArrowDown />
-													) : (
-														<IoArrowUp />
-													)
-												) : (
-													<IoSwapVertical />
-												)
-											}
-										/>
-									</Box>
-								</Th>
-								<Th flexGrow="1">
-									<Box display="flex">
-										<Text>Tags</Text>
-									</Box>
-								</Th>
-								<Th w="150px">
-									<Box display="flex">
-										<Text>Created at</Text>
-										<IconButton
-											onClick={() => addSortColumn("createdAt")}
-											variant="link"
-											aria-label="Sort by Date"
-											icon={
-												sortByColumn?.column === "createdAt" ? (
-													sortByColumn.order === "asc" ? (
-														<IoArrowDown />
-													) : (
-														<IoArrowUp />
-													)
-												) : (
-													<IoSwapVertical />
-												)
-											}
-										/>
-									</Box>
-								</Th>
-								<Th w="50px"></Th>
-							</Tr>
-						</Thead>
-						<Tbody color="text.400">
-							{pageSlice.map((entry, index) => {
-								return (
-									<Tr key={entry.id}>
-										<Td>{page * pageSize + index + 1}</Td>
-										<Td>
-											<Link as={NextLink} href={`/app/dictionary/${entry.id}`}>
-												{entry.word}
-											</Link>
-										</Td>
-										<Td>{entry.translations.join(", ")}</Td>
-										<Td>{entry.tags.map((tag) => tag.name).join(", ")}</Td>
-										<Td>{entry.createdAt.toLocaleDateString()}</Td>
-										<Td w="50px">
-											<Menu isLazy>
-												<MenuButton
-													as={IconButton}
-													aria-label="Options"
-													icon={<IoEllipsisVertical />}
+		<Box
+			px={[6, 8, 25]}
+			pt="12"
+			pb={2}
+			maxH="100vh"
+			overflow="auto"
+			pos="relative"
+			display="flex"
+			w="100%"
+			justifyContent="center"
+			alignItems="center"
+			flexDir="column"
+		>
+			<Card maxW="1000px" w="100%">
+				<CardHeader>
+					<Box
+						display="flex"
+						justifyContent="center"
+						alignItems="center"
+						gap={5}
+						pos="sticky"
+						top="0"
+						bg="white"
+						pt={4}
+					>
+						<Box display="flex" gap={4} alignItems="center" zIndex={50}>
+							<RiTranslate size="2em" color={brand500} />
+							<Text as="h1" fontSize="2em" color="brand.500">
+								Dictionary
+							</Text>
+						</Box>
+						<InputGroup>
+							<InputLeftElement pointerEvents="none">
+								<IoSearch />
+							</InputLeftElement>
+							<Input
+								variant="filled"
+								type="text"
+								placeholder="Search for documents"
+								value={searchTerm}
+								onChange={(e) => updateSearchTerm(e.target.value)}
+							/>
+							<InputRightElement>
+								<IconButton
+									icon={<IoClose />}
+									onClick={() => setSearchTerm("")}
+									aria-label="Clear Search"
+									variant="link"
+								/>
+							</InputRightElement>
+						</InputGroup>
+						<ButtonGroup variant="outline" isAttached>
+							<IconButton icon={<IoFilter />} aria-label="Filter" />
+							<IconButton
+								icon={<IoArrowBack />}
+								isDisabled={page <= 0}
+								onClick={() => setPage(page - 1)}
+								aria-label="Backward"
+							/>
+							<IconButton
+								isDisabled={page + 1 >= pageCount}
+								onClick={() => setPage(page + 1)}
+								icon={<IoArrowForward />}
+								aria-label="Forward"
+							/>
+						</ButtonGroup>
+						<Box>
+							<CircularProgress
+								value={((page + 1) / pageCount) * 100}
+								size="35px"
+								color="brand.500"
+							/>
+						</Box>
+					</Box>
+				</CardHeader>
+
+				<CardBody>
+					<Skeleton isLoaded={!allWords.isLoading}>
+						<TableContainer pt={5}>
+							<Table size="md">
+								<Thead>
+									<Tr>
+										<Th w="100px">#</Th>
+										<Th flexGrow="1">
+											<Box display="flex">
+												<Text>Word</Text>
+												<IconButton
+													onClick={() => addSortColumn("word")}
 													variant="link"
+													aria-label="Sort by Date"
+													icon={
+														sortByColumn?.column === "word" ? (
+															sortByColumn.order === "asc" ? (
+																<IoArrowDown />
+															) : (
+																<IoArrowUp />
+															)
+														) : (
+															<IoSwapVertical />
+														)
+													}
 												/>
-												<MenuList>
-													<MenuItem icon={<IoPencil />}>Open Document</MenuItem>
-													<MenuItem
-														icon={<IoTrashBin />}
-														bg="#e11d48"
-														color="#FFFFFF"
-													>
-														Delete Document
-													</MenuItem>
-												</MenuList>
-											</Menu>
-										</Td>
+											</Box>
+										</Th>
+										<Th flexGrow="1">
+											<Box display="flex">
+												<Text>Translations</Text>
+												<IconButton
+													onClick={() => addSortColumn("translations")}
+													variant="link"
+													aria-label="Sort by Date"
+													icon={
+														sortByColumn?.column === "translations" ? (
+															sortByColumn.order === "asc" ? (
+																<IoArrowDown />
+															) : (
+																<IoArrowUp />
+															)
+														) : (
+															<IoSwapVertical />
+														)
+													}
+												/>
+											</Box>
+										</Th>
+										<Th flexGrow="1">
+											<Box display="flex">
+												<Text>Tags</Text>
+											</Box>
+										</Th>
+										<Th w="150px">
+											<Box display="flex">
+												<Text>Created at</Text>
+												<IconButton
+													onClick={() => addSortColumn("createdAt")}
+													variant="link"
+													aria-label="Sort by Date"
+													icon={
+														sortByColumn?.column === "createdAt" ? (
+															sortByColumn.order === "asc" ? (
+																<IoArrowDown />
+															) : (
+																<IoArrowUp />
+															)
+														) : (
+															<IoSwapVertical />
+														)
+													}
+												/>
+											</Box>
+										</Th>
+										<Th w="50px"></Th>
 									</Tr>
-								);
-							})}
-						</Tbody>
-					</Table>
-				</TableContainer>
-			</Skeleton>
+								</Thead>
+								<Tbody>
+									{pageSlice.map((entry, index) => {
+										return (
+											<Tr key={entry.id}>
+												<Td>{page * pageSize + index + 1}</Td>
+												<Td>
+													<Link
+														as={NextLink}
+														href={`/app/dictionary/${entry.id}`}
+													>
+														{entry.word}
+													</Link>
+												</Td>
+												<Td>{entry.translations.join(", ")}</Td>
+												<Td>{entry.tags.map((tag) => tag.name).join(", ")}</Td>
+												<Td>{entry.createdAt.toLocaleDateString()}</Td>
+												<Td w="50px">
+													<Menu isLazy>
+														<MenuButton
+															as={IconButton}
+															aria-label="Options"
+															icon={<IoEllipsisVertical />}
+															variant="link"
+														/>
+														<MenuList>
+															<MenuItem icon={<IoPencil />}>
+																Open Document
+															</MenuItem>
+															<MenuItem
+																icon={<IoTrashBin />}
+																bg="#e11d48"
+																color="#FFFFFF"
+															>
+																Delete Document
+															</MenuItem>
+														</MenuList>
+													</Menu>
+												</Td>
+											</Tr>
+										);
+									})}
+								</Tbody>
+							</Table>
+						</TableContainer>
+					</Skeleton>
+				</CardBody>
+			</Card>
 		</Box>
 	);
 };

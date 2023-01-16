@@ -347,7 +347,7 @@ function TextFormatFloatingToolbar({
 							)}
 						</Box>
 					</MenuButton>
-					<MenuList fontSize={16}>
+					<MenuList>
 						{Object.entries(blockTypes).map(([key, block]) => (
 							<MenuItem
 								py={1}
@@ -569,7 +569,7 @@ function TextFormatFloatingToolbar({
 						}
 						border="none"
 					/>
-					<MenuList fontSize={16}>
+					<MenuList>
 						{lookupSources.data?.map((lookupSource) => (
 							<MenuItem
 								key={lookupSource.id}

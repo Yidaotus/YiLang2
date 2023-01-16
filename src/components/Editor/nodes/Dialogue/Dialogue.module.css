@@ -1,0 +1,49 @@
+.Dialogue__Container {
+	border-radius: 5px;
+	padding-left: 1em;
+	padding-right: 0.5em;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	position: relative;
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	grid-column-gap: 0px;
+	grid-row-gap: 0px;
+	justify-content: flex-start;
+	align-items: flex-start;
+}
+
+.Dialogue__Speaker::after {
+	content: ":";
+	height: 1px;
+	width: 24px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	padding-left: 3em;
+	padding-right: 2em;
+	transform: translate(50%, 50%);
+}
+
+.Dialogue__Speaker {
+	display: flex;
+	align-items: center;
+	position: relative;
+	min-height: 1.8em;
+	margin-right: 2em;
+	padding: 2px;
+	min-width: 2em;
+	background-color: aqua;
+}
+
+.Dialogue__Speech {
+	display: flex;
+	align-items: center;
+	min-height: 1.8em;
+	border-radius: 3px;
+	margin-bottom: 0.5em;
+	padding-bottom: 2px;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	background-color: bisque;
+}

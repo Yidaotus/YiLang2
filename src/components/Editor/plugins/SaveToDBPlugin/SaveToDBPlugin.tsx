@@ -49,38 +49,45 @@ const $getAllNodesOfType = <T extends LexicalNode>(
 	return foundNodes;
 };
 
-export const SAVE_EDITOR = createCommand("SAVE_EDITOR");
+export const SAVE_EDITOR = createCommand<{ shouldShowToast: boolean }>(
+	"SAVE_EDITOR"
+);
 const DELAY = 1000;
 
 const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
+	const showToast = useRef(false);
 	const toast = useToast();
 	const trcpUtils = trpc.useContext();
 	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
 	const upsertGrammarPoint = trpc.dictionary.upsertGrammarPoint.useMutation();
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
 		onMutate() {
-			const id = toast({
-				title: "Saving",
-				description: "Saving document",
-				status: "loading",
-				isClosable: true,
-			});
-			toastState.current = { id, timestamp: Date.now() };
+			if (showToast.current) {
+				const id = toast({
+					title: "Saving",
+					description: "Saving document",
+					status: "loading",
+					isClosable: true,
+				});
+				toastState.current = { id, timestamp: Date.now() };
+			}
 		},
 		onError() {
 			if (toastState.current) {
 				toast.close(toastState.current.id);
 			}
-			toast({
-				title: "Saving",
-				description: "Error while saving document.",
-				status: "error",
-				isClosable: true,
-			});
+			if (showToast.current) {
+				toast({
+					title: "Saving",
+					description: "Error while saving document.",
+					status: "error",
+					isClosable: true,
+				});
+			}
 		},
 		onSuccess() {
-			if (toastState.current) {
+			if (toastState.current && showToast.current) {
 				const delta = Math.max(
 					0,
 					DELAY - (Date.now() - toastState.current.timestamp)
@@ -103,7 +110,8 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	useEffect(() => {
 		return editor.registerCommand(
 			SAVE_EDITOR,
-			() => {
+			({ shouldShowToast }) => {
+				showToast.current = shouldShowToast;
 				const serializedState = JSON.stringify(editor.getEditorState());
 				const root = $getRoot();
 				const rootElements = root.getChildren();

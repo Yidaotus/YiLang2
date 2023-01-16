@@ -33,6 +33,7 @@ const LayoutMenu = () => {
 			<IconButton
 				aria-label="Appereance"
 				color="text.400"
+				disabled={layoutMode !== "split"}
 				onClick={() => swapSplitLayout()}
 				icon={<RiSwapBoxLine />}
 				gridColumn="span 2"

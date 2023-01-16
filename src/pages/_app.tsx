@@ -15,9 +15,33 @@ import "../styles/globals.css";
 const theme = extendTheme(
 	{
 		fonts: {
-			heading: `'Outfit', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
-			body: `'Outfit', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
-			button: `'Outfit', sans-serif`,
+			heading: `'Inter', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
+			body: `'Inter', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
+			button: `'Inter', sans-serif`,
+		},
+		components: {
+			Menu: {
+				baseStyle: {
+					fontSize: "0.875rem",
+				},
+			},
+			Table: {
+				baseStyle: {
+					table: {
+						fontSize: "0.875rem",
+						color: "text.400",
+					},
+					th: {
+						fontWeight: "semibold",
+						textTransform: "none",
+						bg: "#f7fafc",
+						borderTopWidth: "1px",
+						borderTopColor: "gray.100",
+						borderBottomWidth: "1px",
+						borderBottomColor: "gray.100",
+					},
+				},
+			},
 		},
 		colors: {
 			brand: {

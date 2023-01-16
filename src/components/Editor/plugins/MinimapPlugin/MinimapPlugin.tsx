@@ -7,6 +7,7 @@ import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayou
 import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
+import { $isTableNode } from "@lexical/table";
 import { mergeRegister } from "@lexical/utils";
 import {
 	$getNearestRootOrShadowRoot,
@@ -197,6 +198,7 @@ const outlineNodes = (
 
 				y += Math.max(drawnHeightLeft, drawnHeightRight) + LINE_PADDING;
 			}
+		} else if ($isTableNode(node)) {
 		} else if ($isRemarkContainerNode(node)) {
 			const childNodes = node.getChildren();
 			const remarkTitle = childNodes[0];
