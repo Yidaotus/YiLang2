@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import React, { useCallback } from "react";
 
 import type { GetServerSidePropsContext } from "next";
 
@@ -20,6 +21,7 @@ const EditorPage = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
+	const [showScrollTopElement, setShowScrollTopElement] = useState(false);
 
 	const editorBackgroundOpacity = useEditorStore(
 		(state) => state.editorBackgroundOpacity
@@ -44,6 +46,17 @@ const EditorPage = () => {
 
 	const bgOpacity = ((editorBackgroundOpacity + 20) / 100) * 0.05;
 
+	const handleScroll = useCallback(
+		(e: React.UIEvent<HTMLDivElement, UIEvent>) => {
+			if (e.currentTarget.scrollTop > 100 && !showScrollTopElement) {
+				setShowScrollTopElement(true);
+			} else if (e.currentTarget.scrollTop < 100 && showScrollTopElement) {
+				setShowScrollTopElement(false);
+			}
+		},
+		[showScrollTopElement]
+	);
+
 	return (
 		<Box display="flex">
 			<Box
@@ -57,6 +70,7 @@ const EditorPage = () => {
 				overflow="auto"
 				pos="relative"
 				ref={onRootRef}
+				onScroll={handleScroll}
 				sx={{
 					msOverflowStyle: "none",
 					scrollbarWidth: {
@@ -75,36 +89,50 @@ const EditorPage = () => {
 					px={[4, 16]}
 					top="0"
 					zIndex="20"
-					pos={["static", null, "sticky"]}
-					boxShadow="0px 1px 12px rgba(0, 0, 0, 0.05)"
+					pos="sticky"
+					boxShadow={
+						showScrollTopElement
+							? "0 1px 3px 0 rgba(0, 0, 0, 0.1),0 1px 2px 0 rgba(0, 0, 0, 0.06);"
+							: "none"
+					}
 				>
-					<Box display="flex" gap="12px" fontSize="20px" alignItems="center">
-						<IoDocumentOutline
-							color="#696F80"
-							style={{ minWidth: "22px", height: "22px" }}
-						/>
-						<Box
-							as="span"
-							color="#696F80"
-							textOverflow="ellipsis"
-							whiteSpace="nowrap"
-							overflow="hidden"
-						>
-							{documentTitle}
-						</Box>
+					<Box display="flex" gap="12px" alignItems="center" h="22px">
+						{showScrollTopElement && (
+							<>
+								<IoDocumentOutline
+									color="#696F80"
+									style={{ minWidth: "18px", height: "18px" }}
+								/>
+								<Box
+									fontSize="0.9em"
+									fontWeight="semibold"
+									as="span"
+									color="text.500"
+									textOverflow="ellipsis"
+									whiteSpace="nowrap"
+									overflow="hidden"
+								>
+									{documentTitle}
+								</Box>
+							</>
+						)}
 					</Box>
 				</Box>
 				<Box
 					display="grid"
 					alignItems="start"
 					justifyContent="center"
-					gridTemplateColumns={["1fr minmax(400px, 800px) 1fr"]}
-					px={2}
+					gridTemplateColumns={[
+						"1fr minmax(400px, 800px) 1fr",
+						null,
+						null,
+						"1fr minmax(400px, 800px) minmax(200px, 1fr)",
+					]}
+					px={6}
 				>
 					<div />
 					<Box
 						px={[4, 4, 0]}
-						pt="2rem"
 						pb="4rem"
 						fontFamily="'Source Sans 3', 'Noto Sans SC', 'Noto Sans JP'"
 					>
@@ -129,7 +157,7 @@ const EditorPage = () => {
 							w="100px"
 							h="100px"
 							pos="fixed"
-							mt="400px"
+							mt="200px"
 							mr={{
 								base: "0rem",
 							}}

@@ -1,8 +1,21 @@
 import type { Klass, LexicalNode } from "lexical";
+import {
+	$createParagraphNode,
+	$createTextNode,
+	$getNodeByKey,
+	$getSelection,
+	$isDecoratorNode,
+	$isElementNode,
+	$isRangeSelection,
+	$isTextNode,
+	COMMAND_PRIORITY_LOW,
+	KEY_BACKSPACE_COMMAND,
+	KEY_ENTER_COMMAND,
+} from "lexical";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
-import { ListItemNode, ListNode } from "@lexical/list";
-import React, { useState } from "react";
+import { $isListItemNode, ListItemNode, ListNode } from "@lexical/list";
+import React, { useEffect, useState } from "react";
 
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
@@ -17,6 +30,18 @@ import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
+import { $findMatchingParent, mergeRegister } from "@lexical/utils";
+
+import {
+	$createDialogueSpeakerNode,
+	$createDialogueSpeechNode,
+	$isDialogueContainerNode,
+	$isDialogueSpeakerNode,
+	$isDialogueSpeechNode,
+	DialogueContainerNode,
+	DialogueSpeakerNode,
+	DialogueSpeechNode,
+} from "./nodes/Dialogue";
 
 import { ImageNode } from "./nodes/ImageNode";
 import { WordNode } from "./nodes/WordNode";
@@ -48,6 +73,7 @@ import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedB
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
 import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import shallow from "zustand/shallow";
 import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
 import { SplitLayoutContainerNode } from "./nodes/SplitLayout/SplitLayoutContainer";
@@ -61,6 +87,7 @@ import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SaveToDBPlugin from "./plugins/SaveToDBPlugin/SaveToDBPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import TableCellResizerPlugin from "./plugins/TableCellResizer";
+import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
@@ -89,7 +116,283 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	GrammarPointTitleNode,
 	SplitLayoutContainerNode,
 	SplitLayoutColumnNode,
+	DialogueContainerNode,
+	DialogueSpeakerNode,
+	DialogueSpeechNode,
 ];
+
+const DialoguePlugin = () => {
+	const [editor] = useLexicalComposerContext();
+
+	useEffect(() => {
+		return mergeRegister(
+			editor.registerCommand(
+				KEY_ENTER_COMMAND,
+				(e) => {
+					const selection = $getSelection();
+					if (
+						!selection ||
+						!$isRangeSelection(selection) ||
+						!selection.isCollapsed()
+					)
+						return false;
+
+					const speechNode = $findMatchingParent(
+						selection.anchor.getNode(),
+						$isDialogueSpeechNode
+					);
+
+					if (!$isDialogueSpeechNode(speechNode)) return false;
+
+					const newSpeakerNode = $createDialogueSpeakerNode();
+					const newSpechNode = $createDialogueSpeechNode();
+					speechNode.insertAfter(newSpechNode);
+					speechNode.insertAfter(newSpeakerNode);
+					newSpeakerNode.select();
+					e?.preventDefault();
+					return true;
+				},
+				COMMAND_PRIORITY_LOW
+			),
+			editor.registerCommand(
+				KEY_BACKSPACE_COMMAND,
+				(e) => {
+					const selection = $getSelection();
+					if (
+						!selection ||
+						!$isRangeSelection(selection) ||
+						!selection.isCollapsed()
+					)
+						return false;
+
+					const speakerNode = $findMatchingParent(
+						selection.anchor.getNode(),
+						$isDialogueSpeakerNode
+					);
+
+					if (!$isDialogueSpeakerNode(speakerNode)) return false;
+
+					const prevSibling = speakerNode.getPreviousSibling();
+					const nextSibling = speakerNode.getNextSibling();
+					if (prevSibling && speakerNode.getChildrenSize() < 1) {
+						if ($isElementNode(prevSibling)) {
+							prevSibling.selectEnd();
+						}
+						if (
+							!$isDialogueSpeechNode(nextSibling) ||
+							nextSibling.getChildrenSize() < 1
+						) {
+							nextSibling?.remove();
+							speakerNode.remove();
+							e?.preventDefault();
+						}
+						return true;
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
+			),
+			editor.registerCommand(
+				KEY_ENTER_COMMAND,
+				(e) => {
+					const selection = $getSelection();
+					if (
+						!selection ||
+						!$isRangeSelection(selection) ||
+						!selection.isCollapsed()
+					)
+						return false;
+
+					const speakerNode = $findMatchingParent(
+						selection.anchor.getNode(),
+						$isDialogueSpeakerNode
+					);
+
+					if (!$isDialogueSpeakerNode(speakerNode)) return false;
+
+					const sibling = speakerNode.getNextSibling();
+					if (!$isDialogueSpeechNode(sibling)) {
+						const newSpeechNode = $createDialogueSpeechNode().append(
+							$createTextNode("")
+						);
+						speakerNode.insertAfter(newSpeechNode);
+						newSpeechNode.select();
+						e?.preventDefault();
+						return true;
+					} else {
+						const children = speakerNode.getChildren();
+
+						if (children.length > 0) {
+							sibling.selectStart();
+							e?.preventDefault();
+							return true;
+						}
+
+						const parent = speakerNode.getParent();
+						if (!$isDialogueContainerNode(parent)) return false;
+
+						if (parent.getLastChild() === sibling) {
+							const newParagraph = $createParagraphNode();
+							parent.insertAfter(newParagraph);
+							newParagraph.select();
+
+							speakerNode.remove();
+							sibling.remove();
+
+							e?.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
+			),
+			editor.registerMutationListener(DialogueContainerNode, (nodes) => {
+				editor.update(() => {
+					for (const [nodeKey, mutation] of nodes) {
+						if (mutation === "updated") {
+							const node = $getNodeByKey(nodeKey);
+							if (!$isDialogueContainerNode(node)) return false;
+
+							const children = node.getChildren();
+
+							let index = 0;
+							for (const child of children) {
+								const shouldBeSpeech = !!(index % 2);
+								const shouldBeSpeaker = !shouldBeSpeech;
+
+								if (shouldBeSpeaker && !$isDialogueSpeakerNode(child)) {
+									const speakerNode = $createDialogueSpeakerNode();
+
+									let content: Array<LexicalNode>;
+									if ($isElementNode(child)) {
+										content = child.getChildren();
+									} else {
+										content = [$createTextNode(child.getTextContent())];
+									}
+
+									speakerNode.append(...content);
+									child.replace(speakerNode);
+								}
+
+								if (shouldBeSpeech && !$isDialogueSpeechNode(child)) {
+									const speechNode = $createDialogueSpeechNode();
+
+									let content: Array<LexicalNode>;
+									if ($isElementNode(child)) {
+										content = child.getChildren();
+									} else {
+										content = [$createTextNode(child.getTextContent())];
+									}
+
+									speechNode.append(...content);
+									child.replace(speechNode);
+								}
+
+								index++;
+							}
+						}
+					}
+				});
+			}),
+			editor.registerMutationListener(DialogueSpeechNode, (nodes) => {
+				editor.update(() => {
+					for (const [nodeKey, mutation] of nodes) {
+						if (mutation === "updated" || mutation === "created") {
+							const node = $getNodeByKey(nodeKey);
+							if (!$isDialogueSpeechNode(node)) return false;
+
+							const parent = node.getParent();
+							if (!$isDialogueContainerNode(parent)) {
+								node.remove();
+							}
+
+							const children = node.getChildren();
+
+							if (children.length < 0) {
+								const sibling = node.getPreviousSibling();
+								if ($isDialogueSpeakerNode(sibling)) {
+									sibling.selectEnd();
+								} else {
+									node.selectPrevious();
+								}
+								node.remove();
+							}
+
+							for (const child of children) {
+								if ($isTextNode(child)) {
+									continue;
+								}
+
+								if (
+									$isElementNode(child) &&
+									child.isInline() &&
+									!$isListItemNode(child)
+								) {
+									continue;
+								}
+
+								if ($isDecoratorNode(child) && child.isInline()) {
+									continue;
+								}
+
+								const text = child.getTextContent();
+								child.insertAfter($createTextNode(text));
+								child.remove();
+							}
+						}
+					}
+				});
+			}),
+			editor.registerMutationListener(DialogueSpeakerNode, (nodes) => {
+				editor.update(() => {
+					for (const [nodeKey, mutation] of nodes) {
+						if (mutation === "updated" || mutation === "created") {
+							const node = $getNodeByKey(nodeKey);
+							if (!$isDialogueSpeakerNode(node)) return false;
+
+							const parent = node.getParent();
+							if (!$isDialogueContainerNode(parent)) {
+								node.remove();
+							}
+
+							const children = node.getChildren();
+
+							if (children.length < 0) {
+								const sibling = node.getPreviousSibling();
+								if ($isDialogueSpeechNode(sibling)) {
+									sibling.selectEnd();
+								} else {
+									node.selectPrevious();
+								}
+								node.remove();
+							}
+
+							for (const child of children) {
+								if ($isTextNode(child)) {
+									continue;
+								}
+
+								if ($isElementNode(child) && child.isInline()) {
+									continue;
+								}
+
+								if ($isDecoratorNode(child) && child.isInline()) {
+									continue;
+								}
+
+								const text = child.getTextContent();
+								child.replace($createTextNode(text));
+							}
+						}
+					}
+				});
+			})
+		);
+	}, [editor]);
+
+	return null;
+};
 
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will
@@ -222,6 +525,7 @@ export default React.memo(function Editor({
 					<WordPlugin />
 					<ImagesPlugin />
 					<SaveToDBPlugin documentId={documentId} />
+					<DialoguePlugin />
 					<SaveOnBlurPlugin />
 					<SaveImagesPlugin />
 					<PasteImageFromClipboardPlugin />
@@ -259,6 +563,7 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
+					<TreeViewPlugin />
 				</LexicalComposer>
 			</Box>
 		</Box>

@@ -1,3 +1,4 @@
+import type { InputProps } from "@chakra-ui/react";
 import {
 	Box,
 	Input,
@@ -8,6 +9,7 @@ import {
 	PopoverAnchor,
 	PopoverBody,
 	PopoverContent,
+	Spinner,
 } from "@chakra-ui/react";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
@@ -19,6 +21,7 @@ import {
 	IoLanguageOutline,
 	IoSearch,
 } from "react-icons/io5";
+import useDebounce from "./Editor/hooks/useDebounce";
 
 const highlightString = ({
 	input,
@@ -71,13 +74,18 @@ const highlightString = ({
 
 type UniversalSearchInputProps = {
 	width: string;
-};
-const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
+} & InputProps;
+const UniversalSearchInput = ({
+	width,
+	...rest
+}: UniversalSearchInputProps) => {
 	const [hasInputFocus, setHasInputFocus] = useState(false);
 	const [hasBodyFocus, setHasBodyFocus] = useState(false);
 	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
 
-	const [searchString, setSearchString] = useState("");
+	const [searchInput, setSearchInput] = useState("");
+	const searchString = useDebounce(searchInput);
+
 	const foundDocuments = trpc.document.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
 		{ enabled: searchString.length > 0, cacheTime: 1 }
@@ -94,6 +102,12 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 	const foundDocumentsLength = foundDocuments.data?.length || 0;
 	const foundGrammarPointsLength = foundGrammarPoints.data?.length || 0;
 	const foundWordsLength = foundWords.data?.length || 0;
+
+	const isLoading =
+		foundDocuments.isFetching ||
+		foundWords.isFetching ||
+		foundGrammarPoints.isFetching;
+
 	const isOpen =
 		(hasInputFocus || hasBodyFocus) &&
 		foundDocumentsLength + foundGrammarPointsLength + foundWordsLength > 0;
@@ -110,14 +124,19 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 				<PopoverAnchor>
 					<InputGroup w={width}>
 						<Input
-							value={searchString}
+							value={searchInput}
 							placeholder="Search..."
-							onChange={(e) => setSearchString(e.target.value)}
+							onChange={(e) => setSearchInput(e.target.value)}
 							onFocus={() => setHasInputFocus(true)}
 							onBlur={() => setHasInputFocus(false)}
+							{...rest}
 						/>
 						<InputRightElement>
-							<IoSearch />
+							{isLoading ? (
+								<Spinner size="sm" color="brand.500" />
+							) : (
+								<IoSearch />
+							)}
 						</InputRightElement>
 					</InputGroup>
 				</PopoverAnchor>
@@ -140,7 +159,11 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 					>
 						{foundDocuments.data?.map((doc) => (
 							<Box key={doc.id} display="flex" alignItems="center">
-								<Link as={NextLink} href={`/app/editor/${doc.id}`}>
+								<Link
+									as={NextLink}
+									href={`/app/editor/${doc.id}`}
+									fontSize="0.9em"
+								>
 									{highlightString({ input: doc.title, search: searchString })}
 								</Link>
 								<Box ml="auto" pl={2}>
@@ -148,9 +171,27 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 								</Box>
 							</Box>
 						))}
+						{foundGrammarPoints.data?.map((gp) => (
+							<Box key={gp.id} display="flex" alignItems="center">
+								<Link
+									as={NextLink}
+									href={`/app/editor/${gp.sourceDocument.id}`}
+									fontSize="0.9em"
+								>
+									{highlightString({ input: gp.title, search: searchString })}
+								</Link>
+								<Box ml="auto" pl={2}>
+									<IoBookOutline />
+								</Box>
+							</Box>
+						))}
 						{foundWords.data?.map((word) => (
 							<Box key={word.id} display="flex" alignItems="center">
-								<Link as={NextLink} href={`/app/dictionary/${word.id}`}>
+								<Link
+									as={NextLink}
+									href={`/app/dictionary/${word.id}`}
+									fontSize="0.9em"
+								>
 									<Box color="text.500">
 										{highlightString({
 											input: word.word,
@@ -166,19 +207,6 @@ const UniversalSearchInput = ({ width }: UniversalSearchInputProps) => {
 								</Link>
 								<Box ml="auto" pl={2}>
 									<IoLanguageOutline />
-								</Box>
-							</Box>
-						))}
-						{foundGrammarPoints.data?.map((gp) => (
-							<Box key={gp.id} display="flex" alignItems="center">
-								<Link
-									as={NextLink}
-									href={`/app/editor/${gp.sourceDocument.id}`}
-								>
-									{highlightString({ input: gp.title, search: searchString })}
-								</Link>
-								<Box ml="auto" pl={2}>
-									<IoBookOutline />
 								</Box>
 							</Box>
 						))}

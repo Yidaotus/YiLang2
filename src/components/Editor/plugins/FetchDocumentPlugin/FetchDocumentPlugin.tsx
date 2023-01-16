@@ -43,7 +43,7 @@ const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 					alignItems="center"
 					justifyContent="center"
 					pos="fixed"
-					left={[0, null, "60px"]}
+					left="0"
 					top="0"
 					zIndex={50}
 				>

@@ -7,7 +7,9 @@ import type { ReactElement } from "react";
 import {
 	Box,
 	ButtonGroup,
-	Divider,
+	Card,
+	CardBody,
+	CardHeader,
 	IconButton,
 	Input,
 	InputGroup,
@@ -70,7 +72,6 @@ const DataRow = ({ title, value }: DataRowProps) => (
 			alignItems="flex-start"
 			justifyContent="center"
 			flexDir="column"
-			fontSize="1.1em"
 			gap={2}
 		>
 			{value}
@@ -179,7 +180,7 @@ const TranslationsDataRow = ({
 					</Box>
 				}
 				value={
-					<Box display="flex" gap={2} fontSize="0.85em">
+					<Box display="flex" gap={2}>
 						{translations.map((translation) => (
 							<Box
 								key={translation}
@@ -324,7 +325,6 @@ const SpellingDataRow = ({
 							_hover={{
 								bg: "text.200",
 							}}
-							fontSize="1.0rem"
 							onClick={() => setIsEditingSpelling(true)}
 						>
 							<RxPencil1 />
@@ -454,7 +454,6 @@ const TagDataRow = ({
 										alignItems: "center",
 										cursor: "pointer",
 										py: 1,
-										fontSize: "16px",
 										w: "100%",
 										"&:hover": {
 											bg: "#f4f4f4",
@@ -488,7 +487,7 @@ const TagDataRow = ({
 					</Box>
 				}
 				value={
-					<Box display="flex" gap={2} fontSize="0.85em" flexWrap="wrap">
+					<Box display="flex" gap={2} flexWrap="wrap">
 						{tags.map((tag) => (
 							<Box
 								key={tag.id}
@@ -673,116 +672,116 @@ const DictionaryEntryPag = () => {
 	);
 
 	return (
-		<Box display="flex">
-			<Box px={[6, 8, 12]} maxH="100vh" pos="relative" w="100vw">
-				<Box
-					display="flex"
-					justifyContent="flex-start"
-					alignItems="center"
-					gap={5}
-					pos="sticky"
-					top="0"
-					bg="white"
-					pt={4}
-				>
-					<Box pb={4} display="flex" gap={4} alignItems="center" zIndex={50}>
-						<RiTranslate size="3em" color={brand500} />
-						<Text as="h1" fontSize="3em" color="brand.500">
-							Dictionary
-						</Text>
-					</Box>
-				</Box>
-				<Divider w="100%" />
-				<Box
-					display="flex"
-					justifyContent="center"
-					alignItems="center"
-					w="100%"
-					pt={4}
-				>
-					{dbWord.data && (
-						<Box
-							display="flex"
-							gap={[6, null, 3]}
-							flexDir="column"
-							fontSize="1.1rem"
-							w="100%"
-						>
-							<DataRow
-								title={<Box />}
-								value={
-									<Box fontSize="2.5em" color="brand.500">
-										{dbWord.data?.word}
-									</Box>
-								}
-							/>
-							<SpellingDataRow
-								spelling={dbWord.data.spelling}
-								updateSpelling={updateSpelling}
-							/>
-							<TranslationsDataRow
-								translations={dbWord.data.translations}
-								addTranslation={addTranslation}
-								removeTranslation={removeTranslation}
-							/>
-							<TagDataRow
-								languageId={selectedLanguage.id}
-								tags={dbWord.data.tags}
-								linkNewTag={linkNewTag}
-								removeTag={removeTag}
-							/>
-							<DataRow
-								title={
-									<Box display="flex" gap={1} alignItems="center">
-										<RxCalendar />
-										Created at
-									</Box>
-								}
-								value={
-									<Box color="text.400" fontSize="0.9em">
-										{dbWord.data.createdAt.toLocaleDateString()}
-									</Box>
-								}
-							/>
-							<DataRow
-								title={
-									<Box display="flex" gap={1} alignItems="center">
-										<IoDocumentOutline />
-										Source Document
-									</Box>
-								}
-								value={
-									<Link
-										as={NextLink}
-										href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
-									>
-										<Text textDecoration="underline" color="text.400">
-											{dbWord.data.sourceDocument?.title}
-										</Text>
-									</Link>
-								}
-							/>
-							<DataRow
-								title={
-									<Box display="flex" gap={1} alignItems="center">
-										<IoChatbubbleEllipses />
-										Comment
-									</Box>
-								}
-								value={
-									<Textarea
-										color="text.400"
-										maxW="500px"
-										readOnly
-										zIndex={-1}
-										value={dbWord.data.comment || ""}
-									/>
-								}
-							/>
+		<Box
+			px={[6, 8, 25]}
+			pt="12"
+			pb={2}
+			maxH="100vh"
+			overflow="auto"
+			pos="relative"
+			display="flex"
+			w="100%"
+			justifyContent="center"
+			alignItems="center"
+			flexDir="column"
+		>
+			<Card maxW="1000px" w="100%">
+				<CardHeader>
+					<Box display="flex" gap={5} pos="sticky" top="0" bg="white" pt={4}>
+						<Box pb={4} display="flex" gap={4} alignItems="center" zIndex={50}>
+							<RiTranslate size="2em" color={brand500} />
+							<Text as="h1" fontSize="2em" color="brand.500">
+								Dictionary
+							</Text>
 						</Box>
-					)}
-				</Box>
-			</Box>
+					</Box>
+				</CardHeader>
+				<CardBody>
+					<Box
+						display="flex"
+						justifyContent="center"
+						alignItems="center"
+						w="100%"
+						pt={4}
+					>
+						{dbWord.data && (
+							<Box display="flex" gap={[6, null, 3]} flexDir="column" w="100%">
+								<DataRow
+									title={<Box />}
+									value={
+										<Box fontSize="2.0em" color="brand.500">
+											{dbWord.data?.word}
+										</Box>
+									}
+								/>
+								<SpellingDataRow
+									spelling={dbWord.data.spelling}
+									updateSpelling={updateSpelling}
+								/>
+								<TranslationsDataRow
+									translations={dbWord.data.translations}
+									addTranslation={addTranslation}
+									removeTranslation={removeTranslation}
+								/>
+								<TagDataRow
+									languageId={selectedLanguage.id}
+									tags={dbWord.data.tags}
+									linkNewTag={linkNewTag}
+									removeTag={removeTag}
+								/>
+								<DataRow
+									title={
+										<Box display="flex" gap={1} alignItems="center">
+											<RxCalendar />
+											Created at
+										</Box>
+									}
+									value={
+										<Box color="text.400">
+											{dbWord.data.createdAt.toLocaleDateString()}
+										</Box>
+									}
+								/>
+								<DataRow
+									title={
+										<Box display="flex" gap={1} alignItems="center">
+											<IoDocumentOutline />
+											Source Document
+										</Box>
+									}
+									value={
+										<Link
+											as={NextLink}
+											href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
+										>
+											<Text textDecoration="underline" color="text.400">
+												{dbWord.data.sourceDocument?.title}
+											</Text>
+										</Link>
+									}
+								/>
+								<DataRow
+									title={
+										<Box display="flex" gap={1} alignItems="center">
+											<IoChatbubbleEllipses />
+											Comment
+										</Box>
+									}
+									value={
+										<Textarea
+											color="text.400"
+											maxW="500px"
+											readOnly
+											zIndex={-1}
+											value={dbWord.data.comment || ""}
+										/>
+									}
+								/>
+							</Box>
+						)}
+					</Box>
+				</CardBody>
+			</Card>
 		</Box>
 	);
 };

@@ -20,7 +20,9 @@ import {
 	IoHomeOutline,
 	IoLanguageOutline,
 	IoLibraryOutline,
+	IoSearch,
 } from "react-icons/io5";
+import UniversalSearchInput from "./UniversalSearchInput";
 
 type SideBarButtonProps = {
 	sidebarOpen: boolean;
@@ -39,26 +41,36 @@ const SideBarButton = ({
 	onClick,
 }: SideBarButtonProps) => {
 	const [iconInactive, iconActive] = useToken("colors", [
-		"text.300",
-		"brand.500",
+		"text.400",
+		"text.100",
 	]);
+
+	const isActive = activeRoute === routeId;
 
 	return (
 		<Button
-			w="100%"
-			h="48px"
+			h="32px"
+			w={sidebarOpen ? "100%" : "unset"}
+			size="sm"
+			fontWeight="normal"
+			bg={isActive ? "brand.500" : "none"}
+			color={isActive ? "text.100" : "text.500"}
 			justifyContent="flex-start"
 			sx={{
+				"&:hover": {
+					bg: isActive ? "brand.500" : "brand.50",
+					color: isActive ? "text.100" : "text.500",
+				},
 				"& .chakra-button__icon": {
-					marginRight: sidebarOpen ? 4 : 0,
+					marginRight: sidebarOpen ? 3 : 0,
 				},
 			}}
 			leftIcon={
 				<Icon
-					color={activeRoute === routeId ? iconActive : iconInactive}
+					color={isActive ? iconActive : iconInactive}
 					style={{
-						width: "22px",
-						height: "22px",
+						width: "18px",
+						height: "18px",
 					}}
 				/>
 			}
@@ -148,23 +160,6 @@ const Layout = ({ children }: LayoutProps) => {
 					px={sidebarOpen ? 3 : 1}
 					alignItems="center"
 				>
-					<IconButton
-						color={iconInactive}
-						pos="absolute"
-						variant="link"
-						top="20px"
-						right={sidebarOpen ? "10px" : "-40px"}
-						zIndex={50}
-						icon={
-							sidebarOpen ? (
-								<IoChevronBack size={26} />
-							) : (
-								<IoChevronForward size={26} />
-							)
-						}
-						aria-label="Open Sidebar"
-						onClick={() => setSidebarOpen(!sidebarOpen)}
-					/>
 					<Box fontSize="60" fontWeight="600" color="#344966" userSelect="none">
 						{sidebarOpen ? "YiLang" : "Y"}
 					</Box>
@@ -188,14 +183,28 @@ const Layout = ({ children }: LayoutProps) => {
 						{sidebarOpen ? "New Document" : "+"}
 					</Button>
 					<Box h="24px" />
+					{sidebarOpen ? (
+						<UniversalSearchInput width="250px" bg="white" autoFocus />
+					) : (
+						<IconButton
+							aria-label="open search"
+							icon={<IoSearch />}
+							variant="link"
+							onClick={() => setSidebarOpen(true)}
+						/>
+					)}
+					<Box h="24px" />
 					<Box
 						display="flex"
 						flexDir="column"
-						gap="4px"
+						gap="6px"
 						h="100%"
 						w="100%"
 						alignItems={sidebarOpen ? "flex-start" : "center"}
 					>
+						<Text color="text.400" fontSize="0.9em" pl={2} h="24px">
+							{sidebarOpen ? "Editor" : ""}
+						</Text>
 						<SideBarButton
 							text="Home"
 							routeId="app"
@@ -220,10 +229,16 @@ const Layout = ({ children }: LayoutProps) => {
 							onClick={openDictionary}
 							sidebarOpen={sidebarOpen}
 						/>
-						{!!session ? (
-							<>
-								<Box mt="auto" />
-								<Box display="flex" alignItems="center" gap={2} w="100%">
+						<Box mt="auto" />
+						<Box borderTopColor="text.100" borderTopWidth="1px" w="100%" pt={3}>
+							{!!session ? (
+								<Box
+									display="flex"
+									alignItems="center"
+									justifyContent="center"
+									gap={2}
+									w="100%"
+								>
 									<Avatar
 										referrerPolicy="no-referrer"
 										bg="text.100"
@@ -233,19 +248,48 @@ const Layout = ({ children }: LayoutProps) => {
 										onClick={openSettings}
 									/>
 									{sidebarOpen && (
-										<Text fontSize="1.2rem">
-											{session.user?.name || "unknown"}
-										</Text>
+										<Box display="flex" flexDir="column">
+											<Text fontSize="1.0rem" color="text.500">
+												{session.user?.name || "unknown"}
+											</Text>
+											<Text fontSize="0.9rem" color="text.400">
+												{session.user?.email || "unknown"}
+											</Text>
+										</Box>
 									)}
 								</Box>
-							</>
-						) : (
-							<>
-								<Box mt="auto" />
-								Not signed in <br />
-								<button onClick={() => signIn()}>Sign in</button>
-							</>
-						)}
+							) : (
+								<>
+									Not signed in <br />
+									<button onClick={() => signIn()}>Sign in</button>
+								</>
+							)}
+						</Box>
+						<Box
+							borderTopColor="text.100"
+							borderTopWidth="1px"
+							w="100%"
+							mt={2}
+							pt={2}
+						>
+							{sidebarOpen ? (
+								<IconButton
+									w="100%"
+									aria-label="close sidebar"
+									icon={<IoChevronBack />}
+									variant="link"
+									onClick={() => setSidebarOpen(false)}
+								/>
+							) : (
+								<IconButton
+									w="100%"
+									aria-label="open sidebar"
+									icon={<IoChevronForward />}
+									variant="link"
+									onClick={() => setSidebarOpen(true)}
+								/>
+							)}
+						</Box>
 						<Box h="10px" />
 					</Box>
 				</Box>

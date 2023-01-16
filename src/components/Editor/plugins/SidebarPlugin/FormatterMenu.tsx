@@ -42,7 +42,7 @@ const FormatterMenu = () => {
 					)}
 				</Box>
 			</MenuButton>
-			<MenuList>
+			<MenuList fontSize="0.875rem">
 				{Object.entries(blockTypes)
 					.filter(([key]) => key !== editorSelectedBlockType)
 					.map(([key, block]) => (
