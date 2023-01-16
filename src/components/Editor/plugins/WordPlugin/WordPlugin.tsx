@@ -33,9 +33,6 @@ const WordPlugin = () => {
 		}
 
 		return mergeRegister(
-			editor.registerTextContentListener((text) => {
-				console.debug({ text });
-			}),
 			editor.registerCommand(
 				INSERT_WORD,
 				(word) => {

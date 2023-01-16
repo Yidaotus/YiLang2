@@ -1,5 +1,6 @@
 import type { HeadingTagType } from "@lexical/rich-text";
 import type { NodeKey } from "lexical";
+import { COMMAND_PRIORITY_LOW } from "lexical";
 
 import {
 	Box,
@@ -41,7 +42,6 @@ import {
 	$isRangeSelection,
 	$isRootOrShadowRoot,
 	$setSelection,
-	COMMAND_PRIORITY_CRITICAL,
 	FORMAT_ELEMENT_COMMAND,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
@@ -180,7 +180,7 @@ const ToolbarPlugin = ({ documentId }: { documentId?: string }) => {
 					updateToolbar();
 					return false;
 				},
-				COMMAND_PRIORITY_CRITICAL
+				COMMAND_PRIORITY_LOW
 			),
 			editor.registerUpdateListener(({ editorState }) => {
 				editorState.read(() => {

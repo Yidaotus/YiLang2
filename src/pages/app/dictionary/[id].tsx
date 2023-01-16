@@ -573,7 +573,6 @@ const DictionaryEntryPag = () => {
 				const allTags = trpcUtils.dictionary.getAllTags.getData({
 					language: selectedLanguage.id,
 				});
-				console.debug({ allTags });
 				trpcUtils.dictionary.getWord.setData(
 					{
 						...currentWord,

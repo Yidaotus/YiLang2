@@ -1,10 +1,5 @@
 import type { LexicalEditor } from "lexical";
-import {
-	$createTextNode,
-	$getNearestRootOrShadowRoot,
-	$getRoot,
-	$insertNodes,
-} from "lexical";
+import { $getRoot } from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import {
@@ -76,37 +71,32 @@ export const formatGrammarPoint = ({
 		editor.update(() => {
 			const selection = $getSelection();
 			if ($isRangeSelection(selection)) {
-				const anchorNode = selection.anchor.getNode();
-				const focusNode = selection.focus.getNode();
-				if (focusNode !== anchorNode) return false;
+				const anchor = selection.anchor.getNode();
+				if (!anchor) return false;
 
-				const anchorParent = anchorNode.getParent();
-				if (!anchorParent) return false;
+				const topLevelElement = anchor.getTopLevelElement();
+				if (!topLevelElement) return false;
 
-				if (anchorParent === $getNearestRootOrShadowRoot(anchorNode)) {
-					const title = $createGrammarPointTitleNode();
-					const content = $createGrammarPointContentNode().append(
-						$createParagraphNode().append($createTextNode(""))
-					);
-					const container = $createGrammarPointContainerNode().append(
-						title,
-						content
-					);
-					$insertNodes([container]);
-					container.selectStart();
-				} else {
-					const anchorChildren = anchorParent.getChildren();
-					const title = $createGrammarPointTitleNode();
-					const content = $createGrammarPointContentNode().append(
-						$createParagraphNode().append(...anchorChildren)
-					);
-					const container = $createGrammarPointContainerNode().append(
-						title,
-						content
-					);
-					anchorParent.replace(container);
-					container.selectStart();
+				const tempNode = $createParagraphNode();
+				topLevelElement.insertAfter(tempNode);
+
+				const title = $createGrammarPointTitleNode();
+				const content = $createGrammarPointContentNode();
+				const nodes = selection.getNodes();
+				for (const node of nodes) {
+					const topLevelParent = node.getTopLevelElement();
+					if (topLevelParent) {
+						content.append(topLevelParent);
+					}
 				}
+				const container = $createGrammarPointContainerNode().append(
+					title,
+					content
+				);
+
+				tempNode.replace(container);
+				container.select();
+
 				return true;
 			}
 		});

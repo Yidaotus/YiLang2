@@ -1,4 +1,4 @@
-import type { ElementNode, TextNode } from "lexical";
+import type { ElementNode, LexicalNode, TextNode } from "lexical";
 
 import {
 	$createSplitLayoutColumnNode,
@@ -17,7 +17,6 @@ import {
 	$createTextNode,
 	$getSelection,
 	$isDecoratorNode,
-	$isLeafNode,
 	$isRangeSelection,
 	$isTextNode,
 	COMMAND_PRIORITY_LOW,
@@ -165,9 +164,7 @@ const SplitLayoutPlugin = () => {
 				SET_LAYOUT_MODE_SPLIT,
 				() => {
 					const selection = $getSelection();
-					if (!selection) {
-						return true;
-					}
+					if (!selection) return false;
 
 					const splitContainer = $createSplitLayoutContainerNode();
 
@@ -181,32 +178,23 @@ const SplitLayoutPlugin = () => {
 					const nodes = selection.getNodes();
 					const tempContainer = $createParagraphNode();
 
-					let what = false;
-					console.debug({ nodes });
+					let insertTempNode = true;
+					let currentTarget: LexicalNode | null = null;
 					for (const node of nodes) {
-						let elementNode = null;
-						if ($isLeafNode(node)) {
-							const target = node.getTopLevelElement();
-							if (!target) continue;
-							elementNode = target;
-						} else {
-							elementNode = node;
-						}
-						console.debug({ elementNode });
+						const target = node.getTopLevelElement();
+						if (!target || currentTarget === target) continue;
+						currentTarget = target;
 
-						if (!elementNode) return true;
-
-						if ($findMatchingParent(elementNode, $isSplitLayoutContainerNode))
+						if ($findMatchingParent(target, $isSplitLayoutContainerNode))
 							// Double nesting is not allowed!
 							continue;
 
-						if (!what) {
-							elementNode.insertAfter(tempContainer);
-							tempContainer.select();
-							what = true;
+						if (insertTempNode) {
+							target.insertBefore(tempContainer);
+							insertTempNode = true;
 						}
 
-						splitColumnLeft.append(elementNode);
+						splitColumnLeft.append(target);
 					}
 
 					splitColumnRight.append(paragraphNodeRight);

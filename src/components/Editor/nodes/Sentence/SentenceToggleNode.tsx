@@ -18,13 +18,13 @@ import type {
 	SerializedLexicalNode,
 	Spread,
 } from "lexical";
-import { $getNodeByKey, DecoratorNode } from "lexical";
+import { CLICK_COMMAND, COMMAND_PRIORITY_LOW, DecoratorNode } from "lexical";
 
 import { Box } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import React, { useCallback } from "react";
+import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
+import React, { useEffect, useRef } from "react";
 import { IoLanguage } from "react-icons/io5";
-import { $isSentenceNode } from "./SentenceNode";
 
 export type SerializedSentenceToggleNode = Spread<
 	{
@@ -38,16 +38,35 @@ type SentenceToggleComponentProps = {
 };
 const SentenceToggleComponent = ({ nodeKey }: SentenceToggleComponentProps) => {
 	const [editor] = useLexicalComposerContext();
+	const [isSelected, setSelected, clearSelected] =
+		useLexicalNodeSelection(nodeKey);
+	const toggleRef = useRef<HTMLDivElement>(null);
 
-	const showTranslation = useCallback(() => {
-		editor.getEditorState().read(() => {
-			const targetSentenceNode = $getNodeByKey(nodeKey);
-			const parent = targetSentenceNode?.getParent();
-			if (!$isSentenceNode(parent)) return;
+	useEffect(() => {
+		return editor.registerCommand<MouseEvent>(
+			CLICK_COMMAND,
+			(payload: MouseEvent) => {
+				const currentRef = toggleRef.current;
+				if (!currentRef) return false;
 
-			console.debug(parent.getTranslation());
-		});
-	}, [editor, nodeKey]);
+				const event = payload;
+				const target = event.target as HTMLDivElement;
+
+				if (target === currentRef || currentRef.contains(target)) {
+					if (event.shiftKey) {
+						setSelected(!isSelected);
+					} else {
+						clearSelected();
+						setSelected(true);
+					}
+					return true;
+				}
+
+				return false;
+			},
+			COMMAND_PRIORITY_LOW
+		);
+	}, [clearSelected, editor, isSelected, setSelected]);
 
 	return (
 		<Box
@@ -56,10 +75,12 @@ const SentenceToggleComponent = ({ nodeKey }: SentenceToggleComponentProps) => {
 			ml="0.25em"
 			mr="0.25em"
 			borderRightRadius="4px"
-			onClick={showTranslation}
 			display="flex"
 			justifyContent="center"
 			alignItems="center"
+			pos="relative"
+			cursor="pointer"
+			ref={toggleRef}
 		>
 			<IoLanguage width="100%" height="100%" />
 		</Box>

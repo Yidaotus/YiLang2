@@ -2,7 +2,6 @@ import type { Klass, LexicalNode } from "lexical";
 import {
 	$createParagraphNode,
 	$createTextNode,
-	$getAdjacentNode,
 	$getNodeByKey,
 	$getSelection,
 	$isDecoratorNode,
@@ -94,6 +93,7 @@ import PasteImageFromClipboardPlugin from "./plugins/PasteImageFromClipboardPlug
 import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SaveToDBPlugin from "./plugins/SaveToDBPlugin/SaveToDBPlugin";
+import SentencePopupPlugin from "./plugins/SentencePopupPlugin/SentencePopupPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import TableCellResizerPlugin from "./plugins/TableCellResizer";
 import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
@@ -137,31 +137,42 @@ const DialoguePlugin = () => {
 
 	useEffect(() => {
 		return mergeRegister(
-			editor.registerMutationListener(SentenceToggleNode, (updates) => {
-				editor.update(() => {
-					for (const [nodeKey] of updates) {
-						const node = $getNodeByKey(nodeKey);
-						if (!$isSentenceToggleNode(node)) return;
-
-						const parent = node.getParent();
-						if (!parent || !$isSentenceNode(parent)) {
-							node.remove();
-						}
-					}
-				});
+			editor.registerNodeTransform(SentenceToggleNode, (node) => {
+				console.log({ node });
+				return true;
 			}),
 			editor.registerMutationListener(SentenceNode, (updates) => {
 				editor.update(() => {
 					for (const [nodeKey, mutation] of updates) {
 						const node = $getNodeByKey(nodeKey);
-						if (!$isSentenceNode(node)) return;
+						if (!$isSentenceNode(node)) continue;
 
 						// Node should always have a toggle node
 						const lastChild = node.getLastChild();
 						if (mutation === "created" || mutation === "updated") {
-							if (!lastChild || !$isSentenceToggleNode(lastChild)) {
-								const toggle = $createSentenceToggleNode();
-								node.append(toggle);
+							if (!lastChild) {
+								node.append($createSentenceToggleNode());
+								node.append($createTextNode("").setMode("token"));
+							} else {
+								const prevSibling = lastChild.getPreviousSibling();
+								const lastChildSiblingIsToggle =
+									prevSibling &&
+									$isSentenceToggleNode(lastChild.getPreviousSibling());
+
+								if (!lastChildSiblingIsToggle) {
+									const toggle = $createSentenceToggleNode();
+									if (prevSibling) {
+										prevSibling.insertAfter(toggle);
+									} else {
+										node.append(toggle);
+									}
+								}
+
+								const lastChildIsToken =
+									$isTextNode(lastChild) && lastChild.getMode() === "token";
+								if (!lastChildIsToken) {
+									node.append($createTextNode("").setMode("token"));
+								}
 							}
 						}
 
@@ -172,7 +183,7 @@ const DialoguePlugin = () => {
 
 						// Rrevent nesting
 						const parent = node.getParent();
-						if (!parent) return;
+						if (!parent) continue;
 
 						const parentSentence = $findMatchingParent(parent, $isSentenceNode);
 						if (parentSentence) {
@@ -181,26 +192,6 @@ const DialoguePlugin = () => {
 					}
 				});
 			}),
-			editor.registerCommand(
-				KEY_BACKSPACE_COMMAND,
-				() => {
-					const selection = $getSelection();
-					if (!selection || !$isRangeSelection(selection)) return false;
-
-					const adjNode = $getAdjacentNode(selection.anchor, true);
-
-					if ($isSentenceToggleNode(adjNode)) {
-						const sentenceNode = $getNodeByKey(adjNode.getSentenceNodeKey());
-						if (!$isSentenceNode(sentenceNode)) return false;
-
-						sentenceNode.selectEnd();
-						return true;
-					}
-
-					return false;
-				},
-				COMMAND_PRIORITY_LOW
-			),
 			editor.registerCommand(
 				KEY_ENTER_COMMAND,
 				(e) => {
@@ -635,6 +626,7 @@ export default React.memo(function Editor({
 									anchorElem={floatingAnchorElem}
 								/>
 								<WordPopupPlugin anchorElem={floatingAnchorElem} />
+								<SentencePopupPlugin anchorElem={floatingAnchorElem} />
 							</>
 						)}
 					</>

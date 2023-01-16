@@ -16,6 +16,7 @@ import {
 	$createSentenceNode,
 	$isSentenceNode,
 } from "@components/Editor/nodes/Sentence/SentenceNode";
+import { $isSentenceToggleNode } from "@components/Editor/nodes/Sentence/SentenceToggleNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { ReferenceType } from "@floating-ui/react";
@@ -219,9 +220,9 @@ function TextFormatFloatingToolbar({
 		[editor]
 	);
 
-	const debug = useCallback(() => {
+	const insertSentence = useCallback(() => {
 		editor.update(() => {
-			const translation = "Test Translation";
+			const translation = "";
 			const selection = $getSelection();
 
 			if (!$isRangeSelection(selection)) {
@@ -229,16 +230,21 @@ function TextFormatFloatingToolbar({
 			}
 			const nodes = selection.extract();
 
-			// Add or merge LinkNodes
 			if (nodes.length === 1) {
 				const firstNode = nodes[0] as LexicalNode;
-				// if the first node is a LinkNode or if its
-				// parent is a LinkNode, we update the URL, target and rel.
 				const sentenceNode = $isSentenceNode(firstNode)
 					? firstNode
 					: $getAncestor(firstNode, (node) => $isSentenceNode(node));
 				if ($isSentenceNode(sentenceNode)) {
-					sentenceNode.setTranslation(translation);
+					for (const child of sentenceNode.getChildren()) {
+						if (
+							!$isSentenceToggleNode(child) &&
+							!($isTextNode(child) && child.getMode() === "token")
+						) {
+							sentenceNode.insertBefore(child);
+						}
+					}
+					sentenceNode.remove();
 					return;
 				}
 			}
@@ -295,6 +301,9 @@ function TextFormatFloatingToolbar({
 					sentenceNode.append(node);
 				}
 			}
+
+			if (!sentenceNode) return;
+			sentenceNode.select();
 		});
 	}, [editor]);
 
@@ -547,7 +556,7 @@ function TextFormatFloatingToolbar({
 					}
 					aria-label="Bold"
 					variant="ghost"
-					onClick={debug}
+					onClick={insertSentence}
 				/>
 				<Divider
 					orientation="vertical"

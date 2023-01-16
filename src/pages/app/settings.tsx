@@ -108,12 +108,11 @@ const InlineLanguageNameInput = ({
 
 	const handleInlineLanguageNameInputKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
-			console.debug({ id, key: e.key });
 			if (e.key === "Enter") {
 				changeLanguageName();
 			}
 		},
-		[changeLanguageName, id]
+		[changeLanguageName]
 	);
 
 	const showLanguageInlineInput = useCallback(
@@ -505,8 +504,6 @@ const SettingsPage: NextPageWithLayout = () => {
 	);
 
 	const userStats = trpc.user.stats.useQuery();
-
-	console.debug({ userStats });
 
 	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
 	const apiAddLanguage = trpc.dictionary.addLanguage.useMutation({

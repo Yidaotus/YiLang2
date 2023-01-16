@@ -31,7 +31,6 @@ export interface ImagePayload {
 
 function convertImageElement(domNode: Node): null | DOMConversionOutput {
 	if (domNode instanceof HTMLImageElement) {
-		console.debug({ domNode });
 		const { alt: altText, src, height, width } = domNode;
 		const node = $createImageNode({
 			altText,
@@ -147,8 +146,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 		return node;
 	}
 
-	setFormat(newFormat: string) {
-		console.debug(newFormat);
+	setFormat(_newFormat: string) {
+		// console.debug(newFormat);
 	}
 
 	exportDOM(): DOMExportOutput {
