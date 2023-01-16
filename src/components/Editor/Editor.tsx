@@ -1,8 +1,16 @@
 import type { Klass, LexicalNode } from "lexical";
+import {
+	$getAdjacentNode,
+	$getNodeByKey,
+	$getSelection,
+	$isRangeSelection,
+	COMMAND_PRIORITY_LOW,
+	KEY_BACKSPACE_COMMAND,
+} from "lexical";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { ListItemNode, ListNode } from "@lexical/list";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
@@ -17,8 +25,10 @@ import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
+import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 
 import { ImageNode } from "./nodes/ImageNode";
+import { $isSentenceNode, SentenceNode } from "./nodes/Sentence/SentenceNode";
 import { WordNode } from "./nodes/WordNode";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/FloatingToolbarPlugin";
@@ -48,7 +58,13 @@ import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedB
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
 import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import shallow from "zustand/shallow";
+import {
+	$createSentenceToggleNode,
+	$isSentenceToggleNode,
+	SentenceToggleNode,
+} from "./nodes/Sentence/SentenceToggleNode";
 import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
 import { SplitLayoutContainerNode } from "./nodes/SplitLayout/SplitLayoutContainer";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
@@ -61,6 +77,7 @@ import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SaveToDBPlugin from "./plugins/SaveToDBPlugin/SaveToDBPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import TableCellResizerPlugin from "./plugins/TableCellResizer";
+import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
@@ -89,7 +106,84 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	GrammarPointTitleNode,
 	SplitLayoutContainerNode,
 	SplitLayoutColumnNode,
+	SentenceNode,
+	SentenceToggleNode,
 ];
+
+const SentenceToggleNodePlugin = () => {
+	const [editor] = useLexicalComposerContext();
+
+	useEffect(() => {
+		return mergeRegister(
+			editor.registerMutationListener(SentenceToggleNode, (updates) => {
+				editor.update(() => {
+					for (const [nodeKey] of updates) {
+						const node = $getNodeByKey(nodeKey);
+						if (!$isSentenceToggleNode(node)) return;
+
+						const parent = node.getParent();
+						if (!parent || !$isSentenceNode(parent)) {
+							node.remove();
+						}
+					}
+				});
+			}),
+			editor.registerMutationListener(SentenceNode, (updates) => {
+				editor.update(() => {
+					for (const [nodeKey, mutation] of updates) {
+						const node = $getNodeByKey(nodeKey);
+						if (!$isSentenceNode(node)) return;
+
+						// Node should always have a toggle node
+						const lastChild = node.getLastChild();
+						if (mutation === "created" || mutation === "updated") {
+							if (!lastChild || !$isSentenceToggleNode(lastChild)) {
+								const toggle = $createSentenceToggleNode();
+								node.append(toggle);
+							}
+						}
+
+						// Node cannot be empty. Empty is anything less than 2 childs, because of our toggle node
+						if (node.getChildrenSize() < 2) {
+							node.remove();
+						}
+
+						// Rrevent nesting
+						const parent = node.getParent();
+						if (!parent) return;
+
+						const parentSentence = $findMatchingParent(parent, $isSentenceNode);
+						if (parentSentence) {
+							parentSentence.insertAfter(node);
+						}
+					}
+				});
+			}),
+			editor.registerCommand(
+				KEY_BACKSPACE_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!selection || !$isRangeSelection(selection)) return false;
+
+					const adjNode = $getAdjacentNode(selection.anchor, true);
+
+					if ($isSentenceToggleNode(adjNode)) {
+						const sentenceNode = $getNodeByKey(adjNode.getSentenceNodeKey());
+						if (!$isSentenceNode(sentenceNode)) return false;
+
+						sentenceNode.selectEnd();
+						return true;
+					}
+
+					return false;
+				},
+				COMMAND_PRIORITY_LOW
+			)
+		);
+	}, [editor]);
+
+	return null;
+};
 
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will
@@ -259,6 +353,8 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
+					<SentenceToggleNodePlugin />
+					<TreeViewPlugin />
 				</LexicalComposer>
 			</Box>
 		</Box>

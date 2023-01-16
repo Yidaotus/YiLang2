@@ -11,6 +11,11 @@ import {
 	Spinner,
 	useToken,
 } from "@chakra-ui/react";
+import type { SentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
+import {
+	$createSentenceNode,
+	$isSentenceNode,
+} from "@components/Editor/nodes/Sentence/SentenceNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { ReferenceType } from "@floating-ui/react";
@@ -21,7 +26,12 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { mergeRegister } from "@lexical/utils";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
-import type { ElementFormatType, LexicalEditor } from "lexical";
+import type {
+	ElementFormatType,
+	ElementNode,
+	LexicalEditor,
+	LexicalNode,
+} from "lexical";
 import {
 	$getSelection,
 	$isElementNode,
@@ -38,6 +48,7 @@ import { createPortal } from "react-dom";
 import {
 	IoCheckmark,
 	IoChevronDown,
+	IoCompass,
 	IoLanguage,
 	IoSearch,
 } from "react-icons/io5";
@@ -110,6 +121,19 @@ const useWordEditorDispatch = () => {
 
 	return [setSearchWord, findWord.isFetching] as const;
 };
+
+function $getAncestor(
+	node: LexicalNode,
+	predicate: (ancestor: LexicalNode) => boolean
+): null | LexicalNode {
+	let parent: null | LexicalNode = node;
+	while (
+		parent !== null &&
+		(parent = parent.getParent()) !== null &&
+		!predicate(parent)
+	);
+	return parent;
+}
 
 function TextFormatFloatingToolbar({
 	editor,
@@ -194,6 +218,85 @@ function TextFormatFloatingToolbar({
 		},
 		[editor]
 	);
+
+	const debug = useCallback(() => {
+		editor.update(() => {
+			const translation = "Test Translation";
+			const selection = $getSelection();
+
+			if (!$isRangeSelection(selection)) {
+				return;
+			}
+			const nodes = selection.extract();
+
+			// Add or merge LinkNodes
+			if (nodes.length === 1) {
+				const firstNode = nodes[0] as LexicalNode;
+				// if the first node is a LinkNode or if its
+				// parent is a LinkNode, we update the URL, target and rel.
+				const sentenceNode = $isSentenceNode(firstNode)
+					? firstNode
+					: $getAncestor(firstNode, (node) => $isSentenceNode(node));
+				if ($isSentenceNode(sentenceNode)) {
+					sentenceNode.setTranslation(translation);
+					return;
+				}
+			}
+
+			let prevParent: ElementNode | SentenceNode | null = null;
+			let sentenceNode: SentenceNode | null = null;
+
+			for (const node of nodes) {
+				const parent = node.getParent();
+
+				if (
+					parent === sentenceNode ||
+					parent === null ||
+					($isElementNode(node) && !node.isInline())
+				) {
+					continue;
+				}
+
+				if ($isSentenceNode(parent)) {
+					sentenceNode = parent;
+					parent.setTranslation(translation);
+					continue;
+				}
+
+				if (!parent.is(prevParent)) {
+					prevParent = parent;
+					sentenceNode = $createSentenceNode(translation);
+
+					if ($isSentenceNode(parent)) {
+						if (node.getPreviousSibling() === null) {
+							parent.insertBefore(sentenceNode);
+						} else {
+							parent.insertAfter(sentenceNode);
+						}
+					} else {
+						node.insertBefore(sentenceNode);
+					}
+				}
+
+				if ($isSentenceNode(node)) {
+					if (node.is(sentenceNode)) {
+						continue;
+					}
+					if (sentenceNode !== null) {
+						const children = node.getChildren();
+						sentenceNode.append(...children);
+					}
+
+					node.remove();
+					continue;
+				}
+
+				if (sentenceNode !== null) {
+					sentenceNode.append(node);
+				}
+			}
+		});
+	}, [editor]);
 
 	const iconSize = "18px";
 	return (
@@ -431,6 +534,20 @@ function TextFormatFloatingToolbar({
 					aria-label="Bold"
 					variant="ghost"
 					onClick={showWordEditor}
+				/>
+				<IconButton
+					icon={
+						<IoCompass
+							color="#696F80"
+							style={{
+								height: iconSize,
+								width: iconSize,
+							}}
+						/>
+					}
+					aria-label="Bold"
+					variant="ghost"
+					onClick={debug}
 				/>
 				<Divider
 					orientation="vertical"

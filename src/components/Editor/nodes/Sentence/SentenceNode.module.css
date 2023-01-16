@@ -1,0 +1,11 @@
+.SentenceNode {
+	display: inline-flex;
+	border-radius: 5px;
+	border-color: #d9d9d9;
+	margin-left: 0.25em;
+	margin-right: 0.25em;
+	border-width: 1px;
+	padding-left: 0.25em;
+	overflow: hidden;
+	background-color: #f6f6f6;
+}
