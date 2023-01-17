@@ -1,7 +1,7 @@
 import { Box, Spinner } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
-import { $getRoot } from "lexical";
+import { $getRoot, CLEAR_EDITOR_COMMAND } from "lexical";
 import { useEffect, useState } from "react";
 
 const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
@@ -12,6 +12,7 @@ const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 		onSuccess(data) {
 			setShouldFetch(false);
 			if (data) {
+				editor.dispatchCommand(CLEAR_EDITOR_COMMAND, undefined);
 				if (data.serializedDocument) {
 					const savedEditorState = editor.parseEditorState(
 						data.serializedDocument

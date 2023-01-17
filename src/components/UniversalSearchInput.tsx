@@ -37,12 +37,12 @@ const highlightString = ({
 
 	const output: Array<JSX.Element> = [];
 
-	let processedLenght = 0;
+	let processedLength = 0;
 	let matchInput = input;
 
 	for (const match of matches) {
 		if (match && match.index !== undefined) {
-			const subIndex = match.index - processedLenght;
+			const subIndex = match.index - processedLength;
 			const before = matchInput.substring(0, subIndex);
 			output.push(<span>{before}</span>);
 
@@ -59,7 +59,7 @@ const highlightString = ({
 				</Box>
 			);
 
-			processedLenght += before.length + foundSubstring.length;
+			processedLength += before.length + foundSubstring.length;
 
 			const after = matchInput.substring(
 				subIndex + firstMatch.length,
@@ -69,8 +69,8 @@ const highlightString = ({
 		}
 	}
 
-	if (processedLenght < input.length) {
-		output.push(<span>{input.substring(processedLenght, input.length)}</span>);
+	if (processedLength < input.length) {
+		output.push(<span>{input.substring(processedLength, input.length)}</span>);
 	}
 
 	return output;

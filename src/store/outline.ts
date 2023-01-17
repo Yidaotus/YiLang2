@@ -43,6 +43,8 @@ interface OutlineStore {
 		sentence: SentencesRecord[keyof SentencesRecord];
 	}) => void;
 	removeSentence: (nodeKey: string) => void;
+
+	clear: () => void;
 }
 
 const useOutlineStore = create<OutlineStore>()(
@@ -89,6 +91,8 @@ const useOutlineStore = create<OutlineStore>()(
 					delete newState[nodeKey];
 					return { sentences: newState };
 				}),
+
+			clear: () => set(() => ({ words: {}, sentences: {}, grammarPoints: {} })),
 		}),
 		{
 			name: "outline-storage",

@@ -17,6 +17,7 @@ import {
 	$isNodeSelection,
 	$isRangeSelection,
 	BLUR_COMMAND,
+	CLEAR_EDITOR_COMMAND,
 	COMMAND_PRIORITY_NORMAL,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
@@ -88,6 +89,7 @@ const IndexElementsPlugin = () => {
 		removeGrammarPoint,
 		appendWord,
 		removeWord,
+		clearStore,
 	} = useOutlineStore(
 		(store) => ({
 			sentenceStore: store.sentences,
@@ -102,6 +104,7 @@ const IndexElementsPlugin = () => {
 			removeWord: store.removeWord,
 			appendGrammarPoint: store.appendGrammarPoint,
 			removeGrammarPoint: store.removeGrammarPoint,
+			clearStore: store.clear,
 		}),
 		shallow
 	);
@@ -164,6 +167,14 @@ const IndexElementsPlugin = () => {
 
 	useEffect(() => {
 		return mergeRegister(
+			editor.registerCommand(
+				CLEAR_EDITOR_COMMAND,
+				() => {
+					clearStore();
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
 			editor.registerCommand(
 				SELECTION_CHANGE_COMMAND,
 				() => {
@@ -276,6 +287,7 @@ const IndexElementsPlugin = () => {
 		appendWord,
 		checkForGrammarBlur,
 		checkForSentenceBlur,
+		clearStore,
 		editor,
 		grammarPointStore,
 		removeGrammarPoint,
