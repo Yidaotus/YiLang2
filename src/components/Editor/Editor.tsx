@@ -110,13 +110,12 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	DialogueSpeechNode,
 ];
 
-const DialoguePlugin = () => {
+const DebugPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 
 	useLayoutEffect(() => {
-		return editor.registerUpdateListener(
-			({ editorState, dirtyElements, dirtyLeaves, prevEditorState, tags }) => {
-				/*console.log({ prevEditorState });
+		return editor.registerUpdateListener(() => {
+			/*console.log({ prevEditorState });
 				editorState.read(() => {
 					for (const key of dirtyElements.keys()) {
 						const node = $getNodeByKey(key);
@@ -126,8 +125,7 @@ const DialoguePlugin = () => {
 					}
 				});
 			*/
-			}
-		);
+		});
 	}, [editor]);
 };
 

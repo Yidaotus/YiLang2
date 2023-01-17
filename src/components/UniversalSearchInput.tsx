@@ -39,15 +39,19 @@ const highlightString = ({
 
 	let processedLenght = 0;
 	let matchInput = input;
+
 	for (const match of matches) {
-		if (match.index !== undefined) {
+		if (match && match.index !== undefined) {
 			const subIndex = match.index - processedLenght;
 			const before = matchInput.substring(0, subIndex);
 			output.push(<span>{before}</span>);
 
+			const firstMatch = match[0];
+			if (!firstMatch) continue;
+
 			const foundSubstring = matchInput.substring(
 				subIndex,
-				subIndex + match[0].length
+				subIndex + firstMatch.length
 			);
 			output.push(
 				<Box as="span" color={highlightColor}>
@@ -58,7 +62,7 @@ const highlightString = ({
 			processedLenght += before.length + foundSubstring.length;
 
 			const after = matchInput.substring(
-				subIndex + match[0].length,
+				subIndex + firstMatch.length,
 				matchInput.length
 			);
 			matchInput = after;

@@ -17,7 +17,7 @@ export type EditorWord = {
 	word: string;
 	spelling?: string;
 	translations: Array<string>;
-	tags: Array<string>;
+	tags: Array<string | Tag>;
 	comment?: string;
 	documentId?: string;
 };
@@ -39,6 +39,7 @@ import {
 
 import { Box } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import type { Tag } from "@prisma/client";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import React, { useEffect, useRef } from "react";
