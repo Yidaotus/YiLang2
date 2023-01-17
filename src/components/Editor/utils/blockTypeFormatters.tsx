@@ -1,5 +1,4 @@
-import type { LexicalEditor } from "lexical";
-import { $getRoot } from "lexical";
+import type { LexicalEditor, LexicalNode } from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import {
@@ -71,10 +70,15 @@ export const formatGrammarPoint = ({
 		editor.update(() => {
 			const selection = $getSelection();
 			if ($isRangeSelection(selection)) {
-				const anchor = selection.anchor.getNode();
-				if (!anchor) return false;
+				let selectionTarget;
+				if (selection.isBackward()) {
+					selectionTarget = selection.anchor.getNode();
+				} else {
+					selectionTarget = selection.focus.getNode();
+				}
+				if (!selectionTarget) return false;
 
-				const topLevelElement = anchor.getTopLevelElement();
+				const topLevelElement = selectionTarget.getTopLevelElement();
 				if (!topLevelElement) return false;
 
 				const tempNode = $createParagraphNode();
@@ -83,10 +87,12 @@ export const formatGrammarPoint = ({
 				const title = $createGrammarPointTitleNode();
 				const content = $createGrammarPointContentNode();
 				const nodes = selection.getNodes();
+				let previousParent: LexicalNode | null = null;
 				for (const node of nodes) {
 					const topLevelParent = node.getTopLevelElement();
-					if (topLevelParent) {
+					if (topLevelParent && previousParent !== topLevelParent) {
 						content.append(topLevelParent);
+						previousParent = topLevelElement;
 					}
 				}
 				const container = $createGrammarPointContainerNode().append(
@@ -94,8 +100,10 @@ export const formatGrammarPoint = ({
 					content
 				);
 
-				tempNode.replace(container);
+				tempNode.insertAfter(container);
 				container.select();
+
+				tempNode.remove();
 
 				return true;
 			}
@@ -108,22 +116,39 @@ export const formatRemark = ({ editor, currentBlockType }: FormatterParams) => {
 		editor.update(() => {
 			const selection = $getSelection();
 			if ($isRangeSelection(selection)) {
-				const anchorNode = selection.anchor.getNode();
-				const focusNode = selection.focus.getNode();
-				if (focusNode !== anchorNode) return false;
+				let selectionTarget;
+				if (selection.isBackward()) {
+					selectionTarget = selection.anchor.getNode();
+				} else {
+					selectionTarget = selection.focus.getNode();
+				}
+				if (!selectionTarget) return false;
 
-				const anchorParent = anchorNode.getParent();
-				if (!anchorParent || anchorParent === $getRoot()) return false;
+				const topLevelElement = selectionTarget.getTopLevelElement();
+				if (!topLevelElement) return false;
 
-				const anchorChildren = anchorParent.getChildren();
+				const tempNode = $createParagraphNode();
+				topLevelElement.insertAfter(tempNode);
 
 				const title = $createRemarkTitleNode();
-				const content = $createRemarkContentNode().append(
-					$createParagraphNode().append(...anchorChildren)
-				);
+				const content = $createRemarkContentNode();
+				const nodes = selection.getNodes();
+				let previousParent: LexicalNode | null = null;
+				for (const node of nodes) {
+					const topLevelParent = node.getTopLevelElement();
+					if (topLevelParent && previousParent !== topLevelParent) {
+						content.append(topLevelParent);
+						previousParent = topLevelElement;
+					}
+				}
 				const container = $createRemarkContainerNode().append(title, content);
-				anchorParent.replace(container);
-				container.selectStart();
+
+				tempNode.insertAfter(container);
+				container.select();
+
+				tempNode.remove();
+
+				return true;
 			}
 		});
 	}

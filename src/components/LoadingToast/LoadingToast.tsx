@@ -71,7 +71,6 @@ const useLoadingToast = (
 			delayRef.current = Date.now();
 		} else if (toastRef.current) {
 			const delta = Date.now() - delayRef.current;
-			console.debug({ delta });
 			if (delta >= MIN_DELAY) {
 				toast.close(toastRef.current);
 				toastRef.current = null;

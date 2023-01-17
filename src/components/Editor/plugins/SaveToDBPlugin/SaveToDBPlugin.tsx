@@ -1,6 +1,6 @@
 import type { ToastId } from "@chakra-ui/react";
 import type { LexicalNode } from "lexical";
-import { $isLeafNode } from "lexical";
+import { $isElementNode, $isLeafNode } from "lexical";
 
 import { useToast } from "@chakra-ui/react";
 import { $isGrammarPointContainerNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointContainerNode";
@@ -9,16 +9,20 @@ import type SaveableNode from "@components/Editor/nodes/SaveableNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorStore from "@store/store";
+import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@utils/trpc";
 import { $getRoot, COMMAND_PRIORITY_LOW, createCommand } from "lexical";
 import { useCallback, useEffect, useRef } from "react";
 
 export const $getAllNodesOfType = <T extends LexicalNode>(
 	root: LexicalNode,
-	finder: (node: LexicalNode & T) => node is T
+	finder: (node: LexicalNode) => node is LexicalNode & T
 ) => {
 	const foundNodes: Array<T> = [];
-	const rootElements = root.getChildren();
+	let rootElements: Array<LexicalNode> = [];
+	if ($isElementNode(root)) {
+		rootElements = root.getChildren();
+	}
 	for (const node of rootElements) {
 		if (finder(node)) {
 			foundNodes.push(node);
@@ -41,8 +45,9 @@ const previousSaveMap = new Map<string, SaveableNode>();
 const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
 	const showToast = useRef(false);
+	const queryClient = useQueryClient();
 	const toast = useToast();
-	const trcpUtils = trpc.useContext();
+	const trpcUtils = trpc.useContext();
 
 	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
 	const upsertGrammarPoint = trpc.dictionary.upsertGrammarPoint.useMutation();
@@ -94,10 +99,13 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const saveAllNodes = useCallback(async (nodesToSave: Array<SaveableNode>) => {
 		const saveMap = new Map<string, SaveableNode>();
 		for (const nodeToSave of nodesToSave) {
+			nodeToSave.saveToDatabase();
+			/*
 			if (nodeToSave.hasChangesForDatabase) {
 				const databaseId = await nodeToSave.saveToDatabase();
 				saveMap.set(databaseId, nodeToSave);
 			}
+			*/
 		}
 
 		const deleteMap = new Map<string, SaveableNode>();
@@ -125,14 +133,6 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 					}
 				}
 
-				/*
-				const nodesToSave = $getAllNodesOfType(root, isSaveable);
-
-				saveAllNodes(nodesToSave);
-
-				return true;
-*/
-
 				for (const grammarNode of $getAllNodesOfType(
 					root,
 					$isGrammarPointContainerNode
@@ -155,7 +155,7 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 							editor.update(() => {
 								grammarNode.setId(gp.id);
 							});
-							trcpUtils.dictionary.searchGrammarPoints.invalidate();
+							trpcUtils.dictionary.searchGrammarPoints.invalidate();
 						});
 				}
 
@@ -167,7 +167,7 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 						language: selectedLanguage.id,
 					})
 					.then(() => {
-						trcpUtils.document.search.invalidate();
+						trpcUtils.document.search.invalidate();
 					});
 
 				return true;
@@ -178,8 +178,8 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 		documentId,
 		editor,
 		selectedLanguage.id,
-		trcpUtils.dictionary.searchGrammarPoints,
-		trcpUtils.document.search,
+		trpcUtils.dictionary.searchGrammarPoints,
+		trpcUtils.document.search,
 		upsertDocument,
 		upsertGrammarPoint,
 	]);

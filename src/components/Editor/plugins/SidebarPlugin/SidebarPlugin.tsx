@@ -12,6 +12,7 @@ import { IoSaveOutline } from "react-icons/io5";
 import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
 import FormatterMenu from "./FormatterMenu";
 import LayoutMenu from "./LayoutMenu";
+import SentenceList from "./SentenceList";
 import SettingsMenu from "./SettingsMenu";
 import WordList from "./WordList";
 
@@ -87,6 +88,13 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 				gridColumn="span 2"
 			/>
 			<WordList />
+			<Divider
+				borderWidth="2px"
+				borderRadius="3px"
+				mb="0.5rem"
+				gridColumn="span 2"
+			/>
+			<SentenceList />
 			<Divider
 				borderWidth="2px"
 				borderRadius="3px"

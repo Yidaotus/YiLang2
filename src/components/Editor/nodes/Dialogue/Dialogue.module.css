@@ -29,7 +29,6 @@
 	display: flex;
 	align-items: center;
 	position: relative;
-	min-height: 1.8em;
 	margin-right: 2em;
 	padding: 2px;
 	width: 100%;
@@ -39,7 +38,6 @@
 .Dialogue__Speech {
 	display: flex;
 	align-items: center;
-	min-height: 1.8em;
 	border-radius: 3px;
 	margin-bottom: 0.5em;
 	padding-bottom: 2px;

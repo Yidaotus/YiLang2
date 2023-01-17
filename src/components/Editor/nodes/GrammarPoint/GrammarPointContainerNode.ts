@@ -26,6 +26,9 @@ export class GrammarPointContainerNode extends ElementNode {
 		super(key);
 		this.__id = id;
 	}
+	databaseId = null;
+	hasChangesForDatabase = false;
+	shouldDeleteFromDatabaseOnRemove = true;
 
 	static getType(): string {
 		return "grammar-point-container";

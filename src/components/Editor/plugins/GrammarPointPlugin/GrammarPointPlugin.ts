@@ -52,9 +52,6 @@ export default function GrammarPointPlugin(): JSX.Element | null {
 		}
 
 		return mergeRegister(
-			// Structure enforcing transformers for each node type. In case nesting structure is not
-			// "Container > Title + Content" it'll unwrap nodes and convert it back
-			// to regular content.
 			editor.registerNodeTransform(GrammarPointContentNode, (node) => {
 				const parent = node.getParent();
 				if (!$isGrammarPointContainerNode(parent)) {
@@ -90,10 +87,6 @@ export default function GrammarPointPlugin(): JSX.Element | null {
 					parent.insertAfter(node);
 				}
 			}),
-			// This handles the case when container is collapsed and we delete its previous sibling
-			// into it, it would cause collapsed content deleted (since it's display: none, and selection
-			// swallows it when deletes single char). Instead we expand container, which is although
-			// not perfect, but avoids bigger problem
 			editor.registerCommand(
 				DELETE_CHARACTER_COMMAND,
 				() => {
@@ -121,10 +114,6 @@ export default function GrammarPointPlugin(): JSX.Element | null {
 				},
 				COMMAND_PRIORITY_LOW
 			),
-			// When collapsible is the last child pressing down arrow will insert paragraph
-			// below it to allow adding more content. It's similar what $insertBlockNode
-			// (mainly for decorators), except it'll always be possible to continue adding
-			// new content even if trailing paragraph is accidentally deleted
 			editor.registerCommand(
 				KEY_ARROW_DOWN_COMMAND,
 				() => {
@@ -150,7 +139,6 @@ export default function GrammarPointPlugin(): JSX.Element | null {
 				},
 				COMMAND_PRIORITY_LOW
 			),
-			// Handling CMD+Enter to toggle collapsible element collapsed state
 			editor.registerCommand(
 				INSERT_REMARK_COMMAND,
 				(payload) => {

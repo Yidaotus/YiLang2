@@ -10,18 +10,13 @@ import {
 	Text,
 	useToken,
 } from "@chakra-ui/react";
-import { WordNode } from "@components/Editor/nodes/WordNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import useOutlineStore from "@store/outline";
 import useEditorStore from "@store/store";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import {
-	$createNodeSelection,
-	$getNodeByKey,
-	$setSelection,
-	LineBreakNode,
-} from "lexical";
+import { $createNodeSelection, $setSelection, LineBreakNode } from "lexical";
 import router from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IoLanguageOutline } from "react-icons/io5";
@@ -45,6 +40,7 @@ const WordList = () => {
 	const { highlight: targetWord } = router.query;
 	const targetWordId = Array.isArray(targetWord) ? targetWord[0] : targetWord;
 	const previousTargetWordId = useRef<typeof targetWordId>();
+	const words = useOutlineStore((store) => store.words);
 	const { hideAutoFillWords, setHideAutoFillWords } = useEditorStore(
 		(state) => ({
 			hideAutoFillWords: state.editorHideAutoFillWords,
@@ -52,10 +48,6 @@ const WordList = () => {
 		}),
 		shallow
 	);
-	//@TODO Idea pull out wordStore into plugin so other plugins can hook into it by bear
-	const [wordStore, setWordStore] = useState<
-		Record<string, { wordId: string; isAutoFill: boolean }>
-	>({});
 	const buttonRef = useRef(null);
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
@@ -68,50 +60,6 @@ const WordList = () => {
 	useEffect(() => {
 		return editor.registerNodeTransform(LineBreakNode, (node) => {
 			node.remove();
-		});
-	}, [editor]);
-
-	useEffect(() => {
-		/*
-			editor.registerDecoratorListener<any>((decorators) => {
-				setWordStore(
-					Object.entries(decorators)
-						.filter(([key, value]) => value?.props?.word)
-						.map(([key, value]) => ({
-							key,
-							text: value.props.word,
-						}))
-				);
-			})
-			*/
-		// Fixed in 0.6.5 see https://github.com/facebook/lexical/issues/3490
-		return editor.registerMutationListener(WordNode, (mutatedNodes) => {
-			for (const [nodeKey, mutation] of mutatedNodes) {
-				if (mutation === "created") {
-					editor.getEditorState().read(() => {
-						const wordNode = $getNodeByKey(nodeKey) as WordNode;
-
-						const wordId = wordNode.getId();
-						if (!wordId) return;
-
-						const isAutoFill = wordNode.getIsAutoFill();
-
-						setWordStore((currentStore) => ({
-							...currentStore,
-							[nodeKey]: {
-								wordId,
-								isAutoFill,
-							},
-						}));
-					});
-				}
-				if (mutation === "destroyed") {
-					setWordStore((currentStore) => {
-						delete currentStore[nodeKey];
-						return { ...currentStore };
-					});
-				}
-			}
 		});
 	}, [editor]);
 
@@ -138,7 +86,7 @@ const WordList = () => {
 
 	useEffect(() => {
 		if (targetWordId && targetWordId !== previousTargetWordId.current) {
-			const targetInStore = Object.entries(wordStore).find(
+			const targetInStore = Object.entries(words).find(
 				([_, node]) => targetWordId === node.wordId
 			);
 			if (targetInStore) {
@@ -146,7 +94,7 @@ const WordList = () => {
 				previousTargetWordId.current = targetWordId;
 			}
 		}
-	}, [highlightWord, previousTargetWordId, targetWordId, wordStore]);
+	}, [highlightWord, previousTargetWordId, targetWordId, words]);
 
 	return (
 		<>
@@ -156,7 +104,7 @@ const WordList = () => {
 				variant={!!popupReference ? "solid" : "ghost"}
 				aria-label="Appereance"
 				color="text.400"
-				disabled={Object.entries(wordStore).length < 1}
+				disabled={Object.entries(words).length < 1}
 				ref={buttonRef}
 				onClick={() =>
 					setPopupReference(popupReference ? null : buttonRef.current)
@@ -181,7 +129,7 @@ const WordList = () => {
 						overflow="auto"
 						marginBottom="60px"
 					>
-						{Object.entries(wordStore)
+						{Object.entries(words)
 							.filter(([_, word]) => !(hideAutoFillWords && word.isAutoFill))
 							.map(([nodeKey, node]) => (
 								<Word
