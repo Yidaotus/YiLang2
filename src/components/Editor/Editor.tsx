@@ -1,7 +1,6 @@
 import type { Klass, LexicalNode } from "lexical";
 import {
 	$addUpdateTag,
-	$createParagraphNode,
 	$createTextNode,
 	$getNodeByKey,
 	$getSelection,
@@ -17,12 +16,12 @@ import {
 import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { ListItemNode, ListNode } from "@lexical/list";
 
-import { $isListItemNode } from "@lexical/list";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
+import { $isListItemNode } from "@lexical/list";
 import { MarkNode } from "@lexical/mark";
 import { OverflowNode } from "@lexical/overflow";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -243,11 +242,15 @@ const DialoguePlugin = () => {
 
 					if (!$isDialogueSpeechNode(speechNode)) return false;
 
-					const newSpeakerNode = $createDialogueSpeakerNode();
-					const newSpechNode = $createDialogueSpeechNode();
+					const newSpeakerNode = $createDialogueSpeakerNode().append(
+						$createTextNode("").setMode("segmented")
+					);
+					const newSpechNode = $createDialogueSpeechNode().append(
+						$createTextNode("").setMode("segmented")
+					);
 					speechNode.insertAfter(newSpechNode);
 					speechNode.insertAfter(newSpeakerNode);
-					newSpeakerNode.select();
+					newSpeakerNode.selectEnd();
 					e?.preventDefault();
 					return true;
 				},
@@ -312,37 +315,17 @@ const DialoguePlugin = () => {
 					const sibling = speakerNode.getNextSibling();
 					if (!$isDialogueSpeechNode(sibling)) {
 						const newSpeechNode = $createDialogueSpeechNode().append(
-							$createTextNode("")
+							$createTextNode("").setMode("token")
 						);
 						speakerNode.insertAfter(newSpeechNode);
-						newSpeechNode.select();
+						newSpeechNode.selectStart();
 						e?.preventDefault();
 						return true;
 					} else {
-						const children = speakerNode.getChildren();
-
-						if (children.length > 0) {
-							sibling.selectStart();
-							e?.preventDefault();
-							return true;
-						}
-
-						const parent = speakerNode.getParent();
-						if (!$isDialogueContainerNode(parent)) return false;
-
-						if (parent.getLastChild() === sibling) {
-							const newParagraph = $createParagraphNode();
-							parent.insertAfter(newParagraph);
-							newParagraph.select();
-
-							speakerNode.remove();
-							sibling.remove();
-
-							e?.preventDefault();
-							return true;
-						}
+						sibling.selectStart();
+						e?.preventDefault();
+						return true;
 					}
-					return false;
 				},
 				COMMAND_PRIORITY_LOW
 			),

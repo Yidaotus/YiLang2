@@ -9,10 +9,7 @@ import type {
 	SerializedElementNode,
 	Spread,
 } from "lexical";
-import { $createParagraphNode, $isElementNode, ElementNode } from "lexical";
-
-import { $isGrammarPointContainerNode } from "./GrammarPointContainerNode";
-import { $isGrammarPointContentNode } from "./GrammarPointContentNode";
+import { ElementNode } from "lexical";
 
 type SerializedGrammarPointTitleNode = Spread<
 	{
@@ -64,38 +61,6 @@ export class GrammarPointTitleNode extends ElementNode {
 	collapseAtStart(_selection: RangeSelection): boolean {
 		this.getParentOrThrow().insertBefore(this);
 		return true;
-	}
-
-	insertNewAfter(_: RangeSelection, restoreSelection = true): ElementNode {
-		const containerNode = this.getParentOrThrow();
-
-		if (!$isGrammarPointContainerNode(containerNode)) {
-			throw new Error(
-				"CollapsibleTitleNode expects to be child of CollapsibleContainerNode"
-			);
-		}
-
-		if (containerNode.getOpen()) {
-			const contentNode = this.getNextSibling();
-			if (!$isGrammarPointContentNode(contentNode)) {
-				throw new Error(
-					"CollapsibleTitleNode expects to have CollapsibleContentNode sibling"
-				);
-			}
-
-			const firstChild = contentNode.getFirstChild();
-			if ($isElementNode(firstChild)) {
-				return firstChild;
-			} else {
-				const paragraph = $createParagraphNode();
-				contentNode.append(paragraph);
-				return paragraph;
-			}
-		} else {
-			const paragraph = $createParagraphNode();
-			containerNode.insertAfter(paragraph, restoreSelection);
-			return paragraph;
-		}
 	}
 }
 

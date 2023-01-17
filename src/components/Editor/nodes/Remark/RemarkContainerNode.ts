@@ -71,19 +71,6 @@ export class RemarkContainerNode extends ElementNode {
 			version: 1,
 		};
 	}
-
-	setOpen(open: boolean): void {
-		const writable = this.getWritable();
-		writable.__open = open;
-	}
-
-	getOpen(): boolean {
-		return this.__open;
-	}
-
-	toggleOpen(): void {
-		this.setOpen(!this.getOpen());
-	}
 }
 
 export function $createRemarkContainerNode(): RemarkContainerNode {

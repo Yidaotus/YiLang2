@@ -102,7 +102,8 @@ export class SentenceToggleNode extends DecoratorNode<React.ReactElement> {
 
 	createDOM(_config: EditorConfig): HTMLElement {
 		const div = document.createElement("div");
-		div.style.display = "inline-block";
+		div.style.display = "flex";
+		div.style.alignSelf = "center";
 		return div;
 	}
 

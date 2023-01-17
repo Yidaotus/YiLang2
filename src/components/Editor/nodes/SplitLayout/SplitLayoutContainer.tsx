@@ -60,19 +60,6 @@ export class SplitLayoutContainerNode extends ElementNode {
 		};
 	}
 
-	setOpen(open: boolean): void {
-		const writable = this.getWritable();
-		writable.__open = open;
-	}
-
-	getOpen(): boolean {
-		return this.__open;
-	}
-
-	toggleOpen(): void {
-		this.setOpen(!this.getOpen());
-	}
-
 	isInline(): boolean {
 		return false;
 	}

@@ -5,7 +5,7 @@ import {
 	$createDialogueSpeechNode,
 } from "@components/Editor/nodes/Dialogue";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $insertNodes } from "lexical";
+import { $createTextNode, $insertNodes } from "lexical";
 import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { IoSaveOutline } from "react-icons/io5";
@@ -30,12 +30,18 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 		editor.update(() => {
 			const container = $createDialogueContainerNode();
 
-			const speaker1 = $createDialogueSpeakerNode();
-			const speaker2 = $createDialogueSpeakerNode();
-
-			const speech1 = $createDialogueSpeechNode();
-			const speech2 = $createDialogueSpeechNode();
-
+			const speaker1 = $createDialogueSpeakerNode().append(
+				$createTextNode("").setMode("token")
+			);
+			const speaker2 = $createDialogueSpeakerNode().append(
+				$createTextNode("").setMode("token")
+			);
+			const speech1 = $createDialogueSpeechNode().append(
+				$createTextNode("").setMode("token")
+			);
+			const speech2 = $createDialogueSpeechNode().append(
+				$createTextNode("").setMode("token")
+			);
 			container.append(speaker1, speech1, speaker2, speech2);
 
 			$insertNodes([container]);

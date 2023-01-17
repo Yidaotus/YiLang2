@@ -64,6 +64,10 @@ export class DialogueContainerNode extends ElementNode {
 			version: 1,
 		};
 	}
+
+	canBeEmpty(): boolean {
+		return false;
+	}
 }
 
 export function $createDialogueContainerNode(): DialogueContainerNode {

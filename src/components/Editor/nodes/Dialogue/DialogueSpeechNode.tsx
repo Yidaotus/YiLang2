@@ -54,7 +54,7 @@ export class DialogueSpeechNode extends ElementNode {
 	}
 
 	canBeEmpty(): boolean {
-		return true;
+		return false;
 	}
 
 	static importJSON(

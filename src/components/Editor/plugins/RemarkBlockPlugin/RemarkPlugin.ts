@@ -113,11 +113,10 @@ export default function RemarkPlugin(): JSX.Element | null {
 					}
 
 					const container = topLevelElement.getPreviousSibling();
-					if (!$isRemarkContainerNode(container) || container.getOpen()) {
+					if (!$isRemarkContainerNode(container)) {
 						return false;
 					}
 
-					container.setOpen(true);
 					return true;
 				},
 				COMMAND_PRIORITY_LOW

@@ -61,7 +61,7 @@ export class DialogueSpeakerNode extends ElementNode {
 	}
 
 	canBeEmpty(): boolean {
-		return true;
+		return false;
 	}
 
 	exportJSON(): SerializedDialogueSpeakerNode {

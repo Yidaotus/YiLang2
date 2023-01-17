@@ -113,11 +113,10 @@ export default function GrammarPointPlugin(): JSX.Element | null {
 					}
 
 					const container = topLevelElement.getPreviousSibling();
-					if (!$isGrammarPointContainerNode(container) || container.getOpen()) {
+					if (!$isGrammarPointContainerNode(container)) {
 						return false;
 					}
 
-					container.setOpen(true);
 					return true;
 				},
 				COMMAND_PRIORITY_LOW
