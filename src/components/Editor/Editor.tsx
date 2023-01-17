@@ -1,5 +1,6 @@
 import type { Klass, LexicalNode } from "lexical";
 import {
+	$addUpdateTag,
 	$createParagraphNode,
 	$createTextNode,
 	$getNodeByKey,
@@ -17,7 +18,7 @@ import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { ListItemNode, ListNode } from "@lexical/list";
 
 import { $isListItemNode } from "@lexical/list";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HashtagNode } from "@lexical/hashtag";
@@ -135,14 +136,28 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 const DialoguePlugin = () => {
 	const [editor] = useLexicalComposerContext();
 
+	useLayoutEffect(() => {
+		return editor.registerUpdateListener(
+			({ editorState, dirtyElements, dirtyLeaves, prevEditorState, tags }) => {
+				/*console.log({ prevEditorState });
+				editorState.read(() => {
+					for (const key of dirtyElements.keys()) {
+						const node = $getNodeByKey(key);
+						if (node && isSaveable(node)) {
+							node.saveToDatabase();
+						}
+					}
+				});
+			*/
+			}
+		);
+	}, [editor]);
+
 	useEffect(() => {
 		return mergeRegister(
-			editor.registerNodeTransform(SentenceToggleNode, (node) => {
-				console.log({ node });
-				return true;
-			}),
 			editor.registerMutationListener(SentenceNode, (updates) => {
 				editor.update(() => {
+					$addUpdateTag("history-merge");
 					for (const [nodeKey, mutation] of updates) {
 						const node = $getNodeByKey(nodeKey);
 						if (!$isSentenceNode(node)) continue;
@@ -172,6 +187,24 @@ const DialoguePlugin = () => {
 									$isTextNode(lastChild) && lastChild.getMode() === "token";
 								if (!lastChildIsToken) {
 									node.append($createTextNode("").setMode("token"));
+								}
+							}
+
+							const shouldBeToken = node.getLastChild();
+							if (!shouldBeToken) continue;
+							const shouldBeToggle = shouldBeToken.getPreviousSibling();
+
+							for (const child of node.getChildren()) {
+								if (
+									$isTextNode(child) &&
+									child.getMode() === "token" &&
+									child !== shouldBeToken
+								) {
+									child.remove();
+								}
+
+								if ($isSentenceToggleNode(child) && child !== shouldBeToggle) {
+									child.remove();
 								}
 							}
 						}
@@ -513,7 +546,7 @@ export default React.memo(function Editor({
 	const fontSize = ((editorFontSize + 20) / 100) * 8 + 14;
 	let lineHeight = ((editorLineHeight + 20) / 100) * 1 + 1.0;
 	if (editorShowSpelling) {
-		lineHeight += 0.9;
+		lineHeight += 0.0;
 	}
 
 	const isSemiReadOnly = useBreakpointValue(

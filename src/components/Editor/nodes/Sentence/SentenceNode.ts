@@ -58,6 +58,9 @@ export class SentenceNode extends ElementNode {
 		super(key);
 		this.__translation = translation || "";
 	}
+	save(): void {
+		throw new Error("Method not implemented.");
+	}
 
 	createDOM(_config: EditorConfig): HTMLElement {
 		const element = document.createElement("div");

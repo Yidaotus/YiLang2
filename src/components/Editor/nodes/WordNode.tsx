@@ -68,7 +68,7 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 		{ id: id || "" },
 		{ enabled: !!id }
 	);
-	const wordRef = useRef(null);
+	const wordRef = useRef<HTMLDivElement>(null);
 	const [isSelected, setSelected, clearSelected] =
 		useLexicalNodeSelection(nodeKey);
 
@@ -95,7 +95,12 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 			(payload: MouseEvent) => {
 				const event = payload;
 
-				if (event.target === wordRef.current) {
+				const currentWordRef = wordRef.current;
+				if (
+					currentWordRef &&
+					(event.target === currentWordRef ||
+						currentWordRef.contains(event.target as HTMLElement))
+				) {
 					if (event.shiftKey) {
 						setSelected(!isSelected);
 					} else {
@@ -156,24 +161,21 @@ const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
 							},
 						}}
 					>
-						{dbWord.data.word}
+						<>
+							{editorShowSpelling && !!dbWord.data.spelling && (
+								<span>
+									<ruby>
+										{dbWord.data.word} <rp>(</rp>
+										<rt>{dbWord.data.spelling}</rt>
+										<rp>)</rp>
+									</ruby>
+								</span>
+							)}
+							{(!editorShowSpelling || !dbWord.data.spelling) && (
+								<span>{dbWord.data.word}</span>
+							)}
+						</>
 					</Box>
-					{editorShowSpelling && !!dbWord.data.spelling && (
-						<Box
-							pos="absolute"
-							top="-1.5em"
-							fontSize="0.7em"
-							userSelect="none"
-							width="100%"
-							display="flex"
-							justifyContent="center"
-							overflow="visible"
-							whiteSpace="nowrap"
-							pointerEvents="none"
-						>
-							{dbWord.data.spelling}
-						</Box>
-					)}
 				</Box>
 			)}
 		</>

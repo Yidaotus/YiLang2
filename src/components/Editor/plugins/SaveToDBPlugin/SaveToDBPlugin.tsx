@@ -1,49 +1,31 @@
 import type { ToastId } from "@chakra-ui/react";
-import type { LexicalNode, RootNode } from "lexical";
+import type { LexicalNode } from "lexical";
+import { $isLeafNode } from "lexical";
 
 import { useToast } from "@chakra-ui/react";
 import { $isGrammarPointContainerNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointContainerNode";
 import { $isGrammarPointTitleNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointTitleNode";
-import { $isSplitLayoutColumnNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutColumn";
-import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
+import type SaveableNode from "@components/Editor/nodes/SaveableNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
-import {
-	$getRoot,
-	$isRootOrShadowRoot,
-	COMMAND_PRIORITY_LOW,
-	createCommand,
-} from "lexical";
-import { useEffect, useRef } from "react";
+import { $getRoot, COMMAND_PRIORITY_LOW, createCommand } from "lexical";
+import { useCallback, useEffect, useRef } from "react";
 
-const $getAllNodesOfType = <T extends LexicalNode>(
+export const $getAllNodesOfType = <T extends LexicalNode>(
 	root: LexicalNode,
-	finder: (node: LexicalNode) => node is T
+	finder: (node: LexicalNode & T) => node is T
 ) => {
 	const foundNodes: Array<T> = [];
 	const rootElements = root.getChildren();
 	for (const node of rootElements) {
-		if ($isRootOrShadowRoot(node)) {
-			const subNodes = $getAllNodesOfType(node as RootNode, finder);
-			foundNodes.push(...subNodes);
-		}
-		if ($isSplitLayoutContainerNode(node)) {
-			const children = node.getChildren();
-			const leftColumn = children[0];
-			const rightColumn = children[1];
-			if (
-				$isSplitLayoutColumnNode(leftColumn) &&
-				$isSplitLayoutColumnNode(rightColumn)
-			) {
-				const subNodesLeft = $getAllNodesOfType(leftColumn, finder);
-				const subNodesRight = $getAllNodesOfType(rightColumn, finder);
-				foundNodes.push(...subNodesLeft, ...subNodesRight);
-			}
-		}
 		if (finder(node)) {
 			foundNodes.push(node);
+		}
+		if (!$isLeafNode(node)) {
+			const subNodes = $getAllNodesOfType(node, finder);
+			foundNodes.push(...subNodes);
 		}
 	}
 	return foundNodes;
@@ -54,11 +36,14 @@ export const SAVE_EDITOR = createCommand<{ shouldShowToast: boolean }>(
 );
 const DELAY = 1000;
 
+const previousSaveMap = new Map<string, SaveableNode>();
+
 const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
 	const showToast = useRef(false);
 	const toast = useToast();
 	const trcpUtils = trpc.useContext();
+
 	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
 	const upsertGrammarPoint = trpc.dictionary.upsertGrammarPoint.useMutation();
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
@@ -105,6 +90,24 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 			}
 		},
 	});
+
+	const saveAllNodes = useCallback(async (nodesToSave: Array<SaveableNode>) => {
+		const saveMap = new Map<string, SaveableNode>();
+		for (const nodeToSave of nodesToSave) {
+			if (nodeToSave.hasChangesForDatabase) {
+				const databaseId = await nodeToSave.saveToDatabase();
+				saveMap.set(databaseId, nodeToSave);
+			}
+		}
+
+		const deleteMap = new Map<string, SaveableNode>();
+		for (const [key, value] of previousSaveMap.entries()) {
+			if (!saveMap.get(key)) {
+				deleteMap.set(key, value);
+			}
+		}
+	}, []);
+
 	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 
 	useEffect(() => {
@@ -122,12 +125,18 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 					}
 				}
 
-				const grammarPointNodes = $getAllNodesOfType(
+				/*
+				const nodesToSave = $getAllNodesOfType(root, isSaveable);
+
+				saveAllNodes(nodesToSave);
+
+				return true;
+*/
+
+				for (const grammarNode of $getAllNodesOfType(
 					root,
 					$isGrammarPointContainerNode
-				);
-
-				for (const grammarNode of grammarPointNodes) {
+				)) {
 					const titleNode = grammarNode.getChildren()[0];
 					if (!$isGrammarPointTitleNode(titleNode)) {
 						continue;

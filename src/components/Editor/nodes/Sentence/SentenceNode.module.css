@@ -6,6 +6,6 @@
 	margin-right: 0.25em;
 	border-width: 1px;
 	padding-left: 0.25em;
-	overflow: hidden;
 	background-color: #f6f6f6;
+	align-items: flex-end;
 }
