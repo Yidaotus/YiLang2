@@ -13,7 +13,7 @@ export type EditorTag = {
 };
 
 export type EditorWord = {
-	id?: string;
+	databaseId: string | null;
 	word: string;
 	spelling?: string;
 	translations: Array<string>;
@@ -49,7 +49,7 @@ export type SerializedWordNode = Spread<
 		word: string;
 		translations: Array<string>;
 		isAutoFill: boolean;
-		id?: string;
+		databaseId: string | null;
 		type: "word";
 	},
 	SerializedLexicalNode
@@ -58,14 +58,18 @@ export type SerializedWordNode = Spread<
 type WordComponentProps = {
 	word: string;
 	nodeKey: NodeKey;
-	id?: string;
+	databaseId: string | null;
 };
-const WordComponent = ({ nodeKey, id, word }: WordComponentProps) => {
+const WordComponent = ({
+	nodeKey,
+	databaseId: id,
+	word,
+}: WordComponentProps) => {
 	const editorShowSpelling = useEditorStore(
 		(state) => state.editorShowSpelling
 	);
 	const [editor] = useLexicalComposerContext();
-	const dbWord = trpc.dictionary.getWord.useQuery(
+	const dbWord = trpc.dictionary.word.get.useQuery(
 		{ id: id || "" },
 		{ enabled: !!id }
 	);
@@ -187,7 +191,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 	__word: string;
 	__translations: Array<string>;
 	__isAutoFill: boolean;
-	__id?: string;
+	__databaseId: string | null;
 
 	static getType(): string {
 		return "word";
@@ -197,7 +201,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return new WordNode(
 			node.__translations,
 			node.__word,
-			node.__id,
+			node.__databaseId,
 			node.__key,
 			node.__isAutoFill
 		);
@@ -206,14 +210,14 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 	constructor(
 		translations: Array<string>,
 		word: string,
-		id?: string,
+		databaseId: string | null,
 		key?: NodeKey,
 		isAutoFill?: boolean
 	) {
 		super(key);
 		this.__translations = translations;
 		this.__word = word;
-		this.__id = id;
+		this.__databaseId = databaseId;
 		this.__isAutoFill = isAutoFill || false;
 	}
 
@@ -236,13 +240,13 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return self.__isAutoFill;
 	}
 
-	setId(id: string) {
+	setDatabaseId(id: string) {
 		const self = this.getWritable();
-		self.__id = id;
+		self.__databaseId = id;
 	}
-	getId(): string | undefined {
+	getDatabaseId(): string | null {
 		const self = this.getLatest();
-		return self.__id;
+		return self.__databaseId;
 	}
 
 	setTranslation(translations: Array<string>) {
@@ -267,7 +271,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		return {
 			word: this.getWord(),
 			translations: this.getTranslations(),
-			id: this.getId(),
+			databaseId: this.getDatabaseId(),
 			isAutoFill: this.getIsAutoFill(),
 			type: "word",
 			version: 1,
@@ -278,7 +282,7 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 		const node = $createWordNode(
 			serializedNode.translations,
 			serializedNode.word,
-			serializedNode.id,
+			serializedNode.databaseId,
 			serializedNode.isAutoFill
 		);
 		return node;
@@ -286,7 +290,11 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 
 	decorate(): JSX.Element {
 		return (
-			<WordComponent nodeKey={this.__key} id={this.__id} word={this.__word} />
+			<WordComponent
+				nodeKey={this.__key}
+				databaseId={this.__databaseId}
+				word={this.__word}
+			/>
 		);
 	}
 
@@ -297,6 +305,11 @@ export class WordNode extends DecoratorNode<React.ReactElement> {
 
 	isInline(): boolean {
 		return true;
+	}
+
+	getTextContent(): string {
+		const self = this.getLatest();
+		return self.__word;
 	}
 }
 
@@ -309,8 +322,8 @@ export function $isWordNode(
 export function $createWordNode(
 	translations: Array<string>,
 	word: string,
-	id?: string,
+	databaseId: string | null,
 	isAutoFill?: boolean
 ): WordNode {
-	return new WordNode(translations, word, id, undefined, isAutoFill);
+	return new WordNode(translations, word, databaseId, undefined, isAutoFill);
 }

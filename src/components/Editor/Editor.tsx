@@ -262,7 +262,7 @@ export default React.memo(function Editor({
 					<SaveToDBPlugin documentId={documentId} />
 					<SentencePlugin />
 					<SaveOnBlurPlugin />
-					<IndexElementsPlugin />
+					<IndexElementsPlugin documentId={documentId} />
 					<SaveImagesPlugin />
 					<PasteImageFromClipboardPlugin />
 					<SelectedBlockTypePlugin

@@ -1,3 +1,4 @@
+import { $isGrammarPointContainerNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointContainerNode";
 import {
 	$isGrammarPointTitleNode,
 	GrammarPointTitleNode,
@@ -6,7 +7,7 @@ import {
 	$isSentenceNode,
 	SentenceNode,
 } from "@components/Editor/nodes/Sentence/SentenceNode";
-import { WordNode } from "@components/Editor/nodes/WordNode";
+import { $isWordNode, WordNode } from "@components/Editor/nodes/WordNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import {
@@ -16,6 +17,9 @@ import {
 	useOutlineServerState,
 	useOutlineWords,
 } from "@store/outline";
+import useEditorStore from "@store/store";
+import { trpc } from "@utils/trpc";
+import { filterNullish } from "@utils/utils";
 import type { LexicalNode } from "lexical";
 import {
 	$getNodeByKey,
@@ -29,7 +33,10 @@ import {
 } from "lexical";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { DOCUMENT_LOADED_COMMAND } from "../FetchDocumentPlugin/FetchDocumentPlugin";
-import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
+import {
+	$getAllNodesOfType,
+	SAVE_EDITOR,
+} from "../SaveToDBPlugin/SaveToDBPlugin";
 
 const checkForBlurredElement =
 	<T extends LexicalNode>({
@@ -84,7 +91,11 @@ const checkForBlurredElement =
 		previousFoundNodeKey = foundElement?.getKey() || null;
 	};
 
-const IndexElementsPlugin = () => {
+type IndexElementsPluginProps = {
+	documentId: string;
+};
+
+const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 	const [editor] = useLexicalComposerContext();
 	const {
 		appendGrammarPoint,
@@ -101,10 +112,85 @@ const IndexElementsPlugin = () => {
 	const wordStore = useOutlineWords();
 	const grammarPointStore = useOutlineGrammarPoints();
 	const serverState = useOutlineServerState();
+	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
+
+	const upsertSentence = trpc.dictionary.sentence.upsert.useMutation();
+	const deleteSentences = trpc.dictionary.sentence.deleteMany.useMutation();
+
+	const upsertGrammarPoint = trpc.dictionary.grammarPoint.upsert.useMutation();
+	const deleteGrammarPoints =
+		trpc.dictionary.grammarPoint.deleteMany.useMutation();
 
 	//const blurFoundWordKey = useRef<string | null>(null);
 	const blurFoundGrammarPointKey = useRef<string | null>(null);
 	const blurFoundSentenceKey = useRef<string | null>(null);
+
+	const generateSentenceMutation = useCallback(
+		(node: SentenceNode) => {
+			const nodeKey = node.getKey();
+			const textContent = node.getTextContent();
+			const translation = node.getTranslation();
+			const databaseId = node.getDatabaseId();
+
+			const containingWords = $getAllNodesOfType(node, $isWordNode);
+
+			const newSentence = {
+				sentence: textContent,
+				translation: translation,
+				containingWords: containingWords
+					.map((word) => word.getDatabaseId())
+					.filter(filterNullish),
+				databaseId,
+			};
+
+			const previousNode = sentenceStore[nodeKey];
+			const sameWords =
+				previousNode?.containingWords.length ===
+					newSentence.containingWords.length &&
+				previousNode.containingWords.every((value) => {
+					return newSentence.containingWords.indexOf(value) > -1;
+				});
+
+			if (
+				previousNode &&
+				newSentence.sentence === previousNode.sentence &&
+				newSentence.databaseId === previousNode.databaseId &&
+				newSentence.translation === previousNode.translation &&
+				sameWords
+			) {
+				return;
+			}
+			appendSentence({
+				key: nodeKey,
+				sentence: newSentence,
+			});
+		},
+		[appendSentence, sentenceStore]
+	);
+
+	const generateGrammarPointMutation = useCallback(
+		(node: GrammarPointTitleNode) => {
+			const container = node.getParent();
+			if (!$isGrammarPointContainerNode(container)) return;
+
+			const nodeKey = node.getKey();
+			const title = node.getTextContent();
+			const databaseId = container.getDatabaseId();
+
+			const previousNode = grammarPointStore[nodeKey];
+			if (previousNode && previousNode.title === title) {
+				return;
+			}
+			appendGrammarPoint({
+				key: nodeKey,
+				grammarPoint: {
+					title,
+					databaseId,
+				},
+			});
+		},
+		[appendGrammarPoint, grammarPointStore]
+	);
 
 	const checkForSentenceBlur = useMemo(
 		() =>
@@ -112,25 +198,9 @@ const IndexElementsPlugin = () => {
 				isBlur: false,
 				findFn: $isSentenceNode,
 				previousFoundNodeKey: blurFoundSentenceKey.current,
-				onBlur: (node) => {
-					const nodeKey = node.getKey();
-					const textContent = node.getTextContent();
-					const translation = node.getTranslation();
-
-					const previousNode = sentenceStore[nodeKey];
-					if (previousNode && previousNode.sentence === textContent) {
-						return;
-					}
-					appendSentence({
-						key: nodeKey,
-						sentence: {
-							sentence: textContent,
-							translation: translation,
-						},
-					});
-				},
+				onBlur: generateSentenceMutation,
 			}),
-		[appendSentence, sentenceStore]
+		[generateSentenceMutation]
 	);
 
 	const checkForGrammarBlur = useMemo(
@@ -139,53 +209,97 @@ const IndexElementsPlugin = () => {
 				isBlur: false,
 				findFn: $isGrammarPointTitleNode,
 				previousFoundNodeKey: blurFoundGrammarPointKey.current,
-				onBlur: (node) => {
-					const nodeKey = node.getKey();
-					const title = node.getTextContent();
-
-					const previousNode = grammarPointStore[nodeKey];
-					if (previousNode && previousNode.title === title) {
-						return;
-					}
-					appendGrammarPoint({
-						key: nodeKey,
-						grammarPoint: {
-							title: title,
-						},
-					});
-				},
+				onBlur: generateGrammarPointMutation,
 			}),
-		[appendGrammarPoint, grammarPointStore]
+		[generateGrammarPointMutation]
 	);
 
-	const reconcileServerState = useCallback(() => {
-		const { sentences: serverSentences } = serverState;
-		for (const [nodeKey, sentence] of Object.entries(sentenceStore)) {
-			const serverSentence = serverSentences[nodeKey];
-			if (serverSentence) {
-				const sentenceDifference =
-					sentence.sentence !== serverSentence.sentence;
-				const translationDifference =
-					sentence.translation !== serverSentence.translation;
+	const reconcileServerState = useCallback(async () => {
+		const grammarPointsToUpsert = Object.entries(grammarPointStore).filter(
+			([, grammarPoint]) => !grammarPoint.isDeleted && grammarPoint.isDirty
+		);
+		const grammarPointsToDelete = Object.entries(grammarPointStore).filter(
+			([, grammarPoint]) => grammarPoint.isDeleted
+		);
 
-				const isDirty = sentenceDifference || translationDifference;
-				if (isDirty) {
-					// upsert
-				}
+		for (const [nodeKey, grammarPoint] of grammarPointsToUpsert) {
+			const res = await upsertGrammarPoint.mutateAsync({
+				id: grammarPoint.databaseId,
+				title: grammarPoint.title,
+				sourceDocumentId: documentId,
+			});
+			editor.update(() => {
+				const node = $getNodeByKey(nodeKey);
+				if (!$isGrammarPointTitleNode(node)) return;
 
-				delete serverSentences[nodeKey];
-			}
+				const container = node.getParent();
+				if (!$isGrammarPointContainerNode(container)) return;
+
+				container.setDatabaseId(res.id);
+			});
+			// @TODO This should automatically happen in mutationListener!!!
+			appendGrammarPoint({
+				key: nodeKey,
+				grammarPoint: { ...grammarPoint, databaseId: res.id },
+			});
 		}
 
-		for (const [nodeKey, sentence] of Object.entries(serverSentences)) {
-			const shouldDelete = true;
-			if (shouldDelete) {
-				// delete
-			}
+		const gpIdsToDelete = grammarPointsToDelete
+			.map(([, gp]) => gp.databaseId)
+			.filter(filterNullish);
+		if (gpIdsToDelete && gpIdsToDelete.length > 0) {
+			await deleteGrammarPoints.mutateAsync({
+				ids: gpIdsToDelete,
+			});
+		}
+
+		const sentencesToUpsert = Object.entries(sentenceStore).filter(
+			([, sentence]) => !sentence.isDeleted && sentence.isDirty
+		);
+		const sentencesToDelete = Object.entries(sentenceStore).filter(
+			([, sentence]) => sentence.isDeleted
+		);
+
+		for (const [nodeKey, sentence] of sentencesToUpsert) {
+			const res = await upsertSentence.mutateAsync({
+				id: sentence.databaseId,
+				sentence: sentence.sentence,
+				translation: sentence.translation,
+				containingWords: sentence.containingWords,
+				languageId: selectedLanguage.id,
+				sourceDocumentId: documentId,
+			});
+			editor.update(() => {
+				const node = $getNodeByKey(nodeKey);
+				if (!$isSentenceNode(node)) return;
+
+				node.setDatabaseId(res.id);
+			});
+		}
+
+		const sentenceIdsToDelete = sentencesToDelete
+			.map(([, sentence]) => sentence.databaseId)
+			.filter(filterNullish);
+		if (sentenceIdsToDelete && sentenceIdsToDelete.length > 0) {
+			await deleteSentences.mutateAsync({
+				ids: sentenceIdsToDelete,
+			});
 		}
 
 		markServerState();
-	}, [markServerState, sentenceStore, serverState]);
+	}, [
+		grammarPointStore,
+		sentenceStore,
+		markServerState,
+		upsertGrammarPoint,
+		documentId,
+		editor,
+		appendGrammarPoint,
+		deleteGrammarPoints,
+		upsertSentence,
+		selectedLanguage.id,
+		deleteSentences,
+	]);
 
 	useEffect(() => {
 		return mergeRegister(
@@ -243,7 +357,7 @@ const IndexElementsPlugin = () => {
 						editor.getEditorState().read(() => {
 							const wordNode = $getNodeByKey(nodeKey) as WordNode;
 
-							const wordId = wordNode.getId();
+							const wordId = wordNode.getDatabaseId();
 							if (!wordId) return;
 
 							const isAutoFill = wordNode.getIsAutoFill();
@@ -251,7 +365,7 @@ const IndexElementsPlugin = () => {
 							appendWord({
 								key: nodeKey,
 								word: {
-									wordId,
+									databaseId: wordId,
 									isAutoFill,
 								},
 							});
@@ -268,19 +382,7 @@ const IndexElementsPlugin = () => {
 						editor.getEditorState().read(() => {
 							const grammarPointTitleNode = $getNodeByKey(nodeKey);
 							if (!$isGrammarPointTitleNode(grammarPointTitleNode)) return;
-
-							const title = grammarPointTitleNode.getTextContent();
-
-							const previousNode = grammarPointStore[nodeKey];
-							if (previousNode && previousNode.title === title) {
-								return;
-							}
-							appendGrammarPoint({
-								key: nodeKey,
-								grammarPoint: {
-									title: title,
-								},
-							});
+							generateGrammarPointMutation(grammarPointTitleNode);
 						});
 					}
 					if (mutation === "destroyed") {
@@ -290,27 +392,11 @@ const IndexElementsPlugin = () => {
 			}),
 			editor.registerMutationListener(SentenceNode, (mutatedNodes) => {
 				editor.getEditorState().read(() => {
-					const newStore = { ...sentenceStore };
 					for (const [nodeKey, mutation] of mutatedNodes) {
 						if (mutation === "created" || mutation === "updated") {
 							const sentenceNode = $getNodeByKey(nodeKey);
 							if (!$isSentenceNode(sentenceNode)) return;
-
-							const textContent = sentenceNode.getTextContent();
-							const translation = sentenceNode.getTranslation();
-
-							const previousNode = sentenceStore[nodeKey];
-							if (previousNode && previousNode.sentence === textContent) {
-								return;
-							}
-
-							appendSentence({
-								key: nodeKey,
-								sentence: {
-									sentence: textContent,
-									translation: translation,
-								},
-							});
+							generateSentenceMutation(sentenceNode);
 						}
 						if (mutation === "destroyed") {
 							removeSentence(nodeKey);
@@ -327,6 +413,8 @@ const IndexElementsPlugin = () => {
 		checkForSentenceBlur,
 		clearStore,
 		editor,
+		generateGrammarPointMutation,
+		generateSentenceMutation,
 		grammarPointStore,
 		markServerState,
 		reconcileServerState,

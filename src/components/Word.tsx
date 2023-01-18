@@ -3,13 +3,24 @@ import { trpc } from "@utils/trpc";
 import { IoChatboxEllipses } from "react-icons/io5";
 
 type WordProps = {
-	wordId: string;
-	wordKey?: string;
+	databaseId: string;
+	nodeKey?: string;
 	border?: boolean;
-	clickHandler?: ({ key, id }: { key?: string; id: string }) => void;
+	clickHandler?: ({
+		nodeKey,
+		databaseId,
+	}: {
+		nodeKey?: string;
+		databaseId: string;
+	}) => void;
 };
-const Word = ({ wordKey, wordId, border = false, clickHandler }: WordProps) => {
-	const dbWord = trpc.dictionary.getWord.useQuery({ id: wordId });
+const Word = ({
+	nodeKey,
+	databaseId,
+	border = false,
+	clickHandler,
+}: WordProps) => {
+	const dbWord = trpc.dictionary.word.get.useQuery({ id: databaseId });
 
 	const borderStyle = border
 		? { borderColor: "text.100", borderWidth: "1px", borderRadius: "5px" }
@@ -22,7 +33,7 @@ const Word = ({ wordKey, wordId, border = false, clickHandler }: WordProps) => {
 					<Box sx={{ display: "flex", flexDir: "column" }} p={2}>
 						{!!clickHandler ? (
 							<Link
-								onClick={() => clickHandler({ key: wordKey, id: wordId })}
+								onClick={() => clickHandler({ nodeKey, databaseId })}
 								fontSize="1.4em"
 								color="text.500"
 							>

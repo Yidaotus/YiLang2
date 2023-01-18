@@ -57,9 +57,9 @@ const DashboardPage: NextPageWithLayout = () => {
 
 	const [searchString, setSearchString] = useState("");
 
-	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
-	const recentWords = trpc.dictionary.getRecentWords.useQuery({ take: 10 });
-	const recentDocuments = trpc.dictionary.getRecentDocuments.useQuery({
+	const allLanguages = trpc.dictionary.language.getAll.useQuery();
+	const recentWords = trpc.dictionary.word.getRecent.useQuery({ take: 10 });
+	const recentDocuments = trpc.document.getRecent.useQuery({
 		take: 10,
 	});
 

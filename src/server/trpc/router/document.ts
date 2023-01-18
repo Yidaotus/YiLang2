@@ -110,4 +110,20 @@ export const documentRouter = router({
 				return foundDocuments;
 			}
 		),
+	getRecent: protectedProcedure
+		.input(z.object({ take: z.number() }))
+		.query(({ ctx: { prisma, session }, input: { take } }) => {
+			return prisma.document.findMany({
+				where: {
+					user: { id: session.user.id },
+				},
+				include: {
+					language: true,
+				},
+				orderBy: {
+					createdAt: "desc",
+				},
+				take,
+			});
+		}),
 });

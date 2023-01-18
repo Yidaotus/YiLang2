@@ -18,7 +18,7 @@ import { useEffect } from "react";
 export const INSERT_WORD = createCommand<{
 	translations: string[];
 	word: string;
-	id?: string | undefined;
+	databaseId: string | null;
 }>("INSERT_WORD");
 
 const WordPlugin = () => {
@@ -42,7 +42,7 @@ const WordPlugin = () => {
 					const initialWordNode = $createWordNode(
 						word.translations,
 						word.word,
-						word.id,
+						word.databaseId,
 						false
 					);
 					$insertNodes([initialWordNode]);
@@ -68,7 +68,7 @@ const WordPlugin = () => {
 									const wordNode = $createWordNode(
 										word.translations,
 										word.word,
-										word.id,
+										word.databaseId,
 										true
 									);
 									$insertNodes([wordNode]);
@@ -84,7 +84,7 @@ const WordPlugin = () => {
 				COMMAND_PRIORITY_LOW
 			)
 		);
-	}, [editor]);
+	}, [editor, markAllInstances]);
 
 	return null;
 };

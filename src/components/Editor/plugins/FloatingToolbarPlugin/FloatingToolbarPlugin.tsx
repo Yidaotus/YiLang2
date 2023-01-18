@@ -96,13 +96,13 @@ const useWordEditorDispatch = () => {
 	const [searchWord, setSearchWord] = useState<string | null>(null);
 	const trpcUtils = trpc.useContext();
 	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
-	const findWord = trpc.dictionary.findWord.useQuery(
+	const findWord = trpc.dictionary.word.find.useQuery(
 		{ word: searchWord || "", language: activeLanguage.id },
 		{
 			enabled: !!searchWord,
 			onSuccess: (word) => {
 				if (word) {
-					trpcUtils.dictionary.getWord.setData(word, { id: word.id });
+					trpcUtils.dictionary.word.get.setData(word, { id: word.id });
 				}
 			},
 		}
@@ -112,7 +112,8 @@ const useWordEditorDispatch = () => {
 		if (findWord.status === "success") {
 			const word = findWord.data;
 			if (word) {
-				editor.dispatchCommand(INSERT_WORD, word);
+				const { id, ...rest } = word;
+				editor.dispatchCommand(INSERT_WORD, { ...rest, databaseId: id });
 			} else {
 				editor.dispatchCommand(SHOW_FLOATING_WORD_EDITOR_COMMAND, undefined);
 			}
@@ -169,7 +170,7 @@ function TextFormatFloatingToolbar({
 	);
 
 	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
-	const lookupSources = trpc.dictionary.getAllLookupSources.useQuery(
+	const lookupSources = trpc.dictionary.language.getAllLookupSources.useQuery(
 		{ languageId: activeLanguage.id },
 		{ enabled: !!activeLanguage }
 	);
@@ -271,7 +272,7 @@ function TextFormatFloatingToolbar({
 
 				if (!parent.is(prevParent)) {
 					prevParent = parent;
-					sentenceNode = $createSentenceNode(translation);
+					sentenceNode = $createSentenceNode(translation, null);
 
 					if ($isSentenceNode(parent)) {
 						if (node.getPreviousSibling() === null) {

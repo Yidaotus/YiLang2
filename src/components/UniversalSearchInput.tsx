@@ -94,11 +94,11 @@ const UniversalSearchInput = ({
 		{ search: searchString, languageId: activeLanguage.id },
 		{ enabled: searchString.length > 0, cacheTime: 1 }
 	);
-	const foundWords = trpc.dictionary.searchWord.useQuery(
+	const foundWords = trpc.dictionary.words.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
 		{ enabled: searchString.length > 0, cacheTime: 1 }
 	);
-	const foundGrammarPoints = trpc.dictionary.searchGrammarPoints.useQuery(
+	const foundGrammarPoints = trpc.dictionary.grammarPoint.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
 		{ enabled: searchString.length > 0, cacheTime: 1 }
 	);

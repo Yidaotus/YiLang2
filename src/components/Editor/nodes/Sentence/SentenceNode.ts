@@ -8,7 +8,7 @@ import type {
 } from "lexical";
 
 import { addClassNamesToElement } from "@lexical/utils";
-import { $applyNodeReplacement, $isElementNode, ElementNode } from "lexical";
+import { $isElementNode, ElementNode } from "lexical";
 import sentenceNodeStyles from "./SentenceNode.module.scss";
 
 export type SerializedSentenceNode = Spread<
@@ -32,7 +32,7 @@ export class SentenceNode extends ElementNode {
 	}
 
 	static clone(node: SentenceNode): SentenceNode {
-		return new SentenceNode(node.__translation, node.__key);
+		return new SentenceNode(node.__translation, node.__databaseId, node.__key);
 	}
 
 	static importDOM(): null {
@@ -143,7 +143,7 @@ export function $createSentenceNode(
 	translation: string,
 	databaseId: string | null
 ): SentenceNode {
-	return $applyNodeReplacement(new SentenceNode(translation, databaseId));
+	return new SentenceNode(translation, databaseId);
 }
 
 export function $isSentenceNode(

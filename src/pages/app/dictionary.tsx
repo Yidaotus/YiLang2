@@ -54,7 +54,7 @@ import { trpc } from "../../utils/trpc";
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
 	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
-	const allWords = trpc.dictionary.getAll.useQuery({
+	const allWords = trpc.dictionary.word.getAll.useQuery({
 		language: selectedLanguage.id,
 	});
 	const [searchTerm, setSearchTerm] = useState("");

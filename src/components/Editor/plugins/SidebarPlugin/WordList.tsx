@@ -87,7 +87,7 @@ const WordList = () => {
 	useEffect(() => {
 		if (targetWordId && targetWordId !== previousTargetWordId.current) {
 			const targetInStore = Object.entries(words).find(
-				([_, node]) => targetWordId === node.wordId
+				([_, node]) => targetWordId === node.databaseId
 			);
 			if (targetInStore) {
 				highlightWord(targetInStore[0]);
@@ -135,8 +135,8 @@ const WordList = () => {
 								<Word
 									border
 									key={nodeKey}
-									wordId={node.wordId}
-									wordKey={nodeKey}
+									databaseId={node.databaseId}
+									nodeKey={nodeKey}
 									clickHandler={() => highlightWord(nodeKey)}
 								/>
 							))}

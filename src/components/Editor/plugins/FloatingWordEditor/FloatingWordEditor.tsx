@@ -85,9 +85,9 @@ const WordEditorPopup = React.forwardRef<
 		ref
 	) => {
 		const utils = trpc.useContext();
-		const createWord = trpc.dictionary.createWord.useMutation({
+		const createWord = trpc.dictionary.words.create.useMutation({
 			onSuccess() {
-				utils.dictionary.getAllTags.invalidate();
+				utils.dictionary.tag.getAll.invalidate();
 			},
 		});
 		const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
@@ -226,7 +226,8 @@ const WordEditorPopup = React.forwardRef<
 						language: selectedLanguage.id,
 						documentId,
 					});
-					submitWord(newWord);
+					const { id, ...rest } = newWord;
+					submitWord({ databaseId: id, ...rest });
 				} else {
 					cancel();
 				}
@@ -234,7 +235,7 @@ const WordEditorPopup = React.forwardRef<
 			[cancel, createWord, documentId, selectedLanguage, submitWord]
 		);
 
-		const dbTags = trpc.dictionary.getAllTags.useQuery({
+		const dbTags = trpc.dictionary.tag.getAll.useQuery({
 			language: selectedLanguage.id,
 		});
 

@@ -1,558 +1,36 @@
-import type { ReferenceType } from "@floating-ui/react";
-import type { Tag } from "@prisma/client";
-import type { RouterTypes } from "@utils/trpc";
 import type { GetServerSidePropsContext } from "next";
 import type { ReactElement } from "react";
 
 import {
 	Box,
-	ButtonGroup,
 	Card,
 	CardBody,
 	CardHeader,
-	IconButton,
-	Input,
-	InputGroup,
-	InputRightElement,
 	Link,
+	Stack,
 	Text,
 	Textarea,
 	useToken,
 } from "@chakra-ui/react";
-import { useRouter } from "next/router";
-import { useCallback, useRef, useState } from "react";
-
-import FloatingContainer from "@components/Editor/ui/FloatingContainer";
+import DataRow from "@components/Dictionary/DataRow";
+import SpellingDataRow from "@components/Dictionary/SpellingDataRow";
+import TagDataRow from "@components/Dictionary/TagDataRow";
+import TranslationsDataRow from "@components/Dictionary/TranslationsDataRow";
 import Layout from "@components/Layout";
 import useEditorStore from "@store/store";
-import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import protectPage from "@utils/protectPage";
 import { trpc } from "@utils/trpc";
-import { CreatableSelect } from "chakra-react-select";
+import { filterUndefined } from "@utils/utils";
 import NextLink from "next/link";
+import { useRouter } from "next/router";
+import { useCallback } from "react";
 import {
+	IoAlbumsOutline,
 	IoChatbubbleEllipses,
 	IoDocumentOutline,
-	IoPricetagsOutline,
-	IoSaveOutline,
 } from "react-icons/io5";
-import {
-	RiAddLine,
-	RiCloseLine,
-	RiTranslate,
-	RiTranslate2,
-} from "react-icons/ri";
-import { RxCalendar, RxPencil1, RxPlus } from "react-icons/rx";
-
-type DataRowProps = {
-	title: React.ReactNode;
-	value: React.ReactNode;
-};
-
-const DataRow = ({ title, value }: DataRowProps) => (
-	<Box
-		display="flex"
-		gap={[1, null, 8]}
-		flexDirection={["column", null, "row"]}
-	>
-		<Box
-			w={["100%", null, "30%"]}
-			display="flex"
-			alignItems={["flex-start", null, "flex-end"]}
-			justifyContent="center"
-			flexDir="column"
-			color="text.300"
-			gap="9px"
-		>
-			<Box>{title}</Box>
-		</Box>
-		<Box
-			w={["100%", null, "70%"]}
-			display="flex"
-			alignItems="flex-start"
-			justifyContent="center"
-			flexDir="column"
-			gap={2}
-		>
-			{value}
-		</Box>
-	</Box>
-);
-
-type TranslationsDataRowProps = {
-	translations: Exclude<
-		RouterTypes["dictionary"]["getWord"]["output"],
-		null
-	>["translations"];
-	removeTranslation: (spellingToRemove: string) => void;
-	addTranslation: (newSpelling: string) => void;
-};
-const TranslationsDataRow = ({
-	translations,
-	removeTranslation,
-	addTranslation,
-}: TranslationsDataRowProps) => {
-	const [translationInput, setTranslationInput] = useState("");
-	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
-		null
-	);
-	const floatingRef = useRef(null);
-	const inputGroupRef = useRef<HTMLDivElement | null>(null);
-	const inputRef = useRef<HTMLInputElement | null>(null);
-
-	useOnClickOutside(inputGroupRef, () => {
-		setPopupReference(null);
-	});
-
-	const addTranslationFromInput = useCallback(() => {
-		addTranslation(translationInput);
-		setTranslationInput("");
-		setPopupReference(null);
-	}, [addTranslation, translationInput]);
-
-	const showInputPopup = useCallback(() => {
-		setPopupReference(floatingRef.current);
-		inputRef.current?.focus();
-	}, []);
-
-	const handleInputKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLInputElement>) => {
-			if (e.key === "Enter") {
-				addTranslationFromInput();
-			}
-		},
-		[addTranslationFromInput]
-	);
-
-	return (
-		<>
-			<FloatingContainer
-				popupPlacement="bottom"
-				popupReference={popupReference}
-				showArrow
-			>
-				<InputGroup
-					size="md"
-					width={["90%", null, "400px"]}
-					ref={inputGroupRef}
-				>
-					<Input
-						pr="4.5rem"
-						size="md"
-						autoFocus
-						value={translationInput}
-						onKeyDown={handleInputKeyDown}
-						onChange={(e) => setTranslationInput(e.target.value)}
-						ref={inputRef}
-						border="none"
-						focusBorderColor="none"
-					/>
-					<InputRightElement width="5.5rem">
-						<Box borderLeftWidth="1px" borderColor="text.100" h="60%" />
-						<ButtonGroup isAttached>
-							<IconButton
-								variant="ghost"
-								colorScheme="brand"
-								h="2.1rem"
-								size="md"
-								aria-label="Add Translation"
-								icon={<IoSaveOutline />}
-								onClick={addTranslationFromInput}
-							/>
-							<IconButton
-								variant="ghost"
-								colorScheme="brand"
-								h="2.1rem"
-								size="md"
-								aria-label="Add Translation"
-								icon={<RiCloseLine />}
-								onClick={() => setPopupReference(null)}
-							/>
-						</ButtonGroup>
-					</InputRightElement>
-				</InputGroup>
-			</FloatingContainer>
-			<DataRow
-				title={
-					<Box display="flex" gap={1} alignItems="center">
-						<RiTranslate />
-						Translation
-					</Box>
-				}
-				value={
-					<Box display="flex" gap={2}>
-						{translations.map((translation) => (
-							<Box
-								key={translation}
-								bg="text.100"
-								borderRadius="4px"
-								color="text.500"
-								display="flex"
-								flexWrap="nowrap"
-								alignItems="center"
-								gap={1}
-								pl={2}
-							>
-								<Text>{translation}</Text>
-								<Box
-									as="button"
-									h="100%"
-									borderRightRadius="4px"
-									display="flex"
-									alignItems="center"
-									px={1}
-									sx={{
-										"& svg": {
-											color: "text.400",
-										},
-										"&:hover": {
-											"& svg": {
-												color: "white",
-											},
-											bg: "#BD4C50",
-										},
-									}}
-									onClick={() => removeTranslation(translation)}
-								>
-									<RiCloseLine />
-								</Box>
-							</Box>
-						))}
-						<Box
-							bg="text.100"
-							borderRadius="4px"
-							color="text.500"
-							display="flex"
-							flexWrap="nowrap"
-							alignItems="center"
-							justifyContent="center"
-							p={1}
-							as="button"
-							_hover={{
-								bg: "text.200",
-							}}
-							onClick={showInputPopup}
-							ref={floatingRef}
-						>
-							<RiAddLine />
-						</Box>
-					</Box>
-				}
-			/>
-		</>
-	);
-};
-
-type SpellingDataRowProps = {
-	spelling: Exclude<
-		RouterTypes["dictionary"]["getWord"]["output"],
-		null
-	>["spelling"];
-	updateSpelling: (newSpelling: string) => void;
-};
-const SpellingDataRow = ({
-	spelling,
-	updateSpelling,
-}: SpellingDataRowProps) => {
-	const [isEditingSpelling, setIsEditingSpelling] = useState(false);
-	const [spellingInput, setSpellingInput] = useState(spelling || "");
-
-	const saveSpelling = useCallback(() => {
-		setIsEditingSpelling(false);
-		if (spellingInput && spelling !== spellingInput) {
-			updateSpelling(spellingInput);
-			//updateWord.mutate({ id: dbWord.data.id, spelling: spellingInput });
-		}
-	}, [spelling, spellingInput, updateSpelling]);
-
-	return (
-		<DataRow
-			title={
-				<Box display="flex" gap={1} alignItems="center">
-					<RiTranslate2 />
-					Spelling
-				</Box>
-			}
-			value={
-				isEditingSpelling ? (
-					<InputGroup size="md" width={["90%", null, "400px"]}>
-						<Input
-							pr="4.5rem"
-							size="md"
-							value={spellingInput}
-							onChange={(e) => setSpellingInput(e.target.value)}
-							autoFocus
-						/>
-						<InputRightElement width="5.5rem">
-							<Box borderLeftWidth="1px" borderColor="text.100" h="60%" />
-							<ButtonGroup isAttached>
-								<IconButton
-									variant="ghost"
-									colorScheme="brand"
-									h="2.1rem"
-									size="md"
-									onClick={saveSpelling}
-									aria-label="Add Translation"
-									icon={<IoSaveOutline />}
-								/>
-								<IconButton
-									variant="ghost"
-									colorScheme="brand"
-									h="2.1rem"
-									size="md"
-									onClick={() => setIsEditingSpelling(false)}
-									aria-label="Add Translation"
-									icon={<RiCloseLine />}
-								/>
-							</ButtonGroup>
-						</InputRightElement>
-					</InputGroup>
-				) : (
-					<Box color="text.400" display="flex" gap={2}>
-						{spelling}
-
-						<Box
-							bg="text.100"
-							borderRadius="4px"
-							color="text.500"
-							display="flex"
-							flexWrap="nowrap"
-							alignItems="center"
-							justifyContent="center"
-							px={2}
-							py={1}
-							as="button"
-							_hover={{
-								bg: "text.200",
-							}}
-							onClick={() => setIsEditingSpelling(true)}
-						>
-							<RxPencil1 />
-						</Box>
-					</Box>
-				)
-			}
-		/>
-	);
-};
-
-type TagDataRowProps = {
-	languageId: string;
-	tags: Exclude<RouterTypes["dictionary"]["getWord"]["output"], null>["tags"];
-	linkNewTag: (tagId: string) => void;
-	removeTag: (tagId: string) => void;
-};
-const TagDataRow = ({
-	tags,
-	linkNewTag,
-	removeTag,
-	languageId,
-}: TagDataRowProps) => {
-	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
-		null
-	);
-	const allTags = trpc.dictionary.getAllTags.useQuery({ language: languageId });
-	const floatingRef = useRef(null);
-	const inputRef = useRef(null);
-
-	useOnClickOutside(inputRef, () => {
-		setPopupReference(null);
-	});
-
-	const addTag = useCallback(
-		(tag: Tag) => {
-			linkNewTag(tag.id);
-		},
-		[linkNewTag]
-	);
-
-	const handleRemoveTag = useCallback(
-		(tag: Tag) => {
-			removeTag(tag.id);
-		},
-		[removeTag]
-	);
-
-	const showInputPopup = useCallback(() => {
-		setPopupReference(floatingRef.current);
-	}, []);
-
-	return (
-		<>
-			<FloatingContainer
-				popupPlacement="bottom"
-				popupReference={popupReference}
-				showArrow
-			>
-				<Box ref={inputRef}>
-					<CreatableSelect
-						size="md"
-						focusBorderColor="none"
-						value={[] as Tag[]}
-						onChange={(newValue) => {
-							setPopupReference(null);
-							const newValueItem = newValue[0];
-							if (newValueItem) {
-								addTag(newValueItem);
-							}
-						}}
-						chakraStyles={{
-							container: (prev) => ({
-								...prev,
-								borderRadius: "5px",
-								bg: "#fafaf9",
-								w: "250px",
-								_focus: {
-									border: "none",
-								},
-							}),
-							multiValue: (prev, state) => ({
-								...prev,
-								justifyContent: "center",
-								alignItems: "center",
-								borderColor: "text.100",
-								bg: "#F5F5F5",
-								borderWidth: "1px",
-								"&::before": {
-									content: '""',
-									bg: state.data.color,
-									h: "10px",
-									w: "5px",
-									pr: 2,
-									mr: 2,
-									borderRadius: "1em",
-									border: `1px solid ${state.data.color}`,
-								},
-							}),
-							indicatorSeparator: (prev) => ({
-								...prev,
-								borderLeft: "1px solid text.100",
-								height: "60%",
-							}),
-							dropdownIndicator: (prev) => ({
-								...prev,
-								w: "10px",
-								bg: "#FCFCFB",
-							}),
-							placeholder: (prev) => ({
-								...prev,
-								color: "text.200",
-							}),
-						}}
-						placeholder="Tags"
-						isMulti
-						options={allTags.data || []}
-						getOptionValue={(o) => o.name}
-						getOptionLabel={(o) => o.name}
-						components={{
-							Option: ({ children, data, innerProps }) => (
-								<Box
-									as="div"
-									sx={{
-										color: "text.400",
-										display: "flex",
-										alignItems: "center",
-										cursor: "pointer",
-										py: 1,
-										w: "100%",
-										"&:hover": {
-											bg: "#f4f4f4",
-										},
-									}}
-									{...innerProps}
-								>
-									<Box
-										sx={{
-											w: "12px",
-											h: "12px",
-											ml: 1,
-											mr: 2,
-											borderRadius: "4px",
-											border: `2px solid ${data.color}`,
-											bg: data.color,
-										}}
-									/>
-									{children}
-								</Box>
-							),
-						}}
-					/>
-				</Box>
-			</FloatingContainer>
-			<DataRow
-				title={
-					<Box display="flex" gap={1} alignItems="center">
-						<IoPricetagsOutline />
-						Tags
-					</Box>
-				}
-				value={
-					<Box display="flex" gap={2} flexWrap="wrap">
-						{tags.map((tag) => (
-							<Box
-								key={tag.id}
-								bg={`${tag.color}55`}
-								borderRadius="4px"
-								color="text.500"
-								display="flex"
-								flexWrap="nowrap"
-								alignItems="center"
-								gap={1}
-								pl={2}
-							>
-								<Text>{tag.name}</Text>
-								<Box
-									as="button"
-									h="100%"
-									borderRightRadius="4px"
-									display="flex"
-									alignItems="center"
-									px={1}
-									sx={{
-										"& svg": {
-											color: "text.400",
-										},
-										"&:hover": {
-											"& svg": {
-												color: "white",
-											},
-											bg: "#BD4C50",
-										},
-									}}
-									onClick={() => handleRemoveTag(tag)}
-								>
-									<RiCloseLine />
-								</Box>
-							</Box>
-						))}
-						<Box
-							bg="text.100"
-							borderRadius="4px"
-							color="text.500"
-							display="flex"
-							flexWrap="nowrap"
-							alignItems="center"
-							justifyContent="center"
-							p={1}
-							as="button"
-							_hover={{
-								bg: "text.200",
-							}}
-							ref={floatingRef}
-							onClick={showInputPopup}
-						>
-							<RxPlus />
-						</Box>
-					</Box>
-				}
-			/>
-		</>
-	);
-};
-
-const filterUndefined = <T,>(v: T | undefined): v is T => {
-	return v !== undefined;
-};
+import { RiTranslate } from "react-icons/ri";
+import { RxCalendar } from "react-icons/rx";
 
 const DictionaryEntryPag = () => {
 	const router = useRouter();
@@ -560,20 +38,26 @@ const DictionaryEntryPag = () => {
 	const id = (Array.isArray(routerId) ? routerId[0] : routerId) || "";
 	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 	const trpcUtils = trpc.useContext();
-	const dbWord = trpc.dictionary.getWord.useQuery({ id });
-	const updateWord = trpc.dictionary.updateWord.useMutation({
+	const dbWord = trpc.dictionary.word.get.useQuery({ id });
+	const relatedSentences = trpc.dictionary.sentence.getForWord.useQuery(
+		{ wordId: dbWord.data?.id || "" },
+		{
+			enabled: !!dbWord.data?.id,
+		}
+	);
+	const updateWord = trpc.dictionary.word.update.useMutation({
 		onSuccess() {
-			trpcUtils.dictionary.getWord.invalidate({ id });
+			trpcUtils.dictionary.word.get.invalidate({ id });
 		},
 		onMutate(updatedWord) {
-			const currentWord = trpcUtils.dictionary.getWord.getData({ id });
+			const currentWord = trpcUtils.dictionary.word.get.getData({ id });
 
 			if (currentWord) {
-				trpcUtils.dictionary.getWord.cancel({ id });
-				const allTags = trpcUtils.dictionary.getAllTags.getData({
+				trpcUtils.dictionary.word.get.cancel({ id });
+				const allTags = trpcUtils.dictionary.tag.getAll.getData({
 					language: selectedLanguage.id,
 				});
-				trpcUtils.dictionary.getWord.setData(
+				trpcUtils.dictionary.word.get.setData(
 					{
 						...currentWord,
 						translations: updatedWord.translations || currentWord.translations,
@@ -594,10 +78,10 @@ const DictionaryEntryPag = () => {
 			}
 		},
 		onError: (err, newTodo, context) => {
-			trpcUtils.dictionary.getWord.setData(context?.currentWord, { id });
+			trpcUtils.dictionary.word.get.setData(context?.currentWord, { id });
 		},
 		onSettled: () => {
-			trpcUtils.dictionary.getWord.invalidate({ id });
+			trpcUtils.dictionary.word.get.invalidate({ id });
 		},
 	});
 
@@ -776,6 +260,40 @@ const DictionaryEntryPag = () => {
 										/>
 									}
 								/>
+								{relatedSentences.data && (
+									<DataRow
+										alignTop
+										title={
+											<Box display="flex" gap={1} alignItems="center">
+												<IoAlbumsOutline />
+												Sentences
+											</Box>
+										}
+										value={
+											<Stack>
+												{relatedSentences.data?.map((sentence) => (
+													<Box key={sentence.id}>
+														<Box>
+															<Link
+																as={NextLink}
+																href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
+															>
+																<Text color="text.400">
+																	{sentence.sentence}
+																</Text>
+															</Link>
+														</Box>
+														<Box>
+															<Text color="text.300" fontSize="0.9em">
+																{sentence.translation}
+															</Text>
+														</Box>
+													</Box>
+												))}
+											</Stack>
+										}
+									/>
+								)}
 							</Box>
 						)}
 					</Box>

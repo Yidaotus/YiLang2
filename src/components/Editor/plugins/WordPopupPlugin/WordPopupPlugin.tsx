@@ -18,7 +18,7 @@ import { createPortal } from "react-dom";
 
 const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 	const [wordNode, setWordNode] = useState<{
-		id?: string;
+		databaseId: string | null;
 		word: string;
 		translations: Array<string>;
 	} | null>(null);
@@ -52,7 +52,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		if (!$isWordNode(target)) return;
 
 		setWordNode({
-			id: target.getId(),
+			databaseId: target.getDatabaseId(),
 			word: target.getWord(),
 			translations: target.getTranslations(),
 		});
@@ -96,8 +96,11 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 			showArrow
 		>
 			<Box>
-				{wordNode?.id && (
-					<Word wordId={wordNode.id} clickHandler={({ id }) => editWord(id)} />
+				{wordNode?.databaseId && (
+					<Word
+						databaseId={wordNode.databaseId}
+						clickHandler={({ databaseId: id }) => editWord(id)}
+					/>
 				)}
 			</Box>
 		</FloatingContainer>,

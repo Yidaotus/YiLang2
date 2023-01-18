@@ -2,6 +2,7 @@ import { signOut } from "next-auth/react";
 import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
 import { useCallback, useRef, useState } from "react";
+// @TODO WAY TO BIG!!
 
 import {
 	Accordion,
@@ -81,11 +82,13 @@ const InlineLanguageNameInput = ({
 	);
 
 	const trpcUtils = trpc.useContext();
-	const apiChangeLanguageName = trpc.dictionary.changeLanguageName.useMutation({
-		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
-		},
-	});
+	const apiChangeLanguageName = trpc.dictionary.language.changeName.useMutation(
+		{
+			onSuccess() {
+				trpcUtils.dictionary.language.getAll.invalidate();
+			},
+		}
+	);
 
 	const changeLanguageName = useCallback(() => {
 		if (inlineLanguageNameInput) {
@@ -173,7 +176,7 @@ const InlineLanguageNameInput = ({
 
 type LookupSourceListType = {
 	lookupSources: Exclude<
-		RouterTypes["dictionary"]["getAllLanguages"],
+		RouterTypes["dictionary"]["language"]["getAll"],
 		undefined
 	>["output"][number]["lookupSources"];
 };
@@ -182,16 +185,18 @@ const LookupSourceList = ({ lookupSources }: LookupSourceListType) => {
 	const cancelRef = useRef(null);
 
 	const trpcUtils = trpc.useContext();
-	const apiRemoveLookupSource = trpc.dictionary.removeLookupSource.useMutation({
-		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
-		},
-	});
-	const apiChangeLookupSource = trpc.dictionary.changeLookupSource.useMutation({
-		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
-		},
-	});
+	const apiRemoveLookupSource =
+		trpc.dictionary.language.removeLookupSource.useMutation({
+			onSuccess() {
+				trpcUtils.dictionary.language.getAll.invalidate();
+			},
+		});
+	const apiChangeLookupSource =
+		trpc.dictionary.language.changeLookupSource.useMutation({
+			onSuccess() {
+				trpcUtils.dictionary.language.getAll.invalidate();
+			},
+		});
 
 	const itemToDelete = useRef<string | null>(null);
 	const [editingItemId, setEditingItemId] = useState<null | string>(null);
@@ -379,7 +384,7 @@ const LookupSourceList = ({ lookupSources }: LookupSourceListType) => {
 type LookupSourceSectionType = {
 	languageId: string;
 	lookupSources: Exclude<
-		RouterTypes["dictionary"]["getAllLanguages"],
+		RouterTypes["dictionary"]["language"]["getAll"],
 		undefined
 	>["output"][number]["lookupSources"];
 };
@@ -388,11 +393,12 @@ const LookupSourceSection = ({
 	lookupSources,
 }: LookupSourceSectionType) => {
 	const trpcUtils = trpc.useContext();
-	const apiAddLookupSource = trpc.dictionary.addLookupSource.useMutation({
-		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
-		},
-	});
+	const apiAddLookupSource =
+		trpc.dictionary.language.addLookupSource.useMutation({
+			onSuccess() {
+				trpcUtils.dictionary.language.getAll.invalidate();
+			},
+		});
 
 	const [showLoSourceInput, setShowLoSourceInput] = useState(false);
 
@@ -505,15 +511,15 @@ const SettingsPage: NextPageWithLayout = () => {
 
 	const userStats = trpc.user.stats.useQuery();
 
-	const allLanguages = trpc.dictionary.getAllLanguages.useQuery();
-	const apiAddLanguage = trpc.dictionary.addLanguage.useMutation({
+	const allLanguages = trpc.dictionary.language.getAll.useQuery();
+	const apiAddLanguage = trpc.dictionary.language.add.useMutation({
 		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
+			trpcUtils.dictionary.language.getAll.invalidate();
 		},
 	});
-	const apiRemoveLanguage = trpc.dictionary.removeLanguage.useMutation({
+	const apiRemoveLanguage = trpc.dictionary.language.remove.useMutation({
 		onSuccess() {
-			trpcUtils.dictionary.getAllLanguages.invalidate();
+			trpcUtils.dictionary.language.getAll.invalidate();
 		},
 	});
 

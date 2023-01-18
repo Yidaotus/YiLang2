@@ -3,13 +3,10 @@ import type { LexicalNode } from "lexical";
 import { $isElementNode, $isLeafNode } from "lexical";
 
 import { useToast } from "@chakra-ui/react";
-import { $isGrammarPointContainerNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointContainerNode";
-import { $isGrammarPointTitleNode } from "@components/Editor/nodes/GrammarPoint/GrammarPointTitleNode";
 import type SaveableNode from "@components/Editor/nodes/SaveableNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorStore from "@store/store";
-import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@utils/trpc";
 import { $getRoot, COMMAND_PRIORITY_LOW, createCommand } from "lexical";
 import { useCallback, useEffect, useRef } from "react";
@@ -45,12 +42,10 @@ const previousSaveMap = new Map<string, SaveableNode>();
 const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
 	const showToast = useRef(false);
-	const queryClient = useQueryClient();
 	const toast = useToast();
 	const trpcUtils = trpc.useContext();
 
 	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
-	const upsertGrammarPoint = trpc.dictionary.upsertGrammarPoint.useMutation();
 	const upsertDocument = trpc.document.upsertDocument.useMutation({
 		onMutate() {
 			if (showToast.current) {
@@ -132,33 +127,6 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 						title = node.getTextContent();
 					}
 				}
-
-				for (const grammarNode of $getAllNodesOfType(
-					root,
-					$isGrammarPointContainerNode
-				)) {
-					const titleNode = grammarNode.getChildren()[0];
-					if (!$isGrammarPointTitleNode(titleNode)) {
-						continue;
-					}
-
-					const title = titleNode.getTextContent();
-					const id = grammarNode.getId();
-
-					upsertGrammarPoint
-						.mutateAsync({
-							id: id || undefined,
-							sourceDocumentId: documentId,
-							title,
-						})
-						.then((gp) => {
-							editor.update(() => {
-								grammarNode.setId(gp.id);
-							});
-							trpcUtils.dictionary.searchGrammarPoints.invalidate();
-						});
-				}
-
 				upsertDocument
 					.mutateAsync({
 						id: documentId,
@@ -178,10 +146,8 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 		documentId,
 		editor,
 		selectedLanguage.id,
-		trpcUtils.dictionary.searchGrammarPoints,
 		trpcUtils.document.search,
 		upsertDocument,
-		upsertGrammarPoint,
 	]);
 
 	return null;

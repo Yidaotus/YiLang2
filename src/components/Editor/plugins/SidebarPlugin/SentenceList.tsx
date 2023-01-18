@@ -139,7 +139,7 @@ const SentenceList = () => {
 									</Text>
 								</Button>
 								<Text color="text.300" fontSize="0.9em">
-									{node.translation}
+									{`${node.translation} / ${node.containingWords.length} Words`}
 								</Text>
 							</Box>
 						))}

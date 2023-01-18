@@ -6,13 +6,20 @@ type StoreObject = {
 	isDeleted: boolean;
 };
 
-// > Maybe like this ? type WordsRecord = Record<string, WordNode>;
-type WordsRecord = Record<string, { wordId: string; isAutoFill: boolean }>;
+type WordsRecord = Record<string, { databaseId: string; isAutoFill: boolean }>;
 type SentencesRecord = Record<
 	string,
-	{ sentence: string; translation: string }
+	{
+		sentence: string;
+		translation: string;
+		containingWords: Array<string>;
+		databaseId: string | null;
+	}
 >;
-type GrammarPointsRecord = Record<string, { title: string }>;
+type GrammarPointsRecord = Record<
+	string,
+	{ title: string; databaseId: string | null }
+>;
 
 type StoreWordsRecord = Record<
 	keyof WordsRecord,
@@ -107,9 +114,20 @@ const useOutlineStore = create<OutlineStore>()(
 					})),
 				removeWord: (nodeKey) =>
 					set((state) => {
-						const newState = { ...state.words };
-						delete newState[nodeKey];
-						return { words: newState };
+						const stateWord = state.words[nodeKey];
+						if (stateWord) {
+							return {
+								words: {
+									...state.words,
+									[nodeKey]: {
+										...stateWord,
+										isDirty: true,
+										isDeleted: true,
+									},
+								},
+							};
+						}
+						return {};
 					}),
 
 				appendGrammarPoint: ({ key, grammarPoint }) =>
@@ -125,9 +143,20 @@ const useOutlineStore = create<OutlineStore>()(
 					})),
 				removeGrammarPoint: (nodeKey) =>
 					set((state) => {
-						const newState = { ...state.grammarPoints };
-						delete newState[nodeKey];
-						return { grammarPoints: newState };
+						const stateGrammarPoint = state.grammarPoints[nodeKey];
+						if (stateGrammarPoint) {
+							return {
+								grammarPoints: {
+									...state.grammarPoints,
+									[nodeKey]: {
+										...stateGrammarPoint,
+										isDirty: true,
+										isDeleted: true,
+									},
+								},
+							};
+						}
+						return {};
 					}),
 
 				appendSentence: ({ key, sentence }) =>
@@ -170,22 +199,36 @@ const useOutlineStore = create<OutlineStore>()(
 						};
 
 						const cleanSentences = { ...state.sentences };
-						Object.values(cleanSentences).forEach((sentence) => {
-							sentence.isDeleted = false;
-							sentence.isDirty = false;
+						Object.entries(cleanSentences).forEach(([nodeKey, sentence]) => {
+							if (sentence.isDeleted) {
+								delete cleanSentences[nodeKey];
+							} else {
+								sentence.isDeleted = false;
+								sentence.isDirty = false;
+							}
 						});
 
 						const cleanWords = { ...state.words };
-						Object.values(cleanWords).forEach((word) => {
-							word.isDeleted = false;
-							word.isDirty = false;
+						Object.entries(cleanWords).forEach(([nodeKey, word]) => {
+							if (word.isDeleted) {
+								delete cleanWords[nodeKey];
+							} else {
+								word.isDeleted = false;
+								word.isDirty = false;
+							}
 						});
 
 						const cleanGrammarPoints = { ...state.grammarPoints };
-						Object.values(cleanGrammarPoints).forEach((grammarPoint) => {
-							grammarPoint.isDeleted = false;
-							grammarPoint.isDirty = false;
-						});
+						Object.entries(cleanGrammarPoints).forEach(
+							([nodeKey, grammarPoint]) => {
+								if (grammarPoint.isDeleted) {
+									delete cleanGrammarPoints[nodeKey];
+								} else {
+									grammarPoint.isDeleted = false;
+									grammarPoint.isDirty = false;
+								}
+							}
+						);
 						return {
 							serverState: newServerState,
 							sentences: cleanSentences,
