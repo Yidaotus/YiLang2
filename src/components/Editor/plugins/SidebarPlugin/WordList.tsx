@@ -13,7 +13,7 @@ import {
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useOutlineStore from "@store/outline";
+import { useOutlineWords } from "@store/outline";
 import useEditorStore from "@store/store";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { $createNodeSelection, $setSelection, LineBreakNode } from "lexical";
@@ -40,7 +40,7 @@ const WordList = () => {
 	const { highlight: targetWord } = router.query;
 	const targetWordId = Array.isArray(targetWord) ? targetWord[0] : targetWord;
 	const previousTargetWordId = useRef<typeof targetWordId>();
-	const words = useOutlineStore((store) => store.words);
+	const words = useOutlineWords();
 	const { hideAutoFillWords, setHideAutoFillWords } = useEditorStore(
 		(state) => ({
 			hideAutoFillWords: state.editorHideAutoFillWords,

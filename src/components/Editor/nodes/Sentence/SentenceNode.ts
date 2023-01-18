@@ -9,10 +9,11 @@ import type {
 
 import { addClassNamesToElement } from "@lexical/utils";
 import { $applyNodeReplacement, $isElementNode, ElementNode } from "lexical";
-import sentenceNodeStyles from "./SentenceNode.module.css";
+import sentenceNodeStyles from "./SentenceNode.module.scss";
 
 export type SerializedSentenceNode = Spread<
 	{
+		databaseId: string | null;
 		translation: string;
 		type: "sentence";
 		version: 1;
@@ -24,6 +25,7 @@ export type SerializedSentenceNode = Spread<
 export class SentenceNode extends ElementNode {
 	/** @internal */
 	__translation: string;
+	__databaseId: string | null;
 
 	static getType(): string {
 		return "sentence";
@@ -38,24 +40,26 @@ export class SentenceNode extends ElementNode {
 	}
 
 	static importJSON(serializedNode: SerializedSentenceNode): SentenceNode {
-		const node = $createSentenceNode(serializedNode.translation);
-		node.setFormat(serializedNode.format);
-		node.setIndent(serializedNode.indent);
-		node.setDirection(serializedNode.direction);
+		const node = $createSentenceNode(
+			serializedNode.translation,
+			serializedNode.databaseId
+		);
 		return node;
 	}
 
 	exportJSON(): SerializedSentenceNode {
 		return {
 			...super.exportJSON(),
+			databaseId: this.getDatabaseId(),
 			translation: this.getTranslation(),
 			type: "sentence",
 			version: 1,
 		};
 	}
 
-	constructor(translation: string, key?: NodeKey) {
+	constructor(translation: string, databaseId: string | null, key?: NodeKey) {
 		super(key);
+		this.__databaseId = databaseId;
 		this.__translation = translation || "";
 	}
 	save(): void {
@@ -79,9 +83,19 @@ export class SentenceNode extends ElementNode {
 		return false;
 	}
 
+	getDatabaseId() {
+		const self = this.getLatest();
+		return self.__databaseId;
+	}
+
+	setDatabaseId(databaseId: string): void {
+		const self = this.getWritable();
+		self.__databaseId = databaseId;
+	}
+
 	getTranslation(): string {
 		const self = this.getLatest();
-		return $isSentenceNode(self) ? self.__translation : "";
+		return self.__translation;
 	}
 
 	setTranslation(translation: string): void {
@@ -98,7 +112,10 @@ export class SentenceNode extends ElementNode {
 			restoreSelection
 		);
 		if ($isElementNode(element)) {
-			const sentenceNode = $createSentenceNode(this.__translation);
+			const sentenceNode = $createSentenceNode(
+				this.__translation,
+				this.__databaseId
+			);
 			element.append(sentenceNode);
 			return sentenceNode;
 		}
@@ -122,8 +139,11 @@ export class SentenceNode extends ElementNode {
 	}
 }
 
-export function $createSentenceNode(translation: string): SentenceNode {
-	return $applyNodeReplacement(new SentenceNode(translation));
+export function $createSentenceNode(
+	translation: string,
+	databaseId: string | null
+): SentenceNode {
+	return $applyNodeReplacement(new SentenceNode(translation, databaseId));
 }
 
 export function $isSentenceNode(

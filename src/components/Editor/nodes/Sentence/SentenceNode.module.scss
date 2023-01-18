@@ -1,11 +1,16 @@
 .SentenceNode {
 	display: inline-flex;
 	border-radius: 5px;
-	border-color: #d9d9d9;
+	border-color: #e2e8f0;
 	margin-left: 0.25em;
 	margin-right: 0.25em;
 	border-width: 1px;
 	padding-left: 0.25em;
 	background-color: #f6f6f6;
 	align-items: flex-end;
+
+	.selected {
+		background-color: #1776b1;
+		text-decoration: underline;
+	}
 }

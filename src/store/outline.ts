@@ -1,6 +1,12 @@
 import create from "zustand";
 import { devtools } from "zustand/middleware";
 
+type StoreObject = {
+	isDirty: boolean;
+	isDeleted: boolean;
+};
+
+// > Maybe like this ? type WordsRecord = Record<string, WordNode>;
 type WordsRecord = Record<string, { wordId: string; isAutoFill: boolean }>;
 type SentencesRecord = Record<
 	string,
@@ -8,43 +14,64 @@ type SentencesRecord = Record<
 >;
 type GrammarPointsRecord = Record<string, { title: string }>;
 
+type StoreWordsRecord = Record<
+	keyof WordsRecord,
+	WordsRecord[keyof WordsRecord] & StoreObject
+>;
+type StoreSentencesRecord = Record<
+	keyof SentencesRecord,
+	SentencesRecord[keyof SentencesRecord] & StoreObject
+>;
+type StoreGrammarPointsRecord = Record<
+	keyof GrammarPointsRecord,
+	GrammarPointsRecord[keyof GrammarPointsRecord] & StoreObject
+>;
+
 interface OutlineStore {
-	words: WordsRecord;
-	sentences: SentencesRecord;
-	grammarPoints: GrammarPointsRecord;
+	words: StoreWordsRecord;
+	sentences: StoreSentencesRecord;
+	grammarPoints: StoreGrammarPointsRecord;
 
-	setWords: (words: WordsRecord) => void;
-	setSentences: (sentences: SentencesRecord) => void;
-	setGrammarPoints: (grammarPoints: GrammarPointsRecord) => void;
+	serverState: {
+		words: StoreWordsRecord;
+		sentences: StoreSentencesRecord;
+		grammarPoints: StoreGrammarPointsRecord;
+	};
 
-	appendGrammarPoint: ({
-		key,
-		grammarPoint,
-	}: {
-		key: keyof GrammarPointsRecord;
-		grammarPoint: GrammarPointsRecord[keyof GrammarPointsRecord];
-	}) => void;
-	removeGrammarPoint: (nodeKey: string) => void;
+	actions: {
+		setWords: (words: StoreWordsRecord) => void;
+		setSentences: (sentences: StoreSentencesRecord) => void;
+		setGrammarPoints: (grammarPoints: StoreGrammarPointsRecord) => void;
+		appendGrammarPoint: ({
+			key,
+			grammarPoint,
+		}: {
+			key: keyof GrammarPointsRecord;
+			grammarPoint: GrammarPointsRecord[keyof GrammarPointsRecord];
+		}) => void;
+		removeGrammarPoint: (nodeKey: string) => void;
 
-	appendWord: ({
-		key,
-		word,
-	}: {
-		key: keyof WordsRecord;
-		word: WordsRecord[keyof WordsRecord];
-	}) => void;
-	removeWord: (nodeKey: string) => void;
+		appendWord: ({
+			key,
+			word,
+		}: {
+			key: keyof WordsRecord;
+			word: WordsRecord[keyof WordsRecord];
+		}) => void;
+		removeWord: (nodeKey: string) => void;
 
-	appendSentence: ({
-		key,
-		sentence,
-	}: {
-		key: keyof SentencesRecord;
-		sentence: SentencesRecord[keyof SentencesRecord];
-	}) => void;
-	removeSentence: (nodeKey: string) => void;
+		appendSentence: ({
+			key,
+			sentence,
+		}: {
+			key: keyof SentencesRecord;
+			sentence: SentencesRecord[keyof SentencesRecord];
+		}) => void;
+		removeSentence: (nodeKey: string) => void;
 
-	clear: () => void;
+		clear: () => void;
+		markServerState: () => void;
+	};
 }
 
 const useOutlineStore = create<OutlineStore>()(
@@ -54,45 +81,119 @@ const useOutlineStore = create<OutlineStore>()(
 			sentences: {},
 			grammarPoints: {},
 
-			setWords: (words: WordsRecord) => set(() => ({ words })),
-			setSentences: (sentences: SentencesRecord) => set(() => ({ sentences })),
-			setGrammarPoints: (grammarPoints: GrammarPointsRecord) =>
-				set(() => ({ grammarPoints })),
+			serverState: {
+				words: {},
+				sentences: {},
+				grammarPoints: {},
+			},
 
-			appendWord: ({ key, word }) =>
-				set((state) => ({
-					words: { ...state.words, [key]: word },
-				})),
-			removeWord: (nodeKey) =>
-				set((state) => {
-					const newState = { ...state.words };
-					delete newState[nodeKey];
-					return { words: newState };
-				}),
+			actions: {
+				setWords: (words: StoreWordsRecord) => set(() => ({ words })),
+				setSentences: (sentences: StoreSentencesRecord) =>
+					set(() => ({ sentences })),
+				setGrammarPoints: (grammarPoints: StoreGrammarPointsRecord) =>
+					set(() => ({ grammarPoints })),
 
-			appendGrammarPoint: ({ key, grammarPoint }) =>
-				set((state) => ({
-					grammarPoints: { ...state.grammarPoints, [key]: grammarPoint },
-				})),
-			removeGrammarPoint: (nodeKey) =>
-				set((state) => {
-					const newState = { ...state.grammarPoints };
-					delete newState[nodeKey];
-					return { grammarPoints: newState };
-				}),
+				appendWord: ({ key, word }) =>
+					set((state) => ({
+						words: {
+							...state.words,
+							[key]: {
+								...word,
+								isDirty: true,
+								isDeleted: false,
+							},
+						},
+					})),
+				removeWord: (nodeKey) =>
+					set((state) => {
+						const newState = { ...state.words };
+						delete newState[nodeKey];
+						return { words: newState };
+					}),
 
-			appendSentence: ({ key, sentence }) =>
-				set((state) => ({
-					sentences: { ...state.sentences, [key]: sentence },
-				})),
-			removeSentence: (nodeKey) =>
-				set((state) => {
-					const newState = { ...state.sentences };
-					delete newState[nodeKey];
-					return { sentences: newState };
-				}),
+				appendGrammarPoint: ({ key, grammarPoint }) =>
+					set((state) => ({
+						grammarPoints: {
+							...state.grammarPoints,
+							[key]: {
+								...grammarPoint,
+								isDirty: true,
+								isDeleted: false,
+							},
+						},
+					})),
+				removeGrammarPoint: (nodeKey) =>
+					set((state) => {
+						const newState = { ...state.grammarPoints };
+						delete newState[nodeKey];
+						return { grammarPoints: newState };
+					}),
 
-			clear: () => set(() => ({ words: {}, sentences: {}, grammarPoints: {} })),
+				appendSentence: ({ key, sentence }) =>
+					set((state) => ({
+						sentences: {
+							...state.sentences,
+							[key]: {
+								...sentence,
+								isDirty: true,
+								isDeleted: false,
+							},
+						},
+					})),
+				removeSentence: (nodeKey) =>
+					set((state) => {
+						const stateSentence = state.sentences[nodeKey];
+						if (stateSentence) {
+							return {
+								sentences: {
+									...state.sentences,
+									[nodeKey]: {
+										...stateSentence,
+										isDirty: true,
+										isDeleted: true,
+									},
+								},
+							};
+						}
+						return {};
+					}),
+
+				clear: () =>
+					set(() => ({ words: {}, sentences: {}, grammarPoints: {} })),
+				markServerState: () =>
+					set((state) => {
+						const newServerState = {
+							grammarPoints: { ...state.grammarPoints },
+							words: { ...state.words },
+							sentences: { ...state.sentences },
+						};
+
+						const cleanSentences = { ...state.sentences };
+						Object.values(cleanSentences).forEach((sentence) => {
+							sentence.isDeleted = false;
+							sentence.isDirty = false;
+						});
+
+						const cleanWords = { ...state.words };
+						Object.values(cleanWords).forEach((word) => {
+							word.isDeleted = false;
+							word.isDirty = false;
+						});
+
+						const cleanGrammarPoints = { ...state.grammarPoints };
+						Object.values(cleanGrammarPoints).forEach((grammarPoint) => {
+							grammarPoint.isDeleted = false;
+							grammarPoint.isDirty = false;
+						});
+						return {
+							serverState: newServerState,
+							sentences: cleanSentences,
+							words: cleanWords,
+							grammarPoints: cleanGrammarPoints,
+						};
+					}),
+			},
 		}),
 		{
 			name: "outline-storage",
@@ -100,4 +201,12 @@ const useOutlineStore = create<OutlineStore>()(
 	)
 );
 
-export default useOutlineStore;
+export const useOutlineActions = () =>
+	useOutlineStore((state) => state.actions);
+export const useOutlineWords = () => useOutlineStore((state) => state.words);
+export const useOutlineSentences = () =>
+	useOutlineStore((state) => state.sentences);
+export const useOutlineGrammarPoints = () =>
+	useOutlineStore((state) => state.grammarPoints);
+export const useOutlineServerState = () =>
+	useOutlineStore((state) => state.serverState);

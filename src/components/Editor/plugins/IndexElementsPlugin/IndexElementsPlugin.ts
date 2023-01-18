@@ -9,7 +9,13 @@ import {
 import { WordNode } from "@components/Editor/nodes/WordNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
-import useOutlineStore from "@store/outline";
+import {
+	useOutlineActions,
+	useOutlineGrammarPoints,
+	useOutlineSentences,
+	useOutlineServerState,
+	useOutlineWords,
+} from "@store/outline";
 import type { LexicalNode } from "lexical";
 import {
 	$getNodeByKey,
@@ -21,8 +27,9 @@ import {
 	COMMAND_PRIORITY_NORMAL,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import { useEffect, useMemo, useRef } from "react";
-import shallow from "zustand/shallow";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { DOCUMENT_LOADED_COMMAND } from "../FetchDocumentPlugin/FetchDocumentPlugin";
+import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
 
 const checkForBlurredElement =
 	<T extends LexicalNode>({
@@ -80,34 +87,20 @@ const checkForBlurredElement =
 const IndexElementsPlugin = () => {
 	const [editor] = useLexicalComposerContext();
 	const {
-		grammarPointStore,
-		sentenceStore,
-		wordStore,
-		appendSentence,
-		removeSentence,
 		appendGrammarPoint,
-		removeGrammarPoint,
+		appendSentence,
 		appendWord,
+		clear: clearStore,
+		markServerState,
+		removeGrammarPoint,
+		removeSentence,
 		removeWord,
-		clearStore,
-	} = useOutlineStore(
-		(store) => ({
-			sentenceStore: store.sentences,
-			wordStore: store.words,
-			grammarPointStore: store.grammarPoints,
-			setWordStore: store.setWords,
-			setSentenceStore: store.setSentences,
-			setGrammarPointStore: store.setGrammarPoints,
-			appendSentence: store.appendSentence,
-			removeSentence: store.removeSentence,
-			appendWord: store.appendWord,
-			removeWord: store.removeWord,
-			appendGrammarPoint: store.appendGrammarPoint,
-			removeGrammarPoint: store.removeGrammarPoint,
-			clearStore: store.clear,
-		}),
-		shallow
-	);
+	} = useOutlineActions();
+
+	const sentenceStore = useOutlineSentences();
+	const wordStore = useOutlineWords();
+	const grammarPointStore = useOutlineGrammarPoints();
+	const serverState = useOutlineServerState();
 
 	//const blurFoundWordKey = useRef<string | null>(null);
 	const blurFoundGrammarPointKey = useRef<string | null>(null);
@@ -165,8 +158,53 @@ const IndexElementsPlugin = () => {
 		[appendGrammarPoint, grammarPointStore]
 	);
 
+	const reconcileServerState = useCallback(() => {
+		const { sentences: serverSentences } = serverState;
+		for (const [nodeKey, sentence] of Object.entries(sentenceStore)) {
+			const serverSentence = serverSentences[nodeKey];
+			if (serverSentence) {
+				const sentenceDifference =
+					sentence.sentence !== serverSentence.sentence;
+				const translationDifference =
+					sentence.translation !== serverSentence.translation;
+
+				const isDirty = sentenceDifference || translationDifference;
+				if (isDirty) {
+					// upsert
+				}
+
+				delete serverSentences[nodeKey];
+			}
+		}
+
+		for (const [nodeKey, sentence] of Object.entries(serverSentences)) {
+			const shouldDelete = true;
+			if (shouldDelete) {
+				// delete
+			}
+		}
+
+		markServerState();
+	}, [markServerState, sentenceStore, serverState]);
+
 	useEffect(() => {
 		return mergeRegister(
+			editor.registerCommand(
+				SAVE_EDITOR,
+				() => {
+					reconcileServerState();
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand(
+				DOCUMENT_LOADED_COMMAND,
+				() => {
+					markServerState();
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
 			editor.registerCommand(
 				CLEAR_EDITOR_COMMAND,
 				() => {
@@ -290,6 +328,8 @@ const IndexElementsPlugin = () => {
 		clearStore,
 		editor,
 		grammarPointStore,
+		markServerState,
+		reconcileServerState,
 		removeGrammarPoint,
 		removeSentence,
 		removeWord,

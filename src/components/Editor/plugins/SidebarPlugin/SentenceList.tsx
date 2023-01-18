@@ -4,7 +4,7 @@ import type { ReferenceType } from "@floating-ui/react";
 import { Box, Button, Text, useToken } from "@chakra-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useOutlineStore from "@store/outline";
+import { useOutlineSentences } from "@store/outline";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { $createRangeSelection, $setSelection } from "lexical";
 import router from "next/router";
@@ -27,7 +27,7 @@ const SentenceList = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
 	const { highlight: targetSentence } = router.query;
-	const sentences = useOutlineStore((store) => store.sentences);
+	const sentences = useOutlineSentences();
 	const targetSentenceId = Array.isArray(targetSentence)
 		? targetSentence[0]
 		: targetSentence;
@@ -126,7 +126,17 @@ const SentenceList = () => {
 									variant="link"
 									onClick={() => highlightSentence(nodeKey)}
 								>
-									<Text color="text.400">{node.sentence}</Text>
+									<Text
+										color={
+											node.isDeleted
+												? "red.300"
+												: node.isDirty
+												? "green.200"
+												: "text.400"
+										}
+									>
+										{node.sentence}
+									</Text>
 								</Button>
 								<Text color="text.300" fontSize="0.9em">
 									{node.translation}

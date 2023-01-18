@@ -1,8 +1,12 @@
 import { Box, Spinner } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { trpc } from "@utils/trpc";
-import { $getRoot, CLEAR_EDITOR_COMMAND } from "lexical";
+import { $getRoot, CLEAR_EDITOR_COMMAND, createCommand } from "lexical";
 import { useEffect, useState } from "react";
+
+export const DOCUMENT_LOADED_COMMAND = createCommand<void>(
+	"DOCUMENT_LOADED_COMMAND"
+);
 
 const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
@@ -18,11 +22,13 @@ const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 						data.serializedDocument
 					);
 					editor.setEditorState(savedEditorState);
+					console.log("Loading finished");
 				} else {
 					editor.update(() => {
 						$getRoot().clear();
 					});
 				}
+				editor.dispatchCommand(DOCUMENT_LOADED_COMMAND, undefined);
 			}
 		},
 	});
