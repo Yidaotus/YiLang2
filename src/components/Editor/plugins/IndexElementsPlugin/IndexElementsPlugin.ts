@@ -153,6 +153,7 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 
 			if (
 				previousNode &&
+				!previousNode.isDeleted &&
 				newSentence.sentence === previousNode.sentence &&
 				newSentence.databaseId === previousNode.databaseId &&
 				newSentence.translation === previousNode.translation &&

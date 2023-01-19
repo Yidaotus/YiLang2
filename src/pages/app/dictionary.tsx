@@ -15,10 +15,6 @@ import {
 	InputLeftElement,
 	InputRightElement,
 	Link,
-	Menu,
-	MenuButton,
-	MenuItem,
-	MenuList,
 	Skeleton,
 	Table,
 	TableContainer,
@@ -41,9 +37,7 @@ import {
 	IoArrowForward,
 	IoArrowUp,
 	IoClose,
-	IoEllipsisVertical,
 	IoFilter,
-	IoPencil,
 	IoSearch,
 	IoSwapVertical,
 	IoTrashBin,
@@ -57,6 +51,13 @@ const DictionaryPage: NextPageWithLayout = () => {
 	const allWords = trpc.dictionary.word.getAll.useQuery({
 		language: selectedLanguage.id,
 	});
+	const trcpUtils = trpc.useContext();
+	const removeWord = trpc.dictionary.word.delete.useMutation({
+		onSuccess: ({ id }) => {
+			trcpUtils.dictionary.word.get.invalidate({ id });
+			trcpUtils.dictionary.word.getAll.invalidate();
+		},
+	});
 	const [searchTerm, setSearchTerm] = useState("");
 	const [pageSize, setPageSize] = useState(20);
 	const [page, setPage] = useState(0);
@@ -64,6 +65,13 @@ const DictionaryPage: NextPageWithLayout = () => {
 		column: keyof Exclude<typeof allWords.data, undefined>[number];
 		order: "asc" | "desc";
 	}>();
+
+	const removeWordHandler = useCallback(
+		(id: string) => {
+			removeWord.mutate({ id });
+		},
+		[removeWord]
+	);
 
 	const pageSearchResult = useMemo(() => {
 		if (!allWords.data) {
@@ -326,26 +334,21 @@ const DictionaryPage: NextPageWithLayout = () => {
 												<Td>{entry.tags.map((tag) => tag.name).join(", ")}</Td>
 												<Td>{entry.createdAt.toLocaleDateString()}</Td>
 												<Td w="50px">
-													<Menu isLazy>
-														<MenuButton
-															as={IconButton}
-															aria-label="Options"
-															icon={<IoEllipsisVertical />}
-															variant="link"
-														/>
-														<MenuList>
-															<MenuItem icon={<IoPencil />}>
-																Open Document
-															</MenuItem>
-															<MenuItem
-																icon={<IoTrashBin />}
-																bg="#e11d48"
-																color="#FFFFFF"
-															>
-																Delete Document
-															</MenuItem>
-														</MenuList>
-													</Menu>
+													<IconButton
+														size="sm"
+														variant="ghost"
+														aria-label="delete word"
+														icon={<IoTrashBin />}
+														sx={{
+															"&:hover": {
+																bg: "red.400",
+																color: "white",
+															},
+														}}
+														onClick={() => removeWordHandler(entry.id)}
+													>
+														Delete Word
+													</IconButton>
 												</Td>
 											</Tr>
 										);

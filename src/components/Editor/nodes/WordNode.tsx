@@ -42,7 +42,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import type { Tag } from "@prisma/client";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 export type SerializedWordNode = Spread<
 	{
@@ -76,6 +76,14 @@ const WordComponent = ({
 	const wordRef = useRef<HTMLDivElement>(null);
 	const [isSelected, setSelected, clearSelected] =
 		useLexicalNodeSelection(nodeKey);
+
+	const borderColors = useMemo(() => {
+		if (!dbWord.data?.tags || dbWord.data.tags.length < 1) {
+			return ["#9ca5bf"];
+		} else {
+			return dbWord.data.tags.map((t) => t.color);
+		}
+	}, [dbWord.data?.tags]);
 
 	useEffect(() => {
 		const remoteWord = dbWord.data;
@@ -131,7 +139,7 @@ const WordComponent = ({
 						cursor: "default",
 						borderRadius: "4px",
 						px: "2px",
-						bg: isSelected ? "#CCCCCC" : "#FAFAF9",
+						bg: isSelected ? "text.400" : "text.400",
 						borderBottom: "5px",
 					}}
 				>
@@ -146,7 +154,7 @@ const WordComponent = ({
 							mx: "2px",
 							borderRadius: "4px",
 							px: "2px",
-							bg: isSelected ? "text.100" : "#FAFAF9",
+							bg: isSelected ? "text.100" : "text.50",
 							pos: "relative",
 							"&::after": {
 								content: '""',
@@ -155,10 +163,10 @@ const WordComponent = ({
 								left: 0,
 								width: "100%",
 								h: "2px",
-								bg: `linear-gradient(to right, ${dbWord.data.tags
+								bg: `linear-gradient(to right, ${borderColors
 									.map(
 										(t, i, tags) =>
-											`${t.color} ${(i / tags.length) * 100}%, ${t.color} ${
+											`${t} ${(i / tags.length) * 100}%, ${t} ${
 												((i + 1) / tags.length) * 100
 											}%`
 									)

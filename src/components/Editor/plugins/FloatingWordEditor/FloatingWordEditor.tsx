@@ -85,7 +85,7 @@ const WordEditorPopup = React.forwardRef<
 		ref
 	) => {
 		const utils = trpc.useContext();
-		const createWord = trpc.dictionary.words.create.useMutation({
+		const createWord = trpc.dictionary.word.create.useMutation({
 			onSuccess() {
 				utils.dictionary.tag.getAll.invalidate();
 			},

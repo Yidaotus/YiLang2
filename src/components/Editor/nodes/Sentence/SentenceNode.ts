@@ -14,6 +14,7 @@ import sentenceNodeStyles from "./SentenceNode.module.scss";
 export type SerializedSentenceNode = Spread<
 	{
 		databaseId: string | null;
+		showTranslation: boolean;
 		translation: string;
 		type: "sentence";
 		version: 1;
@@ -25,6 +26,7 @@ export type SerializedSentenceNode = Spread<
 export class SentenceNode extends ElementNode {
 	/** @internal */
 	__translation: string;
+	__showTranslation: boolean;
 	__databaseId: string | null;
 
 	static getType(): string {
@@ -32,7 +34,12 @@ export class SentenceNode extends ElementNode {
 	}
 
 	static clone(node: SentenceNode): SentenceNode {
-		return new SentenceNode(node.__translation, node.__databaseId, node.__key);
+		return new SentenceNode(
+			node.__translation,
+			node.__databaseId,
+			node.__showTranslation,
+			node.__key
+		);
 	}
 
 	static importDOM(): null {
@@ -42,7 +49,8 @@ export class SentenceNode extends ElementNode {
 	static importJSON(serializedNode: SerializedSentenceNode): SentenceNode {
 		const node = $createSentenceNode(
 			serializedNode.translation,
-			serializedNode.databaseId
+			serializedNode.databaseId,
+			serializedNode.showTranslation
 		);
 		return node;
 	}
@@ -52,15 +60,22 @@ export class SentenceNode extends ElementNode {
 			...super.exportJSON(),
 			databaseId: this.getDatabaseId(),
 			translation: this.getTranslation(),
+			showTranslation: this.getShowTranslation(),
 			type: "sentence",
 			version: 1,
 		};
 	}
 
-	constructor(translation: string, databaseId: string | null, key?: NodeKey) {
+	constructor(
+		translation: string,
+		databaseId: string | null,
+		showTranslation: boolean,
+		key?: NodeKey
+	) {
 		super(key);
 		this.__databaseId = databaseId;
 		this.__translation = translation || "";
+		this.__showTranslation = showTranslation;
 	}
 	save(): void {
 		throw new Error("Method not implemented.");
@@ -68,6 +83,7 @@ export class SentenceNode extends ElementNode {
 
 	createDOM(_config: EditorConfig): HTMLElement {
 		const element = document.createElement("div");
+		element.dataset.translation = this.getTranslation();
 		addClassNamesToElement(
 			element,
 			sentenceNodeStyles.SentenceNode || "SentenceNode"
@@ -76,11 +92,43 @@ export class SentenceNode extends ElementNode {
 	}
 
 	updateDOM(
-		_prevNode: SentenceNode,
-		_element: HTMLElement,
+		prevNode: SentenceNode,
+		element: HTMLElement,
 		_config: EditorConfig
 	): boolean {
+		if (prevNode.__translation !== this.__translation) {
+			element.dataset.translation = this.__translation;
+		}
+		if (prevNode.__showTranslation !== this.__showTranslation) {
+			if (this.getShowTranslation()) {
+				element.classList.remove(
+					sentenceNodeStyles.SentenceNode || "SentenceNode"
+				);
+				element.classList.add(
+					sentenceNodeStyles.SentenceNodeWithTranslation ||
+						"SentenceNodeWithTranslation"
+				);
+			} else {
+				element.classList.add(
+					sentenceNodeStyles.SentenceNode || "SentenceNode"
+				);
+				element.classList.remove(
+					sentenceNodeStyles.SentenceNodeWithTranslation ||
+						"SentenceNodeWithTranslation"
+				);
+			}
+		}
 		return false;
+	}
+
+	getShowTranslation() {
+		const self = this.getLatest();
+		return self.__showTranslation;
+	}
+
+	setShowTranslation(showTranslation: boolean): void {
+		const self = this.getWritable();
+		self.__showTranslation = showTranslation;
 	}
 
 	getDatabaseId() {
@@ -114,7 +162,8 @@ export class SentenceNode extends ElementNode {
 		if ($isElementNode(element)) {
 			const sentenceNode = $createSentenceNode(
 				this.__translation,
-				this.__databaseId
+				this.__databaseId,
+				this.__showTranslation
 			);
 			element.append(sentenceNode);
 			return sentenceNode;
@@ -122,16 +171,20 @@ export class SentenceNode extends ElementNode {
 		return null;
 	}
 
-	canInsertTextBefore(): false {
-		return false;
+	canInsertTextBefore(): true {
+		return true;
 	}
 
-	canInsertTextAfter(): false {
-		return false;
+	canInsertTextAfter(): true {
+		return true;
 	}
 
 	canBeEmpty(): false {
 		return false;
+	}
+
+	canMergeWith(node: ElementNode): boolean {
+		return $isSentenceNode(node);
 	}
 
 	isInline(): true {
@@ -141,9 +194,10 @@ export class SentenceNode extends ElementNode {
 
 export function $createSentenceNode(
 	translation: string,
-	databaseId: string | null
+	databaseId: string | null,
+	showTranslation: boolean
 ): SentenceNode {
-	return new SentenceNode(translation, databaseId);
+	return new SentenceNode(translation, databaseId, showTranslation);
 }
 
 export function $isSentenceNode(

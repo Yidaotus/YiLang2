@@ -19,6 +19,30 @@ export const sentenceRouter = router({
 				},
 			});
 		}),
+	search: protectedProcedure
+		.input(
+			z.object({
+				search: z.string(),
+				languageId: z.string(),
+			})
+		)
+		.query(
+			async ({ ctx: { prisma, session }, input: { languageId, search } }) => {
+				const foundSentences = await prisma.sentence.findMany({
+					where: {
+						user: { id: session.user.id },
+						language: { id: languageId },
+						OR: [
+							{ sentence: { contains: search, mode: "insensitive" } },
+							{ translation: { contains: search, mode: "insensitive" } },
+						],
+					},
+					include: { sourceDocument: { select: { title: true, id: true } } },
+				});
+				console.debug({ foundSentences, languageId, search });
+				return foundSentences;
+			}
+		),
 	deleteMany: protectedProcedure
 		.input(
 			z.object({

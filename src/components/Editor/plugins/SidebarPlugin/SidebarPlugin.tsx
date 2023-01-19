@@ -1,11 +1,8 @@
 import { Box, Button, Divider, IconButton, useToken } from "@chakra-ui/react";
-import {
-	$createDialogueContainerNode,
-	$createDialogueSpeakerNode,
-	$createDialogueSpeechNode,
-} from "@components/Editor/nodes/Dialogue";
+import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createTextNode, $insertNodes } from "lexical";
+import { $findMatchingParent } from "@lexical/utils";
+import { $getSelection, $isRangeSelection } from "lexical";
 import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { IoSaveOutline } from "react-icons/io5";
@@ -29,23 +26,19 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 
 	const DEBUG = useCallback(() => {
 		editor.update(() => {
-			const container = $createDialogueContainerNode();
+			const selection = $getSelection();
+			if (
+				!selection ||
+				!$isRangeSelection(selection) ||
+				!selection.isCollapsed()
+			)
+				return;
 
-			const speaker1 = $createDialogueSpeakerNode().append(
-				$createTextNode("").setMode("token")
-			);
-			const speaker2 = $createDialogueSpeakerNode().append(
-				$createTextNode("").setMode("token")
-			);
-			const speech1 = $createDialogueSpeechNode().append(
-				$createTextNode("").setMode("token")
-			);
-			const speech2 = $createDialogueSpeechNode().append(
-				$createTextNode("").setMode("token")
-			);
-			container.append(speaker1, speech1, speaker2, speech2);
+			const node = selection.anchor.getNode();
+			const parent = $findMatchingParent(node, $isSentenceNode);
+			if (!$isSentenceNode(parent)) return;
 
-			$insertNodes([container]);
+			parent.setShowTranslation(!parent.getShowTranslation());
 		});
 	}, [editor]);
 

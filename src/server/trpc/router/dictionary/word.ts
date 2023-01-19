@@ -92,6 +92,17 @@ export const wordRouter = router({
 				return wordWithDeserializedTranslations;
 			}
 		),
+	delete: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+			})
+		)
+		.mutation(async ({ ctx: { prisma, session }, input: { id } }) => {
+			return await prisma.word.delete({
+				where: { userWordId: { id, userId: session.user.id } },
+			});
+		}),
 	update: protectedProcedure
 		.input(
 			z.object({

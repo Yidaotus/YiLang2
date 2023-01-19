@@ -2,13 +2,14 @@ import type { Middleware } from "@floating-ui/dom";
 import type { ReferenceType } from "@floating-ui/react";
 
 import { Box, Button, Text, useToken } from "@chakra-ui/react";
+import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useOutlineSentences } from "@store/outline";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { $createRangeSelection, $setSelection } from "lexical";
+import { $getNodeByKey } from "lexical";
 import router from "next/router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoAlbumsOutline } from "react-icons/io5";
 
 const clipTop: Middleware = {
@@ -26,11 +27,12 @@ const clipTop: Middleware = {
 const SentenceList = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const { highlight: targetSentence } = router.query;
+	const { sentence: targetSentence } = router.query;
 	const sentences = useOutlineSentences();
 	const targetSentenceId = Array.isArray(targetSentence)
 		? targetSentence[0]
 		: targetSentence;
+	const previousTargetSentenceId = useRef<typeof targetSentenceId>();
 
 	const buttonRef = useRef(null);
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
@@ -52,10 +54,10 @@ const SentenceList = () => {
 							inline: "nearest",
 						});
 						setPopupReference(null);
-						const newSelection = $createRangeSelection();
-						newSelection.anchor.set(key, 0, "element");
-						newSelection.focus.set(key, 0, "element");
-						$setSelection(newSelection);
+						const node = $getNodeByKey(key);
+						if ($isSentenceNode(node)) {
+							node.selectStart();
+						}
 					}
 				});
 			}
@@ -63,14 +65,13 @@ const SentenceList = () => {
 		[editor]
 	);
 
-	/*
 	useEffect(() => {
 		if (
 			targetSentenceId &&
 			targetSentenceId !== previousTargetSentenceId.current
 		) {
-			const targetInStore = Object.entries(sentenceStore).find(
-				([_, node]) => targetSentenceId === node.
+			const targetInStore = Object.entries(sentences).find(
+				([_, node]) => targetSentenceId === node.databaseId
 			);
 			if (targetInStore) {
 				highlightSentence(targetInStore[0]);
@@ -80,10 +81,9 @@ const SentenceList = () => {
 	}, [
 		highlightSentence,
 		previousTargetSentenceId,
+		sentences,
 		targetSentenceId,
-		sentenceStore,
 	]);
-*/
 
 	return (
 		<>
@@ -118,7 +118,14 @@ const SentenceList = () => {
 						overflow="auto"
 					>
 						{Object.entries(sentences).map(([nodeKey, node]) => (
-							<Box key={nodeKey} display="flex" flexDir="column">
+							<Box
+								key={nodeKey}
+								display="flex"
+								flexDir="column"
+								overflow="hidden"
+								whiteSpace="nowrap"
+								textOverflow="ellipsis"
+							>
 								<Button
 									fontWeight="normal"
 									textAlign="left"

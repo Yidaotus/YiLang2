@@ -20,7 +20,7 @@ import Layout from "@components/Layout";
 import useEditorStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import { trpc } from "@utils/trpc";
-import { filterUndefined } from "@utils/utils";
+import { filterUndefined, highlightString } from "@utils/utils";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
@@ -32,7 +32,7 @@ import {
 import { RiTranslate } from "react-icons/ri";
 import { RxCalendar } from "react-icons/rx";
 
-const DictionaryEntryPag = () => {
+const DictionaryEntryPage = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = (Array.isArray(routerId) ? routerId[0] : routerId) || "";
@@ -276,11 +276,14 @@ const DictionaryEntryPag = () => {
 														<Box>
 															<Link
 																as={NextLink}
-																href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
+																href={`/app/editor/${sentence.documentId}?sentence=${sentence.id}`}
 															>
-																<Text color="text.400">
-																	{sentence.sentence}
-																</Text>
+																{highlightString({
+																	input: sentence.sentence,
+																	search: dbWord.data?.word || "",
+																	textColor: "text.400",
+																	highlightColor: "yellow.400",
+																})}
 															</Link>
 														</Box>
 														<Box>
@@ -303,7 +306,7 @@ const DictionaryEntryPag = () => {
 	);
 };
 
-DictionaryEntryPag.getLayout = function getLayout(page: ReactElement) {
+DictionaryEntryPage.getLayout = function getLayout(page: ReactElement) {
 	return <Layout>{page}</Layout>;
 };
 
@@ -313,4 +316,4 @@ export const getServerSideProps = async (
 	return protectPage(context);
 };
 
-export default DictionaryEntryPag;
+export default DictionaryEntryPage;

@@ -223,7 +223,7 @@ function TextFormatFloatingToolbar({
 
 	const insertSentence = useCallback(() => {
 		editor.update(() => {
-			const translation = "";
+			const translation = "This is just a simple test!";
 			const selection = $getSelection();
 
 			if (!$isRangeSelection(selection)) {
@@ -272,7 +272,7 @@ function TextFormatFloatingToolbar({
 
 				if (!parent.is(prevParent)) {
 					prevParent = parent;
-					sentenceNode = $createSentenceNode(translation, null);
+					sentenceNode = $createSentenceNode(translation, null, true);
 
 					if ($isSentenceNode(parent)) {
 						if (node.getPreviousSibling() === null) {

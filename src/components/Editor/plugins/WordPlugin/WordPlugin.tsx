@@ -1,17 +1,31 @@
-import { $createWordNode, WordNode } from "@components/Editor/nodes/WordNode";
+import {
+	$createWordNode,
+	$isWordNode,
+	WordNode,
+} from "@components/Editor/nodes/WordNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import useEditorStore from "@store/store";
 import {
 	$createNodeSelection,
 	$createRangeSelection,
+	$createTextNode,
 	$getRoot,
 	$getSelection,
 	$insertNodes,
+	$isDecoratorNode,
 	$isElementNode,
+	$isNodeSelection,
+	$isRangeSelection,
 	$setSelection,
+	COMMAND_PRIORITY_EDITOR,
 	COMMAND_PRIORITY_LOW,
+	COMMAND_PRIORITY_NORMAL,
 	createCommand,
+	KEY_ARROW_LEFT_COMMAND,
+	KEY_ARROW_RIGHT_COMMAND,
+	KEY_BACKSPACE_COMMAND,
+	KEY_DELETE_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
 
@@ -34,10 +48,101 @@ const WordPlugin = () => {
 
 		return mergeRegister(
 			editor.registerCommand(
+				KEY_DELETE_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!selection || !$isNodeSelection(selection)) return false;
+
+					for (const node of selection.getNodes()) {
+						if ($isWordNode(node)) {
+							node.selectPrevious();
+							node.remove();
+						}
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand(
+				KEY_BACKSPACE_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!selection || !$isNodeSelection(selection)) return false;
+
+					for (const node of selection.getNodes()) {
+						if ($isWordNode(node)) {
+							node.selectPrevious();
+							node.remove();
+						}
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand<KeyboardEvent>(
+				KEY_ARROW_LEFT_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if ($isNodeSelection(selection)) {
+						const nodes = selection.getNodes();
+						const targetNode = nodes[0];
+						if (targetNode) {
+							const previousNode = targetNode.getPreviousSibling();
+
+							if ($isDecoratorNode(previousNode) && previousNode.isInline()) {
+								previousNode.insertAfter($createTextNode(" "));
+								previousNode.selectNext();
+								return true;
+							}
+						}
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_EDITOR
+			),
+			editor.registerCommand(
+				KEY_ARROW_LEFT_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!selection || !$isNodeSelection(selection)) return false;
+
+					for (const node of selection.getNodes()) {
+						if (!$isWordNode(node)) return false;
+
+						const sibling = node.getPreviousSibling();
+						if (!sibling || $isWordNode(sibling)) {
+							node.insertBefore($createTextNode(" "));
+						}
+					}
+
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand(
+				KEY_ARROW_RIGHT_COMMAND,
+				() => {
+					const selection = $getSelection();
+					if (!selection || !$isNodeSelection(selection)) return false;
+
+					for (const node of selection.getNodes()) {
+						if (!$isWordNode(node)) return false;
+
+						const sibling = node.getNextSibling();
+						if (!sibling || $isWordNode(sibling)) {
+							node.insertAfter($createTextNode(" "));
+						}
+					}
+
+					return false;
+				},
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand(
 				INSERT_WORD,
 				(word) => {
 					const selection = $getSelection();
-					if (!selection) return false;
+					if (!selection || !$isRangeSelection(selection)) return false;
 
 					const initialWordNode = $createWordNode(
 						word.translations,
@@ -45,7 +150,14 @@ const WordPlugin = () => {
 						word.databaseId,
 						false
 					);
-					$insertNodes([initialWordNode]);
+					const extractedNodes = selection.extract();
+					for (const [index, node] of extractedNodes.entries()) {
+						if (index === 0) {
+							node.replace(initialWordNode);
+						} else {
+							node.remove();
+						}
+					}
 
 					if (markAllInstances) {
 						const root = $getRoot();
@@ -90,3 +202,9 @@ const WordPlugin = () => {
 };
 
 export default WordPlugin;
+function $findMatchingParent(
+	arg0: import("lexical").ElementNode | import("lexical").TextNode,
+	$isSentenceNode: any
+) {
+	throw new Error("Function not implemented.");
+}
