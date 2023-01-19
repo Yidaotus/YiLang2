@@ -60,12 +60,13 @@ import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "../FloatingWordEditor/Floatin
 import { INSERT_SENTENCE_COMMAND } from "../SentencePlugin/SentencePlugin";
 import { INSERT_WORD } from "../WordPlugin/WordPlugin";
 
-export function getDOMRangeRect(
+export const getDOMRangeRect = (
 	nativeSelection: Selection,
 	rootElement: HTMLElement
-): DOMRect {
+) => {
 	const domRange = nativeSelection.getRangeAt(0);
 
+	let rects;
 	let rect;
 
 	if (nativeSelection.anchorNode === rootElement) {
@@ -74,12 +75,14 @@ export function getDOMRangeRect(
 			inner = inner.firstElementChild as HTMLElement;
 		}
 		rect = inner.getBoundingClientRect();
+		rects = inner.getClientRects();
 	} else {
 		rect = domRange.getBoundingClientRect();
+		rects = domRange.getClientRects();
 	}
 
-	return rect;
-}
+	return { rects, rect };
+};
 
 const useWordEditorDispatch = () => {
 	const [editor] = useLexicalComposerContext();
@@ -523,7 +526,10 @@ function useFloatingTextFormatToolbar(
 			rootElement.contains(nativeSelection.anchorNode)
 		) {
 			const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
-			setPopupReference({ getBoundingClientRect: () => rangeRect });
+			setPopupReference({
+				getBoundingClientRect: () => rangeRect.rect,
+				getClientRects: () => rangeRect.rects,
+			});
 		} else {
 			setPopupReference(null);
 		}
@@ -633,6 +639,7 @@ function useFloatingTextFormatToolbar(
 		<FloatingContainer
 			popupReference={popupReference}
 			popupPlacement="top"
+			positionInline={false}
 			showArrow
 		>
 			<TextFormatFloatingToolbarMemo

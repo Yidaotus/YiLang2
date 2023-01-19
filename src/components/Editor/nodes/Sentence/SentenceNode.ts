@@ -84,10 +84,17 @@ export class SentenceNode extends ElementNode {
 	createDOM(_config: EditorConfig): HTMLElement {
 		const element = document.createElement("mark");
 		element.dataset.translation = this.getTranslation();
-		addClassNamesToElement(
-			element,
-			sentenceNodeStyles.SentenceNode || "SentenceNode"
-		);
+		if (this.getShowTranslation()) {
+			element.classList.add(
+				sentenceNodeStyles.SentenceNodeWithTranslation ||
+					"SentenceNodeWithTranslation"
+			);
+		} else {
+			addClassNamesToElement(
+				element,
+				sentenceNodeStyles.SentenceNode || "SentenceNode"
+			);
+		}
 		return element;
 	}
 

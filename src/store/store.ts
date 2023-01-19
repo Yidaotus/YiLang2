@@ -55,7 +55,12 @@ const useEditorStore = create<EditorStore>()(
 				editorHideAutoFillWords: false,
 				setEditorHideAutoFillWords: (hideAutoFill: boolean) =>
 					set(() => ({ editorHideAutoFillWords: hideAutoFill })),
-				editorSelectedBlock: { type: "paragraph", key: "", layoutMode: "full" },
+				editorSelectedBlock: {
+					type: "paragraph",
+					key: "",
+					layoutMode: "full",
+					sentenceKey: null,
+				},
 				setEditorSelectedBlock: (selectedBlock: SelectedBlock) =>
 					set(() => ({ editorSelectedBlock: selectedBlock })),
 			}),

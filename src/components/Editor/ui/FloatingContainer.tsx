@@ -1,5 +1,6 @@
 import type { ChakraProps } from "@chakra-ui/react";
 import type { Middleware, Placement, ReferenceType } from "@floating-ui/react";
+import { inline } from "@floating-ui/react";
 
 import { Box, chakra } from "@chakra-ui/react";
 import { arrow, flip, offset, shift, useFloating } from "@floating-ui/react";
@@ -30,6 +31,7 @@ type FloatingContainerProps = {
 	showArrow?: boolean;
 	unMountOnHide?: boolean;
 	showBackground?: boolean;
+	positionInline?: boolean;
 } & ChakraProps;
 
 const FloatingContainer = ({
@@ -42,6 +44,7 @@ const FloatingContainer = ({
 	showArrow = false,
 	unMountOnHide = false,
 	showBackground = true,
+	positionInline = true,
 	...rest
 }: FloatingContainerProps) => {
 	const arrowRef = useRef(null);
@@ -59,6 +62,7 @@ const FloatingContainer = ({
 		placement: popupPlacement,
 		middleware: [
 			offset(popupOffset),
+			positionInline ? inline() : undefined,
 			shift(),
 			flip(),
 			shiftOnHeader,

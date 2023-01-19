@@ -38,18 +38,17 @@
 	max-width: 90%;
 	background-color: #f6f6f6;
 
-	> span {
-		flex-shrink: 0;
-	}
-
 	&::after {
 		background-repeat: no-repeat;
 		background-position: left;
 		background-image: url("/icons/bookmark.svg");
 		background-size: 1.4em;
-		padding-left: 24px;
-		padding-right: 16px;
-		font-size: 0.9em;
+		padding-left: 20px;
+		padding-right: 8px;
+		margin-left: 4px;
+		color: #696f80;
+		font-size: 0.8em;
+		font-style: italic;
 		content: " " attr(data-translation);
 	}
 }

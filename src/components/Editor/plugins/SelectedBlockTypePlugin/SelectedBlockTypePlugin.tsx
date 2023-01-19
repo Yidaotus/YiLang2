@@ -1,3 +1,4 @@
+import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
 import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
 import { $isListNode, ListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -11,7 +12,6 @@ import {
 	$getSelection,
 	$isNodeSelection,
 	$isRangeSelection,
-	$isRootOrShadowRoot,
 	COMMAND_PRIORITY_LOW,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
@@ -42,6 +42,7 @@ export type SelectedBlock = {
 	type: SelectedBlockType;
 	key: string;
 	layoutMode: "split" | "full";
+	sentenceKey: string | null;
 };
 
 type SelectedBlockTypePluginProps = {
@@ -56,44 +57,53 @@ const SelectedBlockTypePlugin = ({
 	const getCurrentBlockType = useCallback(() => {
 		const selection = $getSelection();
 
+		let anchorNode;
 		if ($isRangeSelection(selection)) {
-			const anchorNode = selection.anchor.getNode();
-			let topLevelElement =
-				anchorNode.getKey() === "root"
-					? anchorNode
-					: $findMatchingParent(anchorNode, (e) => {
-							const parent = e.getParent();
-							return parent !== null && $isRootOrShadowRoot(parent);
-					  });
+			anchorNode = selection.anchor.getNode();
+		} else if ($isNodeSelection(selection)) {
+			anchorNode = selection.getNodes()[0];
+		}
+		if (!anchorNode) return;
 
-			if (topLevelElement === null) {
-				topLevelElement = anchorNode.getTopLevelElementOrThrow();
+		const topLevelElement = anchorNode.getTopLevelElement();
+		if (topLevelElement === null) return;
+
+		const elementKey = topLevelElement.getKey();
+		const elementDOM = editor.getElementByKey(elementKey);
+
+		const layoutMode =
+			$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
+				? "split"
+				: "full";
+
+		let sentenceKey: null | string = null;
+		if (
+			$isNodeSelection(selection) ||
+			($isRangeSelection(selection) && selection.isCollapsed())
+		) {
+			const sentenceNode = $findMatchingParent(anchorNode, $isSentenceNode);
+			if (sentenceNode) {
+				sentenceKey = sentenceNode.getKey();
 			}
+		}
 
-			const elementKey = topLevelElement.getKey();
-			const elementDOM = editor.getElementByKey(elementKey);
-
-			const layoutMode =
-				$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
-					? "split"
-					: "full";
-
-			if (elementDOM !== null) {
-				if ($isListNode(topLevelElement)) {
-					const parentList = $getNearestNodeOfType<ListNode>(
-						anchorNode,
-						ListNode
-					);
-					const type = parentList
-						? parentList.getListType()
-						: topLevelElement.getListType();
-					setSelectedBlockType({
-						type: type as SelectedBlockType,
-						key: elementKey,
-						layoutMode,
-					});
-				} else {
-					/*
+		if (elementDOM !== null) {
+			if ($isListNode(topLevelElement)) {
+				const parentList = $getNearestNodeOfType<ListNode>(
+					anchorNode,
+					ListNode
+				);
+				const type = parentList
+					? parentList.getListType()
+					: topLevelElement.getListType();
+				setSelectedBlockType({
+					type: type as SelectedBlockType,
+					key: elementKey,
+					layoutMode,
+					sentenceKey,
+				});
+			} else {
+				/*
 					const container = $findMatchingParent(
 						selection.anchor.getNode(),
 						$isRemarkContainerNode
@@ -110,53 +120,15 @@ const SelectedBlockTypePlugin = ({
 					}
 					*/
 
-					const type = $isHeadingNode(topLevelElement)
-						? topLevelElement.getTag()
-						: topLevelElement.getType();
-					if (type in blockTypeToBlockName) {
-						setSelectedBlockType({
-							type: type as SelectedBlockType,
-							key: elementKey,
-							layoutMode,
-						});
-					}
-				}
-			}
-		}
-		if ($isNodeSelection(selection)) {
-			const anchorNode = selection.getNodes()[0];
-			if (!anchorNode) {
-				return;
-			}
-			let element =
-				anchorNode.getKey() === "root"
-					? anchorNode
-					: $findMatchingParent(anchorNode, (e) => {
-							const parent = e.getParent();
-							return parent !== null && $isRootOrShadowRoot(parent);
-					  });
-
-			if (element === null) {
-				element = anchorNode.getTopLevelElementOrThrow();
-			}
-
-			const elementKey = element.getKey();
-			const elementDOM = editor.getElementByKey(elementKey);
-
-			const layoutMode =
-				$findMatchingParent(anchorNode, $isSplitLayoutContainerNode) !== null
-					? "split"
-					: "full";
-
-			if (elementDOM !== null) {
-				const type = $isHeadingNode(element)
-					? element.getTag()
-					: element.getType();
+				const type = $isHeadingNode(topLevelElement)
+					? topLevelElement.getTag()
+					: topLevelElement.getType();
 				if (type in blockTypeToBlockName) {
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
 						layoutMode,
+						sentenceKey,
 					});
 				}
 			}

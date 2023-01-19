@@ -71,6 +71,7 @@ import PasteImageFromClipboardPlugin from "./plugins/PasteImageFromClipboardPlug
 import SaveImagesPlugin from "./plugins/SaveImagesPlugin/SaveImagesPlugin";
 import SaveOnBlurPlugin from "./plugins/SaveOnBlur/SaveOnBlurPlugin";
 import SaveToDBPlugin from "./plugins/SaveToDBPlugin/SaveToDBPlugin";
+import SentenceMenuPlugin from "./plugins/SentenceMenuPlugin/SentenceMenuPlugin";
 import SentencePlugin from "./plugins/SentencePlugin/SentencePlugin";
 import SentencePopupPlugin from "./plugins/SentencePopupPlugin/SentencePopupPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
@@ -212,7 +213,7 @@ export default React.memo(function Editor({
 							<Box
 								sx={{
 									"*::selection": {
-										bg: "text.100",
+										bg: "#b3d4fc",
 										borderRadius: "5px",
 									},
 								}}
@@ -290,6 +291,7 @@ export default React.memo(function Editor({
 								/>
 								<BlockSelectPopupPlugin anchorElem={floatingAnchorElem} />
 								<ImageMenuPlugin anchorElem={floatingAnchorElem} />
+								<SentenceMenuPlugin anchorElem={floatingAnchorElem} />
 								<FloatingTextFormatToolbarPlugin
 									anchorElem={floatingAnchorElem}
 									documentId={documentId}

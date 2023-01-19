@@ -369,7 +369,11 @@ const FloatingWordEditorPlugin = ({
 	}, []);
 
 	return createPortal(
-		<FloatingContainer popupReference={popupReference} popupPlacement="bottom">
+		<FloatingContainer
+			popupReference={popupReference}
+			popupPlacement="bottom"
+			positionInline={false}
+		>
 			<WordEditorPopupMemo
 				word={word}
 				ref={inputRef}
