@@ -276,7 +276,7 @@ const DictionaryEntryPage = () => {
 														<Box>
 															<Link
 																as={NextLink}
-																href={`/app/editor/${sentence.documentId}?sentence=${sentence.id}`}
+																href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
 															>
 																{highlightString({
 																	input: sentence.sentence,

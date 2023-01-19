@@ -82,7 +82,7 @@ export class SentenceNode extends ElementNode {
 	}
 
 	createDOM(_config: EditorConfig): HTMLElement {
-		const element = document.createElement("div");
+		const element = document.createElement("mark");
 		element.dataset.translation = this.getTranslation();
 		addClassNamesToElement(
 			element,

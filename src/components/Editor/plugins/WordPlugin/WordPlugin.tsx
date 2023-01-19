@@ -1,3 +1,4 @@
+import { HIGHLIGHT_NODE_COMMAND } from "@components/Editor/Editor";
 import {
 	$createWordNode,
 	$isWordNode,
@@ -10,6 +11,7 @@ import {
 	$createNodeSelection,
 	$createRangeSelection,
 	$createTextNode,
+	$getNodeByKey,
 	$getRoot,
 	$getSelection,
 	$insertNodes,
@@ -27,7 +29,8 @@ import {
 	KEY_BACKSPACE_COMMAND,
 	KEY_DELETE_COMMAND,
 } from "lexical";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { $getAllNodesOfType } from "../SaveToDBPlugin/SaveToDBPlugin";
 
 export const INSERT_WORD = createCommand<{
 	translations: string[];
@@ -41,12 +44,50 @@ const WordPlugin = () => {
 		(store) => store.editorMarkAllInstances
 	);
 
+	const highlightWord = useCallback(
+		(key: string) => {
+			let nodeKey = key;
+			let nodeElem = editor.getElementByKey(nodeKey);
+			if (!nodeElem) {
+				const wordNodes = $getAllNodesOfType($getRoot(), $isWordNode);
+				for (const word of wordNodes) {
+					if (word.getDatabaseId() === key) {
+						nodeElem = editor.getElementByKey(word.getKey());
+						nodeKey = word.getKey();
+						break;
+					}
+				}
+			}
+			if (nodeElem) {
+				nodeElem.scrollIntoView({
+					block: "center",
+					inline: "nearest",
+				});
+				const node = $getNodeByKey(nodeKey);
+				if ($isWordNode(node)) {
+					const nodeSelection = $createNodeSelection();
+					nodeSelection.add(nodeKey);
+					$setSelection(nodeSelection);
+					return true;
+				}
+			}
+
+			return false;
+		},
+		[editor]
+	);
+
 	useEffect(() => {
 		if (!editor.hasNodes([WordNode])) {
 			throw new Error("WordPlugin: WordNode not registered on editor");
 		}
 
 		return mergeRegister(
+			editor.registerCommand(
+				HIGHLIGHT_NODE_COMMAND,
+				highlightWord,
+				COMMAND_PRIORITY_NORMAL
+			),
 			editor.registerCommand(
 				KEY_DELETE_COMMAND,
 				() => {
@@ -196,15 +237,9 @@ const WordPlugin = () => {
 				COMMAND_PRIORITY_LOW
 			)
 		);
-	}, [editor, markAllInstances]);
+	}, [editor, highlightWord, markAllInstances]);
 
 	return null;
 };
 
 export default WordPlugin;
-function $findMatchingParent(
-	arg0: import("lexical").ElementNode | import("lexical").TextNode,
-	$isSentenceNode: any
-) {
-	throw new Error("Function not implemented.");
-}

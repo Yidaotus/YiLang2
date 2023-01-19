@@ -2,14 +2,12 @@ import type { Middleware } from "@floating-ui/dom";
 import type { ReferenceType } from "@floating-ui/react";
 
 import { Box, Button, Text, useToken } from "@chakra-ui/react";
-import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
+import { HIGHLIGHT_NODE_COMMAND } from "@components/Editor/Editor";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useOutlineSentences } from "@store/outline";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { $getNodeByKey } from "lexical";
-import router from "next/router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { IoAlbumsOutline } from "react-icons/io5";
 
 const clipTop: Middleware = {
@@ -27,12 +25,7 @@ const clipTop: Middleware = {
 const SentenceList = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const { sentence: targetSentence } = router.query;
 	const sentences = useOutlineSentences();
-	const targetSentenceId = Array.isArray(targetSentence)
-		? targetSentence[0]
-		: targetSentence;
-	const previousTargetSentenceId = useRef<typeof targetSentenceId>();
 
 	const buttonRef = useRef(null);
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
@@ -42,48 +35,6 @@ const SentenceList = () => {
 	useOnClickOutside(floatingRef, () => {
 		setPopupReference(null);
 	});
-
-	const highlightSentence = useCallback(
-		(key: string) => {
-			if (key) {
-				editor.update(() => {
-					const nodeElem = editor.getElementByKey(key);
-					if (nodeElem) {
-						nodeElem.scrollIntoView({
-							block: "center",
-							inline: "nearest",
-						});
-						setPopupReference(null);
-						const node = $getNodeByKey(key);
-						if ($isSentenceNode(node)) {
-							node.selectStart();
-						}
-					}
-				});
-			}
-		},
-		[editor]
-	);
-
-	useEffect(() => {
-		if (
-			targetSentenceId &&
-			targetSentenceId !== previousTargetSentenceId.current
-		) {
-			const targetInStore = Object.entries(sentences).find(
-				([_, node]) => targetSentenceId === node.databaseId
-			);
-			if (targetInStore) {
-				highlightSentence(targetInStore[0]);
-				previousTargetSentenceId.current = targetSentenceId;
-			}
-		}
-	}, [
-		highlightSentence,
-		previousTargetSentenceId,
-		sentences,
-		targetSentenceId,
-	]);
 
 	return (
 		<>
@@ -131,7 +82,9 @@ const SentenceList = () => {
 									textAlign="left"
 									alignSelf="flex-start"
 									variant="link"
-									onClick={() => highlightSentence(nodeKey)}
+									onClick={() =>
+										editor.dispatchCommand(HIGHLIGHT_NODE_COMMAND, nodeKey)
+									}
 								>
 									<Text
 										color={

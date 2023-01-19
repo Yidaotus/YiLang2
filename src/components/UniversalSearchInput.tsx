@@ -206,7 +206,7 @@ const UniversalSearchInput = ({
 							<Box key={sentence.id} display="flex" alignItems="center">
 								<Link
 									as={NextLink}
-									href={`/app/editor/${sentence.documentId}?sentence=${sentence.id}`}
+									href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
 									fontSize="0.9em"
 								>
 									<Box

@@ -11,12 +11,6 @@ import {
 	Spinner,
 	useToken,
 } from "@chakra-ui/react";
-import type { SentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
-import {
-	$createSentenceNode,
-	$isSentenceNode,
-} from "@components/Editor/nodes/Sentence/SentenceNode";
-import { $isSentenceToggleNode } from "@components/Editor/nodes/Sentence/SentenceToggleNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { ReferenceType } from "@floating-ui/react";
@@ -27,12 +21,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { mergeRegister } from "@lexical/utils";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
-import type {
-	ElementFormatType,
-	ElementNode,
-	LexicalEditor,
-	LexicalNode,
-} from "lexical";
+import type { ElementFormatType, LexicalEditor } from "lexical";
 import {
 	$getSelection,
 	$isElementNode,
@@ -68,6 +57,7 @@ import {
 import shallow from "zustand/shallow";
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { SHOW_FLOATING_WORD_EDITOR_COMMAND } from "../FloatingWordEditor/FloatingWordEditor";
+import { INSERT_SENTENCE_COMMAND } from "../SentencePlugin/SentencePlugin";
 import { INSERT_WORD } from "../WordPlugin/WordPlugin";
 
 export function getDOMRangeRect(
@@ -123,19 +113,6 @@ const useWordEditorDispatch = () => {
 
 	return [setSearchWord, findWord.isFetching] as const;
 };
-
-function $getAncestor(
-	node: LexicalNode,
-	predicate: (ancestor: LexicalNode) => boolean
-): null | LexicalNode {
-	let parent: null | LexicalNode = node;
-	while (
-		parent !== null &&
-		(parent = parent.getParent()) !== null &&
-		!predicate(parent)
-	);
-	return parent;
-}
 
 function TextFormatFloatingToolbar({
 	editor,
@@ -220,93 +197,6 @@ function TextFormatFloatingToolbar({
 		},
 		[editor]
 	);
-
-	const insertSentence = useCallback(() => {
-		editor.update(() => {
-			const translation = "This is just a simple test!";
-			const selection = $getSelection();
-
-			if (!$isRangeSelection(selection)) {
-				return;
-			}
-			const nodes = selection.extract();
-
-			if (nodes.length === 1) {
-				const firstNode = nodes[0] as LexicalNode;
-				const sentenceNode = $isSentenceNode(firstNode)
-					? firstNode
-					: $getAncestor(firstNode, (node) => $isSentenceNode(node));
-				if ($isSentenceNode(sentenceNode)) {
-					for (const child of sentenceNode.getChildren()) {
-						if (
-							!$isSentenceToggleNode(child) &&
-							!($isTextNode(child) && child.getMode() === "token")
-						) {
-							sentenceNode.insertBefore(child);
-						}
-					}
-					sentenceNode.remove();
-					return;
-				}
-			}
-
-			let prevParent: ElementNode | SentenceNode | null = null;
-			let sentenceNode: SentenceNode | null = null;
-
-			for (const node of nodes) {
-				const parent = node.getParent();
-
-				if (
-					parent === sentenceNode ||
-					parent === null ||
-					($isElementNode(node) && !node.isInline())
-				) {
-					continue;
-				}
-
-				if ($isSentenceNode(parent)) {
-					sentenceNode = parent;
-					parent.setTranslation(translation);
-					continue;
-				}
-
-				if (!parent.is(prevParent)) {
-					prevParent = parent;
-					sentenceNode = $createSentenceNode(translation, null, true);
-
-					if ($isSentenceNode(parent)) {
-						if (node.getPreviousSibling() === null) {
-							parent.insertBefore(sentenceNode);
-						} else {
-							parent.insertAfter(sentenceNode);
-						}
-					} else {
-						node.insertBefore(sentenceNode);
-					}
-				}
-
-				if ($isSentenceNode(node)) {
-					if (node.is(sentenceNode)) {
-						continue;
-					}
-					if (sentenceNode !== null) {
-						const children = node.getChildren();
-						sentenceNode.append(...children);
-					}
-
-					node.remove();
-					continue;
-				}
-
-				if (sentenceNode !== null) {
-					sentenceNode.append(node);
-				}
-			}
-
-			if (!sentenceNode) return;
-			sentenceNode.select();
-		});
-	}, [editor]);
 
 	const iconSize = "18px";
 	return (
@@ -557,7 +447,9 @@ function TextFormatFloatingToolbar({
 					}
 					aria-label="Bold"
 					variant="ghost"
-					onClick={insertSentence}
+					onClick={() =>
+						editor.dispatchCommand(INSERT_SENTENCE_COMMAND, undefined)
+					}
 				/>
 				<Divider
 					orientation="vertical"

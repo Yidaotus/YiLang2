@@ -1,4 +1,5 @@
 import { Box } from "@chakra-ui/react";
+import type { LexicalNode } from "lexical";
 
 export const filterUndefined = <T,>(v: T | undefined): v is T => {
 	return v !== undefined;
@@ -70,3 +71,16 @@ export const highlightString = ({
 
 	return output;
 };
+
+export function $getAncestor(
+	node: LexicalNode,
+	predicate: (ancestor: LexicalNode) => boolean
+): null | LexicalNode {
+	let parent: null | LexicalNode = node;
+	while (
+		parent !== null &&
+		(parent = parent.getParent()) !== null &&
+		!predicate(parent)
+	);
+	return parent;
+}

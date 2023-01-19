@@ -1,4 +1,5 @@
 import type { Klass, LexicalNode } from "lexical";
+import { createCommand } from "lexical";
 
 import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { ListItemNode, ListNode } from "@lexical/list";
@@ -128,6 +129,8 @@ const DebugPlugin = () => {
 		});
 	}, [editor]);
 };
+
+export const HIGHLIGHT_NODE_COMMAND = createCommand<string>("HIGHLIGHT_NODE");
 
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will

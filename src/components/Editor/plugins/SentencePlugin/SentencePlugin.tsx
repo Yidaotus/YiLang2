@@ -1,19 +1,36 @@
-import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
+import { HIGHLIGHT_NODE_COMMAND } from "@components/Editor/Editor";
+import type { SentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
+import {
+	$createSentenceNode,
+	$isSentenceNode,
+} from "@components/Editor/nodes/Sentence/SentenceNode";
+import { $isSentenceToggleNode } from "@components/Editor/nodes/Sentence/SentenceToggleNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $findMatchingParent, mergeRegister } from "@lexical/utils";
-import type { LexicalNode } from "lexical";
+import { $getAncestor } from "@utils/utils";
+import type { ElementNode, LexicalNode } from "lexical";
 import {
 	$createTextNode,
+	$getNodeByKey,
+	$getRoot,
 	$getSelection,
+	$isElementNode,
 	$isRangeSelection,
+	$isTextNode,
 	COMMAND_PRIORITY_NORMAL,
+	createCommand,
 	KEY_ARROW_LEFT_COMMAND,
 	KEY_ARROW_RIGHT_COMMAND,
 	KEY_BACKSPACE_COMMAND,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 import { useCallback, useEffect, useState } from "react";
+import { $getAllNodesOfType } from "../SaveToDBPlugin/SaveToDBPlugin";
 import highlighStyles from "./SentenceHighlight.module.scss";
+
+export const INSERT_SENTENCE_COMMAND = createCommand<void>(
+	"INSER_SENTENCE_COMMAND"
+);
 
 const SentencePlugin = () => {
 	const [editor] = useLexicalComposerContext();
@@ -59,8 +76,135 @@ const SentencePlugin = () => {
 		return false;
 	}, [markSentences]);
 
+	const insertSentence = useCallback(() => {
+		const translation = "This is just a simple test!";
+		const selection = $getSelection();
+
+		if (!$isRangeSelection(selection)) {
+			return false;
+		}
+		const nodes = selection.extract();
+
+		if (nodes.length === 1) {
+			const firstNode = nodes[0] as LexicalNode;
+			const sentenceNode = $isSentenceNode(firstNode)
+				? firstNode
+				: $getAncestor(firstNode, (node) => $isSentenceNode(node));
+			if ($isSentenceNode(sentenceNode)) {
+				for (const child of sentenceNode.getChildren()) {
+					if (
+						!$isSentenceToggleNode(child) &&
+						!($isTextNode(child) && child.getMode() === "token")
+					) {
+						sentenceNode.insertBefore(child);
+					}
+				}
+				sentenceNode.remove();
+				return false;
+			}
+		}
+
+		let prevParent: ElementNode | SentenceNode | null = null;
+		let sentenceNode: SentenceNode | null = null;
+
+		for (const node of nodes) {
+			const parent = node.getParent();
+
+			if (
+				parent === sentenceNode ||
+				parent === null ||
+				($isElementNode(node) && !node.isInline())
+			) {
+				continue;
+			}
+
+			if ($isSentenceNode(parent)) {
+				sentenceNode = parent;
+				parent.setTranslation(translation);
+				continue;
+			}
+
+			if (!parent.is(prevParent)) {
+				prevParent = parent;
+				sentenceNode = $createSentenceNode(translation, null, true);
+
+				if ($isSentenceNode(parent)) {
+					if (node.getPreviousSibling() === null) {
+						parent.insertBefore(sentenceNode);
+					} else {
+						parent.insertAfter(sentenceNode);
+					}
+				} else {
+					node.insertBefore(sentenceNode);
+				}
+			}
+
+			if ($isSentenceNode(node)) {
+				if (node.is(sentenceNode)) {
+					continue;
+				}
+				if (sentenceNode !== null) {
+					const children = node.getChildren();
+					sentenceNode.append(...children);
+				}
+
+				node.remove();
+				continue;
+			}
+
+			if (sentenceNode !== null) {
+				sentenceNode.append(node);
+			}
+		}
+
+		if (!sentenceNode) return false;
+		sentenceNode.select();
+		return true;
+	}, [editor]);
+
+	const highlightSentence = useCallback(
+		(key: string) => {
+			let nodeKey = key;
+			let nodeElem = editor.getElementByKey(nodeKey);
+			if (!nodeElem) {
+				const sentenceNodes = $getAllNodesOfType($getRoot(), $isSentenceNode);
+				for (const sentence of sentenceNodes) {
+					if (sentence.getDatabaseId() === key) {
+						nodeElem = editor.getElementByKey(sentence.getKey());
+						nodeKey = sentence.getKey();
+						break;
+					}
+				}
+			}
+			if (nodeElem) {
+				nodeElem.scrollIntoView({
+					block: "center",
+					inline: "nearest",
+				});
+				const node = $getNodeByKey(nodeKey);
+				if ($isSentenceNode(node)) {
+					node.selectStart();
+				}
+				return true;
+			}
+
+			return false;
+		},
+		[editor]
+	);
+
 	useEffect(() => {
 		return mergeRegister(
+			editor.registerCommand(
+				INSERT_SENTENCE_COMMAND,
+				insertSentence,
+				COMMAND_PRIORITY_NORMAL
+			),
+			editor.registerCommand(
+				HIGHLIGHT_NODE_COMMAND,
+				highlightSentence,
+				COMMAND_PRIORITY_NORMAL
+			),
 			editor.registerCommand(
 				SELECTION_CHANGE_COMMAND,
 				markActiveSentence,

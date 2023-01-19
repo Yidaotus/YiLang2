@@ -10,15 +10,15 @@ import {
 	Text,
 	useToken,
 } from "@chakra-ui/react";
+import { HIGHLIGHT_NODE_COMMAND } from "@components/Editor/Editor";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useOutlineWords } from "@store/outline";
 import useEditorStore from "@store/store";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
-import { $createNodeSelection, $setSelection, LineBreakNode } from "lexical";
-import router from "next/router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { LineBreakNode } from "lexical";
+import { useEffect, useRef, useState } from "react";
 import { IoLanguageOutline } from "react-icons/io5";
 import shallow from "zustand/shallow";
 
@@ -37,9 +37,6 @@ const clipTop: Middleware = {
 const WordList = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const { highlight: targetWord } = router.query;
-	const targetWordId = Array.isArray(targetWord) ? targetWord[0] : targetWord;
-	const previousTargetWordId = useRef<typeof targetWordId>();
 	const words = useOutlineWords();
 	const { hideAutoFillWords, setHideAutoFillWords } = useEditorStore(
 		(state) => ({
@@ -62,39 +59,6 @@ const WordList = () => {
 			node.remove();
 		});
 	}, [editor]);
-
-	const highlightWord = useCallback(
-		(key: string) => {
-			if (key) {
-				editor.update(() => {
-					const nodeElem = editor.getElementByKey(key);
-					if (nodeElem) {
-						nodeElem.scrollIntoView({
-							block: "center",
-							inline: "nearest",
-						});
-						setPopupReference(null);
-						const newSelection = $createNodeSelection();
-						newSelection.add(key);
-						$setSelection(newSelection);
-					}
-				});
-			}
-		},
-		[editor]
-	);
-
-	useEffect(() => {
-		if (targetWordId && targetWordId !== previousTargetWordId.current) {
-			const targetInStore = Object.entries(words).find(
-				([_, node]) => targetWordId === node.databaseId
-			);
-			if (targetInStore) {
-				highlightWord(targetInStore[0]);
-				previousTargetWordId.current = targetWordId;
-			}
-		}
-	}, [highlightWord, previousTargetWordId, targetWordId, words]);
 
 	return (
 		<>
@@ -137,7 +101,9 @@ const WordList = () => {
 									key={nodeKey}
 									databaseId={node.databaseId}
 									nodeKey={nodeKey}
-									clickHandler={() => highlightWord(nodeKey)}
+									clickHandler={() =>
+										editor.dispatchCommand(HIGHLIGHT_NODE_COMMAND, nodeKey)
+									}
 								/>
 							))}
 					</Box>

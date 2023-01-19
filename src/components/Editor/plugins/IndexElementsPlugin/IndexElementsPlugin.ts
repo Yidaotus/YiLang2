@@ -114,8 +114,17 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 	const serverState = useOutlineServerState();
 	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 
-	const upsertSentence = trpc.dictionary.sentence.upsert.useMutation();
-	const deleteSentences = trpc.dictionary.sentence.deleteMany.useMutation();
+	const trpcUtils = trpc.useContext();
+	const upsertSentence = trpc.dictionary.sentence.upsert.useMutation({
+		onSuccess: () => {
+			trpcUtils.dictionary.sentence.getForWord.invalidate();
+		},
+	});
+	const deleteSentences = trpc.dictionary.sentence.deleteMany.useMutation({
+		onSuccess: () => {
+			trpcUtils.dictionary.sentence.getForWord.invalidate();
+		},
+	});
 
 	const upsertGrammarPoint = trpc.dictionary.grammarPoint.upsert.useMutation();
 	const deleteGrammarPoints =

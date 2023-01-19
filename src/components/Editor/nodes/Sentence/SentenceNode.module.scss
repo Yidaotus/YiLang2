@@ -1,5 +1,4 @@
 .SentenceNode {
-	display: inline-flex;
 	border-radius: 5px;
 	border-color: #e2e8f0;
 	margin-left: 0.25em;
@@ -8,6 +7,7 @@
 	padding-left: 0.25em;
 	align-items: flex-end;
 	flex-wrap: wrap;
+	background-color: #f6f6f6;
 
 	> span {
 		flex-shrink: 0;
@@ -27,7 +27,6 @@
 }
 
 .SentenceNodeWithTranslation {
-	display: inline-flex;
 	border-radius: 5px;
 	border-color: #e2e8f0;
 	margin-left: 0.25em;
@@ -37,6 +36,7 @@
 	align-items: flex-end;
 	flex-wrap: wrap;
 	max-width: 90%;
+	background-color: #f6f6f6;
 
 	> span {
 		flex-shrink: 0;
