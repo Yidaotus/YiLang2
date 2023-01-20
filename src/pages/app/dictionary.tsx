@@ -27,7 +27,7 @@ import {
 	useToken,
 } from "@chakra-ui/react";
 import Layout from "@components/Layout";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import type { GetServerSidePropsContext } from "next";
 import NextLink from "next/link";
@@ -47,7 +47,9 @@ import { trpc } from "../../utils/trpc";
 
 const DictionaryPage: NextPageWithLayout = () => {
 	const [text400, brand500] = useToken("colors", ["text.400", "brand.500"]);
-	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
+	const selectedLanguage = useEditorSettingsStore(
+		(state) => state.selectedLanguage
+	);
 	const allWords = trpc.dictionary.word.getAll.useQuery({
 		language: selectedLanguage.id,
 	});

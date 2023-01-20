@@ -7,7 +7,7 @@ import {
 	Text,
 	useToken,
 } from "@chakra-ui/react";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
@@ -96,7 +96,9 @@ const Layout = ({ children }: LayoutProps) => {
 	]);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
-	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
+	const selectedLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 	const apiCreateDocument = trpc.document.upsertDocument.useMutation();
 
 	const openHome = useCallback(() => {

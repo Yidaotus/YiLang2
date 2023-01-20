@@ -7,7 +7,7 @@ import { Box, Spinner } from "@chakra-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { createDOMRange, createRectsFromDOMRange } from "@lexical/selection";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { trpc } from "@utils/trpc";
 import {
@@ -90,7 +90,9 @@ const WordEditorPopup = React.forwardRef<
 				utils.dictionary.tag.getAll.invalidate();
 			},
 		});
-		const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
+		const selectedLanguage = useEditorSettingsStore(
+			(store) => store.selectedLanguage
+		);
 
 		const selectionState = useMemo(
 			() => ({

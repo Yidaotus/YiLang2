@@ -10,7 +10,7 @@ import {
 import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { $getNodeByKey } from "lexical";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -31,7 +31,7 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 	);
 	const [text400, text100] = useToken("colors", ["text.400", "text.100"]);
 
-	const selectedSentenceKey = useEditorStore(
+	const selectedSentenceKey = useEditorSettingsStore(
 		(state) => state.editorSelectedBlock.sentenceKey
 	);
 

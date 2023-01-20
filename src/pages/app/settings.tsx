@@ -42,7 +42,7 @@ import {
 	useToken,
 } from "@chakra-ui/react";
 import Layout from "@components/Layout";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore, { useEditorSettingsActions } from "@store/store";
 import protectPage from "@utils/protectPage";
 import type { RouterTypes } from "@utils/trpc";
 import { trpc } from "@utils/trpc";
@@ -76,10 +76,10 @@ const InlineLanguageNameInput = ({
 	const [showInlineLanguageNameInput, setShowInlineLanguageNameInput] =
 		useState(false);
 
-	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
-	const setActiveLanguage = useEditorStore(
-		(store) => store.setSelectedLanguage
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
 	);
+	const { setSelectedLanguage } = useEditorSettingsActions();
 
 	const trpcUtils = trpc.useContext();
 	const apiChangeLanguageName = trpc.dictionary.language.changeName.useMutation(
@@ -97,7 +97,7 @@ const InlineLanguageNameInput = ({
 				name: inlineLanguageNameInput.trim(),
 			});
 			if (activeLanguage.id === id) {
-				setActiveLanguage({ id, name: inlineLanguageNameInput.trim() });
+				setSelectedLanguage({ id, name: inlineLanguageNameInput.trim() });
 			}
 		}
 		setShowInlineLanguageNameInput(false);
@@ -106,7 +106,7 @@ const InlineLanguageNameInput = ({
 		apiChangeLanguageName,
 		id,
 		inlineLanguageNameInput,
-		setActiveLanguage,
+		setSelectedLanguage,
 	]);
 
 	const handleInlineLanguageNameInputKeyDown = useCallback(
@@ -504,10 +504,10 @@ const SettingsPage: NextPageWithLayout = () => {
 	const { data: session } = useSession();
 	const trpcUtils = trpc.useContext();
 
-	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
-	const setActiveLanguage = useEditorStore(
-		(store) => store.setSelectedLanguage
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
 	);
+	const { setSelectedLanguage } = useEditorSettingsActions();
 
 	const userStats = trpc.user.stats.useQuery();
 
@@ -546,7 +546,7 @@ const SettingsPage: NextPageWithLayout = () => {
 					(lang) => lang.id !== itemToDeleteId
 				);
 				if (firstOtherLanguage) {
-					setActiveLanguage({
+					setSelectedLanguage({
 						id: firstOtherLanguage.id,
 						name: firstOtherLanguage.name,
 					});
@@ -560,7 +560,7 @@ const SettingsPage: NextPageWithLayout = () => {
 		allLanguages.data,
 		apiRemoveLanguage,
 		onClose,
-		setActiveLanguage,
+		setSelectedLanguage,
 	]);
 
 	const switchActiveLanguage = useCallback(
@@ -570,7 +570,7 @@ const SettingsPage: NextPageWithLayout = () => {
 			);
 
 			if (selectedLanguage) {
-				setActiveLanguage({
+				setSelectedLanguage({
 					id,
 					name: selectedLanguage.name,
 				});
@@ -583,7 +583,7 @@ const SettingsPage: NextPageWithLayout = () => {
 				});
 			}
 		},
-		[allLanguages.data, setActiveLanguage, toast]
+		[allLanguages.data, setSelectedLanguage, toast]
 	);
 
 	const addLanguage = useCallback(() => {

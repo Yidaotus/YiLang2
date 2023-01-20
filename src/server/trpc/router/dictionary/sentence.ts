@@ -47,16 +47,20 @@ export const sentenceRouter = router({
 		.input(
 			z.object({
 				ids: z.array(z.string()),
+				nodeKeys: z.array(z.string()).optional(),
 			})
 		)
-		.mutation(async ({ ctx: { prisma, session }, input: { ids } }) => {
-			return prisma.sentence.deleteMany({
-				where: {
-					user: { id: session.user.id },
-					id: { in: ids },
-				},
-			});
-		}),
+		.mutation(
+			async ({ ctx: { prisma, session }, input: { ids, nodeKeys } }) => {
+				await prisma.sentence.deleteMany({
+					where: {
+						user: { id: session.user.id },
+						id: { in: ids },
+					},
+				});
+				return { ids, nodeKeys };
+			}
+		),
 	upsert: protectedProcedure
 		.input(
 			z.object({
@@ -66,6 +70,7 @@ export const sentenceRouter = router({
 				containingWords: z.array(z.string()),
 				sourceDocumentId: z.string(),
 				languageId: z.string(),
+				nodeKey: z.string().optional(),
 			})
 		)
 		.mutation(
@@ -78,6 +83,7 @@ export const sentenceRouter = router({
 					containingWords,
 					sourceDocumentId,
 					languageId,
+					nodeKey,
 				},
 			}) => {
 				const newSentence = await prisma.sentence.upsert({
@@ -114,7 +120,7 @@ export const sentenceRouter = router({
 						},
 					},
 				});
-				return newSentence;
+				return { ...newSentence, nodeKey };
 			}
 		),
 });

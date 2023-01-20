@@ -57,6 +57,7 @@ interface OutlineStore {
 			grammarPoint: GrammarPointsRecord[keyof GrammarPointsRecord];
 		}) => void;
 		removeGrammarPoint: (nodeKey: string) => void;
+		markGrammarPointClean: (nodeKey: string) => void;
 
 		appendWord: ({
 			key,
@@ -66,6 +67,7 @@ interface OutlineStore {
 			word: WordsRecord[keyof WordsRecord];
 		}) => void;
 		removeWord: (nodeKey: string) => void;
+		markWordClean: (nodeKey: string) => void;
 
 		appendSentence: ({
 			key,
@@ -74,6 +76,7 @@ interface OutlineStore {
 			key: keyof SentencesRecord;
 			sentence: SentencesRecord[keyof SentencesRecord];
 		}) => void;
+		markSentenceClean: (nodeKey: string) => void;
 		removeSentence: (nodeKey: string) => void;
 
 		clear: () => void;
@@ -129,6 +132,27 @@ const useOutlineStore = create<OutlineStore>()(
 						}
 						return {};
 					}),
+				markWordClean: (nodeKey) =>
+					set((state) => {
+						const newWordState = { ...state.words };
+
+						const target = newWordState[nodeKey];
+						if (!target) return {};
+
+						if (target.isDeleted) {
+							delete newWordState[nodeKey];
+						} else if (target.isDirty) {
+							newWordState[nodeKey] = {
+								...target,
+								isDeleted: false,
+								isDirty: false,
+							};
+						} else {
+							return {};
+						}
+
+						return { words: newWordState };
+					}),
 
 				appendGrammarPoint: ({ key, grammarPoint }) =>
 					set((state) => ({
@@ -158,6 +182,27 @@ const useOutlineStore = create<OutlineStore>()(
 						}
 						return {};
 					}),
+				markGrammarPointClean: (nodeKey) =>
+					set((state) => {
+						const newGrammarPointState = { ...state.grammarPoints };
+
+						const target = newGrammarPointState[nodeKey];
+						if (!target) return {};
+
+						if (target.isDeleted) {
+							delete newGrammarPointState[nodeKey];
+						} else if (target.isDirty) {
+							newGrammarPointState[nodeKey] = {
+								...target,
+								isDeleted: false,
+								isDirty: false,
+							};
+						} else {
+							return {};
+						}
+
+						return { grammarPoints: newGrammarPointState };
+					}),
 
 				appendSentence: ({ key, sentence }) =>
 					set((state) => ({
@@ -186,6 +231,27 @@ const useOutlineStore = create<OutlineStore>()(
 							};
 						}
 						return {};
+					}),
+				markSentenceClean: (nodeKey) =>
+					set((state) => {
+						const newSentenceState = { ...state.sentences };
+
+						const target = newSentenceState[nodeKey];
+						if (!target) return {};
+
+						if (target.isDeleted) {
+							delete newSentenceState[nodeKey];
+						} else if (target.isDirty) {
+							newSentenceState[nodeKey] = {
+								...target,
+								isDeleted: false,
+								isDirty: false,
+							};
+						} else {
+							return {};
+						}
+
+						return { sentences: newSentenceState };
 					}),
 
 				clear: () =>

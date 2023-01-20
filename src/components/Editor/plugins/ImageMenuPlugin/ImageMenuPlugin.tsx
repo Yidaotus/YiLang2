@@ -12,7 +12,7 @@ import type { ImageAlignment } from "@components/Editor/nodes/ImageNode";
 import { $isImageNode } from "@components/Editor/nodes/ImageNode";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { $getNodeByKey, FORMAT_ELEMENT_COMMAND } from "lexical";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -39,7 +39,7 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 	const [text400, text100] = useToken("colors", ["text.400", "text.100"]);
 	const [alignment, setAlignment] = useState<ImageAlignment | null>(null);
 
-	const selectedBlock = useEditorStore(
+	const selectedBlock = useEditorSettingsStore(
 		(state) => state.editorSelectedBlock,
 		shallow
 	);

@@ -14,12 +14,13 @@ import {
 	useToken,
 } from "@chakra-ui/react";
 import SettingsSlider from "@components/SettingsSlider";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore, { useEditorSettingsActions } from "@store/store";
 import {
 	IoCheckmarkDone,
 	IoGridOutline,
 	IoLanguageOutline,
 	IoSettings,
+	IoSettingsOutline,
 } from "react-icons/io5";
 import { RiFontSize2, RiLineHeight } from "react-icons/ri";
 import shallow from "zustand/shallow";
@@ -31,23 +32,24 @@ const SettingsMenu = () => {
 		setEditorBackgroundOpacity,
 		setEditorShowSpelling,
 		setEditorMarkAllInstances,
+		setEditorSaveOnBlur,
+	} = useEditorSettingsActions();
+
+	const {
 		editorShowSpelling,
 		editorFontSize,
 		editorBackgroundOpacity,
 		editorLineHeight,
 		editorMarkAllInstances,
-	} = useEditorStore(
+		editorSaveOnBlur,
+	} = useEditorSettingsStore(
 		(state) => ({
-			setEditorLineHeight: state.setEditorLineHeight,
-			setEditorFontSize: state.setEditorFontSize,
-			setEditorBackgroundOpacity: state.setEditorBackgroundOpacity,
-			setEditorShowSpelling: state.setEditorShowSpelling,
-			setEditorMarkAllInstances: state.setEditorMarkAllInstances,
 			editorShowSpelling: state.editorShowSpelling,
 			editorFontSize: state.editorFontSize,
 			editorBackgroundOpacity: state.editorBackgroundOpacity,
 			editorLineHeight: state.editorLineHeight,
 			editorMarkAllInstances: state.editorMarkAllInstances,
+			editorSaveOnBlur: state.editorSaveOnBlur,
 		}),
 		shallow
 	);
@@ -183,6 +185,36 @@ const SettingsMenu = () => {
 							id="mark-all-matches"
 							isChecked={editorMarkAllInstances}
 							onChange={(e) => setEditorMarkAllInstances(e.target.checked)}
+						/>
+					</FormControl>
+					<FormControl
+						display="flex"
+						alignItems="center"
+						my={4}
+						justifyContent="space-between"
+					>
+						<FormLabel
+							htmlFor="save-on-blu"
+							mb="0"
+							display="flex"
+							gap={2}
+							alignItems="center"
+						>
+							<IoSettingsOutline size={16} color={text400} />
+							<Text
+								textTransform="uppercase"
+								fontWeight="500"
+								fontSize="14"
+								color="text.300"
+							>
+								Save on blur
+							</Text>
+						</FormLabel>
+						<Switch
+							colorScheme="brand"
+							id="save-on-blu"
+							isChecked={editorSaveOnBlur}
+							onChange={(e) => setEditorSaveOnBlur(e.target.checked)}
 						/>
 					</FormControl>
 				</PopoverBody>

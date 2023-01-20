@@ -17,7 +17,7 @@ import SpellingDataRow from "@components/Dictionary/SpellingDataRow";
 import TagDataRow from "@components/Dictionary/TagDataRow";
 import TranslationsDataRow from "@components/Dictionary/TranslationsDataRow";
 import Layout from "@components/Layout";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import { trpc } from "@utils/trpc";
 import { filterUndefined, highlightString } from "@utils/utils";
@@ -36,7 +36,9 @@ const DictionaryEntryPage = () => {
 	const router = useRouter();
 	const { id: routerId } = router.query;
 	const id = (Array.isArray(routerId) ? routerId[0] : routerId) || "";
-	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
+	const selectedLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 	const trpcUtils = trpc.useContext();
 	const dbWord = trpc.dictionary.word.get.useQuery({ id });
 	const relatedSentences = trpc.dictionary.sentence.getForWord.useQuery(

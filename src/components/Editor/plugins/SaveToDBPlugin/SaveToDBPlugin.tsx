@@ -6,7 +6,7 @@ import { useToast } from "@chakra-ui/react";
 import type SaveableNode from "@components/Editor/nodes/SaveableNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { $getRoot, COMMAND_PRIORITY_LOW, createCommand } from "lexical";
 import { useCallback, useEffect, useRef } from "react";
@@ -111,7 +111,9 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 		}
 	}, []);
 
-	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
+	const selectedLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 
 	useEffect(() => {
 		return editor.registerCommand(

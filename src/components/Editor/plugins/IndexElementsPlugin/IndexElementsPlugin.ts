@@ -16,7 +16,7 @@ import {
 	useOutlineSentences,
 	useOutlineWords,
 } from "@store/outline";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { filterNullish } from "@utils/utils";
 import type { LexicalNode, NodeMutation } from "lexical";
@@ -105,28 +105,76 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 		removeGrammarPoint,
 		removeSentence,
 		removeWord,
+		markGrammarPointClean,
+		markSentenceClean,
 	} = useOutlineActions();
 
 	const sentenceStore = useOutlineSentences();
 	const wordStore = useOutlineWords();
 	const grammarPointStore = useOutlineGrammarPoints();
-	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
+	const selectedLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 
 	const trpcUtils = trpc.useContext();
 	const upsertSentence = trpc.dictionary.sentence.upsert.useMutation({
-		onSuccess: () => {
+		onSuccess({ id, nodeKey }) {
 			trpcUtils.dictionary.sentence.getForWord.invalidate();
+			if (nodeKey) {
+				editor.update(() => {
+					const node = $getNodeByKey(nodeKey);
+					if (!$isSentenceNode(node)) return;
+
+					node.setDatabaseId(id);
+				});
+
+				markSentenceClean(nodeKey);
+			}
 		},
 	});
 	const deleteSentences = trpc.dictionary.sentence.deleteMany.useMutation({
-		onSuccess: () => {
+		onSuccess({ nodeKeys }) {
 			trpcUtils.dictionary.sentence.getForWord.invalidate();
+			if (nodeKeys) {
+				for (const nodeKey of nodeKeys) {
+					markGrammarPointClean(nodeKey);
+				}
+			}
 		},
 	});
 
-	const upsertGrammarPoint = trpc.dictionary.grammarPoint.upsert.useMutation();
+	const upsertGrammarPoint = trpc.dictionary.grammarPoint.upsert.useMutation({
+		onSuccess({ nodeKey, id, ...rest }) {
+			if (nodeKey) {
+				editor.update(() => {
+					const node = $getNodeByKey(nodeKey);
+					if (!$isGrammarPointTitleNode(node)) return;
+
+					const container = node.getParent();
+					if (!$isGrammarPointContainerNode(container)) return;
+
+					container.setDatabaseId(id);
+				});
+				// @TODO This should automatically happen in mutationListener!!!
+				appendGrammarPoint({
+					key: nodeKey,
+					grammarPoint: { ...rest, databaseId: id },
+				});
+
+				markGrammarPointClean(nodeKey);
+			}
+		},
+	});
 	const deleteGrammarPoints =
-		trpc.dictionary.grammarPoint.deleteMany.useMutation();
+		trpc.dictionary.grammarPoint.deleteMany.useMutation({
+			onSuccess({ nodeKeys }) {
+				if (nodeKeys) {
+					for (const nodeKey of nodeKeys) {
+						markGrammarPointClean(nodeKey);
+					}
+				}
+			},
+		});
 
 	//const blurFoundWordKey = useRef<string | null>(null);
 	const blurFoundGrammarPointKey = useRef<string | null>(null);
@@ -245,33 +293,24 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 		);
 
 		for (const [nodeKey, grammarPoint] of grammarPointsToUpsert) {
-			const res = await upsertGrammarPoint.mutateAsync({
+			upsertGrammarPoint.mutate({
 				id: grammarPoint.databaseId,
 				title: grammarPoint.title,
 				sourceDocumentId: documentId,
-			});
-			editor.update(() => {
-				const node = $getNodeByKey(nodeKey);
-				if (!$isGrammarPointTitleNode(node)) return;
-
-				const container = node.getParent();
-				if (!$isGrammarPointContainerNode(container)) return;
-
-				container.setDatabaseId(res.id);
-			});
-			// @TODO This should automatically happen in mutationListener!!!
-			appendGrammarPoint({
-				key: nodeKey,
-				grammarPoint: { ...grammarPoint, databaseId: res.id },
+				nodeKey,
 			});
 		}
 
 		const gpIdsToDelete = grammarPointsToDelete
 			.map(([, gp]) => gp.databaseId)
 			.filter(filterNullish);
+		const gpNodeKeysToDelete = grammarPointsToDelete
+			.map(([nodeKey]) => nodeKey)
+			.filter(filterNullish);
 		if (gpIdsToDelete && gpIdsToDelete.length > 0) {
-			await deleteGrammarPoints.mutateAsync({
+			deleteGrammarPoints.mutate({
 				ids: gpIdsToDelete,
+				nodeKeys: gpNodeKeysToDelete,
 			});
 		}
 
@@ -283,40 +322,34 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 		);
 
 		for (const [nodeKey, sentence] of sentencesToUpsert) {
-			const res = await upsertSentence.mutateAsync({
+			upsertSentence.mutate({
 				id: sentence.databaseId,
 				sentence: sentence.sentence,
 				translation: sentence.translation,
 				containingWords: sentence.containingWords,
 				languageId: selectedLanguage.id,
 				sourceDocumentId: documentId,
-			});
-			editor.update(() => {
-				const node = $getNodeByKey(nodeKey);
-				if (!$isSentenceNode(node)) return;
-
-				node.setDatabaseId(res.id);
+				nodeKey,
 			});
 		}
 
 		const sentenceIdsToDelete = sentencesToDelete
 			.map(([, sentence]) => sentence.databaseId)
 			.filter(filterNullish);
+		const sentenceNodeKeysToDelete = sentencesToDelete
+			.map(([nodeKey]) => nodeKey)
+			.filter(filterNullish);
 		if (sentenceIdsToDelete && sentenceIdsToDelete.length > 0) {
-			await deleteSentences.mutateAsync({
+			deleteSentences.mutate({
 				ids: sentenceIdsToDelete,
+				nodeKeys: sentenceNodeKeysToDelete,
 			});
 		}
-
-		markServerState();
 	}, [
 		grammarPointStore,
 		sentenceStore,
-		markServerState,
 		upsertGrammarPoint,
 		documentId,
-		editor,
-		appendGrammarPoint,
 		deleteGrammarPoints,
 		upsertSentence,
 		selectedLanguage.id,

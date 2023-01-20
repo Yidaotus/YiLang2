@@ -15,12 +15,11 @@ import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import Word from "@components/Word";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useOutlineWords } from "@store/outline";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore, { useEditorSettingsActions } from "@store/store";
 import useOnClickOutside from "@ui/hooks/useOnClickOutside";
 import { LineBreakNode } from "lexical";
 import { useEffect, useRef, useState } from "react";
 import { IoLanguageOutline } from "react-icons/io5";
-import shallow from "zustand/shallow";
 
 const clipTop: Middleware = {
 	name: "clipToTop",
@@ -38,12 +37,9 @@ const WordList = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
 	const words = useOutlineWords();
-	const { hideAutoFillWords, setHideAutoFillWords } = useEditorStore(
-		(state) => ({
-			hideAutoFillWords: state.editorHideAutoFillWords,
-			setHideAutoFillWords: state.setEditorHideAutoFillWords,
-		}),
-		shallow
+	const { setEditorHideAutoFillWords } = useEditorSettingsActions();
+	const hideAutoFillWords = useEditorSettingsStore(
+		(state) => state.editorHideAutoFillWords
 	);
 	const buttonRef = useRef(null);
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
@@ -144,7 +140,7 @@ const WordList = () => {
 								colorScheme="brand"
 								id="hide-auto-fill-words"
 								isChecked={hideAutoFillWords}
-								onChange={(e) => setHideAutoFillWords(e.target.checked)}
+								onChange={(e) => setEditorHideAutoFillWords(e.target.checked)}
 							/>
 						</FormControl>
 					</Box>

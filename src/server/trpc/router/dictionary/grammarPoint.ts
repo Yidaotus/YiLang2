@@ -43,28 +43,33 @@ export const grammarPointRouter = router({
 		.input(
 			z.object({
 				ids: z.array(z.string()),
+				nodeKeys: z.array(z.string()).optional(),
 			})
 		)
-		.mutation(async ({ ctx: { prisma, session }, input: { ids } }) => {
-			return prisma.grammarPoint.deleteMany({
-				where: {
-					user: { id: session.user.id },
-					id: { in: ids },
-				},
-			});
-		}),
+		.mutation(
+			async ({ ctx: { prisma, session }, input: { ids, nodeKeys } }) => {
+				await prisma.grammarPoint.deleteMany({
+					where: {
+						user: { id: session.user.id },
+						id: { in: ids },
+					},
+				});
+				return { ids, nodeKeys };
+			}
+		),
 	upsert: protectedProcedure
 		.input(
 			z.object({
 				id: z.string().optional().nullable(),
 				title: z.string(),
 				sourceDocumentId: z.string(),
+				nodeKey: z.string().optional(),
 			})
 		)
 		.mutation(
 			async ({
 				ctx: { prisma, session },
-				input: { id, title, sourceDocumentId },
+				input: { id, title, sourceDocumentId, nodeKey },
 			}) => {
 				const grammarPoint = await prisma.grammarPoint.upsert({
 					where: {
@@ -83,7 +88,7 @@ export const grammarPointRouter = router({
 						title,
 					},
 				});
-				return grammarPoint;
+				return { ...grammarPoint, nodeKey };
 			}
 		),
 });

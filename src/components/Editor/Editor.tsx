@@ -65,7 +65,7 @@ import { GrammarPointTitleNode } from "./nodes/GrammarPoint/GrammarPointTitleNod
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMaxIndentLevelPlugin";
 
-import useEditorStore from "@store/store";
+import useEditorSettingsStore, { useEditorSettingsActions } from "@store/store";
 import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocumentTitlePlugin";
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
 import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
@@ -223,9 +223,14 @@ const DebugPlugin = () => {
 					const parentIndex = node.getIndexWithinParent();
 
 					if (node.getChildrenSize() < 1) {
-						parent.insertAfter($createParagraphNode());
-						parent.selectNext();
-						node.remove();
+						const sibling = node.getNextSibling();
+						if ($isDialogueSpeakerNode(sibling)) {
+							sibling.selectStart();
+						} else {
+							parent.insertAfter($createParagraphNode());
+							parent.selectNext();
+							node.remove();
+						}
 					} else {
 						const speechNode = $createDialogueSpeechNode();
 						const speakerNode = $createDialogueSpeakerNode();
@@ -331,20 +336,17 @@ export default React.memo(function Editor({
 	sidebarPortal,
 	setDocumentTitle,
 }: EditorProps) {
-	const {
-		editorFontSize,
-		editorLineHeight,
-		editorShowSpelling,
-		setEditorSelectedBlockType,
-	} = useEditorStore(
-		(state) => ({
-			editorFontSize: state.editorFontSize,
-			editorLineHeight: state.editorLineHeight,
-			editorShowSpelling: state.editorShowSpelling,
-			setEditorSelectedBlockType: state.setEditorSelectedBlock,
-		}),
-		shallow
-	);
+	const { setEditorSelectedBlock } = useEditorSettingsActions();
+
+	const { editorFontSize, editorLineHeight, editorShowSpelling } =
+		useEditorSettingsStore(
+			(state) => ({
+				editorFontSize: state.editorFontSize,
+				editorLineHeight: state.editorLineHeight,
+				editorShowSpelling: state.editorShowSpelling,
+			}),
+			shallow
+		);
 
 	const initialConfig = {
 		namespace: "MyEditor",
@@ -449,7 +451,7 @@ export default React.memo(function Editor({
 					<SaveImagesPlugin />
 					<PasteImageFromClipboardPlugin />
 					<SelectedBlockTypePlugin
-						setSelectedBlockType={setEditorSelectedBlockType}
+						setSelectedBlockType={setEditorSelectedBlock}
 					/>
 					<DebugPlugin />
 					<>

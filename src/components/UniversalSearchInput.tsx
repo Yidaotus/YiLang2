@@ -11,7 +11,7 @@ import {
 	PopoverContent,
 	Spinner,
 } from "@chakra-ui/react";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { highlightString } from "@utils/utils";
 import NextLink from "next/link";
@@ -34,7 +34,9 @@ const UniversalSearchInput = ({
 }: UniversalSearchInputProps) => {
 	const [hasInputFocus, setHasInputFocus] = useState(false);
 	const [hasBodyFocus, setHasBodyFocus] = useState(false);
-	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 
 	const [searchInput, setSearchInput] = useState("");
 	const searchString = useDebounce(searchInput);

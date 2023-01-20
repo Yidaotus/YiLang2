@@ -26,7 +26,6 @@ const FetchDocumentPlugin = ({ documentId }: { documentId: string }) => {
 						data.serializedDocument
 					);
 					editor.setEditorState(savedEditorState);
-					console.log("Loading finished");
 				} else {
 					editor.update(() => {
 						$getRoot().clear();

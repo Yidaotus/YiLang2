@@ -9,17 +9,15 @@ import {
 } from "@chakra-ui/react";
 import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { IoChevronDown } from "react-icons/io5";
 import { RiParagraph } from "react-icons/ri";
-import shallow from "zustand/shallow";
 
 const FormatterMenu = () => {
 	const [text400] = useToken("colors", ["text.400"]);
 	const [editor] = useLexicalComposerContext();
-	const { type: editorSelectedBlockType } = useEditorStore(
-		(state) => state.editorSelectedBlock,
-		shallow
+	const { type: editorSelectedBlockType } = useEditorSettingsStore(
+		(state) => state.editorSelectedBlock
 	);
 
 	return (

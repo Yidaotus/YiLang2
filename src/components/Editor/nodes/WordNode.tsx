@@ -40,7 +40,7 @@ import {
 import { Box } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import type { Tag } from "@prisma/client";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import React, { useEffect, useMemo, useRef } from "react";
 
@@ -65,7 +65,7 @@ const WordComponent = ({
 	databaseId: id,
 	word,
 }: WordComponentProps) => {
-	const editorShowSpelling = useEditorStore(
+	const editorShowSpelling = useEditorSettingsStore(
 		(state) => state.editorShowSpelling
 	);
 	const [editor] = useLexicalComposerContext();

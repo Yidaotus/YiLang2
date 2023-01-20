@@ -12,7 +12,7 @@ const Editor = dynamic(() => import("../../../components/Editor/Editor"), {
 });
 
 import Layout from "@components/Layout";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import { useState } from "react";
 import { IoDocumentOutline } from "react-icons/io5";
@@ -23,7 +23,7 @@ const EditorPage = () => {
 	const id = Array.isArray(routerId) ? routerId[0] : routerId;
 	const [showScrollTopElement, setShowScrollTopElement] = useState(false);
 
-	const editorBackgroundOpacity = useEditorStore(
+	const editorBackgroundOpacity = useEditorSettingsStore(
 		(state) => state.editorBackgroundOpacity
 	);
 

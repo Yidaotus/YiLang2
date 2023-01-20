@@ -1,9 +1,8 @@
 import { ButtonGroup, IconButton } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { RiSwapBoxLine } from "react-icons/ri";
 import { RxColumns, RxRows } from "react-icons/rx";
-import shallow from "zustand/shallow";
 import {
 	SET_LAYOUT_MODE_FULL,
 	SET_LAYOUT_MODE_SPLIT,
@@ -12,9 +11,8 @@ import {
 
 const LayoutMenu = () => {
 	const [editor] = useLexicalComposerContext();
-	const layoutMode = useEditorStore(
-		(state) => state.editorSelectedBlock.layoutMode,
-		shallow
+	const layoutMode = useEditorSettingsStore(
+		(state) => state.editorSelectedBlock.layoutMode
 	);
 	const swapSplitLayout = () => {
 		editor.dispatchCommand(SWAP_SPLIT_COLUMNS, undefined);

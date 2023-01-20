@@ -19,7 +19,7 @@ import { $isLinkNode } from "@lexical/link";
 import { $wrapSelectionInMarkNode } from "@lexical/mark";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import type { ElementFormatType, LexicalEditor } from "lexical";
 import {
@@ -88,7 +88,9 @@ const useWordEditorDispatch = () => {
 	const [editor] = useLexicalComposerContext();
 	const [searchWord, setSearchWord] = useState<string | null>(null);
 	const trpcUtils = trpc.useContext();
-	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 	const findWord = trpc.dictionary.word.find.useQuery(
 		{ word: searchWord || "", language: activeLanguage.id },
 		{
@@ -144,12 +146,14 @@ function TextFormatFloatingToolbar({
 
 	const brand500 = "#000000";
 
-	const { type: currentBlockType } = useEditorStore(
+	const { type: currentBlockType } = useEditorSettingsStore(
 		(state) => state.editorSelectedBlock,
 		shallow
 	);
 
-	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
 	const lookupSources = trpc.dictionary.language.getAllLookupSources.useQuery(
 		{ languageId: activeLanguage.id },
 		{ enabled: !!activeLanguage }

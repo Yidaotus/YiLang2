@@ -1,13 +1,17 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import useEditorSettingsStore from "@store/store";
 import { useCallback, useEffect } from "react";
 import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
 
 const SaveOnBlurPlugin = () => {
 	const [editor] = useLexicalComposerContext();
+	const saveOnBlur = useEditorSettingsStore((state) => state.editorSaveOnBlur);
 
 	const saveOnBlurHandler = useCallback(() => {
-		editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast: false });
-	}, [editor]);
+		if (saveOnBlur) {
+			editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast: false });
+		}
+	}, [editor, saveOnBlur]);
 
 	useEffect(() => {
 		window.addEventListener("blur", saveOnBlurHandler);

@@ -1,6 +1,6 @@
 import type { NextPageWithLayout } from "pages/_app";
 import type { ReactElement } from "react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
 import {
 	Avatar,
@@ -29,7 +29,7 @@ import {
 	useToken,
 } from "@chakra-ui/react";
 import Layout from "@components/Layout";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore, { useEditorSettingsActions } from "@store/store";
 import protectPage from "@utils/protectPage";
 import { trpc } from "@utils/trpc";
 import type { GetServerSidePropsContext } from "next";
@@ -48,14 +48,12 @@ const DashboardPage: NextPageWithLayout = () => {
 
 	const { data: session } = useSession();
 
-	const activeLanguage = useEditorStore((store) => store.selectedLanguage);
-	const setActiveLanguage = useEditorStore(
-		(store) => store.setSelectedLanguage
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
 	);
+	const { setSelectedLanguage } = useEditorSettingsActions();
 
 	const userStats = trpc.user.stats.useQuery();
-
-	const [searchString, setSearchString] = useState("");
 
 	const allLanguages = trpc.dictionary.language.getAll.useQuery();
 	const recentWords = trpc.dictionary.word.getRecent.useQuery({ take: 10 });
@@ -70,7 +68,7 @@ const DashboardPage: NextPageWithLayout = () => {
 			);
 
 			if (selectedLanguage) {
-				setActiveLanguage({
+				setSelectedLanguage({
 					id,
 					name: selectedLanguage.name,
 				});
@@ -83,7 +81,7 @@ const DashboardPage: NextPageWithLayout = () => {
 				});
 			}
 		},
-		[allLanguages.data, setActiveLanguage, toast]
+		[allLanguages.data, setSelectedLanguage, toast]
 	);
 
 	return (

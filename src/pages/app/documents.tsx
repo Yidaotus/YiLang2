@@ -36,7 +36,7 @@ import { trpc } from "@utils/trpc";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
 
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import protectPage from "@utils/protectPage";
 import type { GetServerSidePropsContext } from "next";
 import {
@@ -60,7 +60,9 @@ const DocumentsPage: NextPageWithLayout = () => {
 	const [brand500] = useToken("colors", ["brand.500"]);
 	const router = useRouter();
 	const utils = trpc.useContext();
-	const selectedLanguage = useEditorStore((state) => state.selectedLanguage);
+	const selectedLanguage = useEditorSettingsStore(
+		(state) => state.selectedLanguage
+	);
 	const apiDeleteDocument = trpc.document.removeDocument.useMutation({
 		onSuccess() {
 			utils.document.getAll.invalidate();

@@ -6,7 +6,7 @@ import {
 } from "@components/Editor/nodes/WordNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
-import useEditorStore from "@store/store";
+import useEditorSettingsStore from "@store/store";
 import {
 	$createNodeSelection,
 	$createRangeSelection,
@@ -40,7 +40,7 @@ export const INSERT_WORD = createCommand<{
 
 const WordPlugin = () => {
 	const [editor] = useLexicalComposerContext();
-	const markAllInstances = useEditorStore(
+	const markAllInstances = useEditorSettingsStore(
 		(store) => store.editorMarkAllInstances
 	);
 
