@@ -41,21 +41,22 @@ const UniversalSearchInput = ({
 	const [searchInput, setSearchInput] = useState("");
 	const searchString = useDebounce(searchInput);
 
+	const searchEnabled = searchString.length > 0;
 	const foundDocuments = trpc.document.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 0, cacheTime: 1 }
+		{ enabled: searchEnabled, cacheTime: 1 }
 	);
 	const foundWords = trpc.dictionary.word.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 0, cacheTime: 1 }
+		{ enabled: searchEnabled, cacheTime: 1 }
 	);
 	const foundGrammarPoints = trpc.dictionary.grammarPoint.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 0, cacheTime: 1 }
+		{ enabled: searchEnabled, cacheTime: 1 }
 	);
 	const foundSentences = trpc.dictionary.sentence.search.useQuery(
 		{ search: searchString, languageId: activeLanguage.id },
-		{ enabled: searchString.length > 0, cacheTime: 1 }
+		{ enabled: searchEnabled, cacheTime: 1 }
 	);
 
 	const foundDocumentsLength = foundDocuments.data?.length || 0;
@@ -64,10 +65,11 @@ const UniversalSearchInput = ({
 	const foundWordsLength = foundWords.data?.length || 0;
 
 	const isLoading =
-		foundDocuments.isFetching ||
-		foundWords.isFetching ||
-		foundSentences.isFetching ||
-		foundGrammarPoints.isFetching;
+		searchEnabled &&
+		(foundDocuments.status === "loading" ||
+			foundWords.status === "loading" ||
+			foundSentences.status === "loading" ||
+			foundGrammarPoints.status === "loading");
 
 	const isOpen =
 		(hasInputFocus || hasBodyFocus) &&
