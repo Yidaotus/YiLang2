@@ -3,6 +3,7 @@ import type { EditorTag } from "@components/Editor/nodes/WordNode";
 import {
 	Box,
 	Button,
+	Divider,
 	FormControl,
 	FormErrorMessage,
 	FormLabel,
@@ -13,7 +14,11 @@ import {
 import { useCallback, useEffect } from "react";
 import { CirclePicker } from "react-color";
 import { Controller, useForm } from "react-hook-form";
-import { IoSave } from "react-icons/io5";
+import {
+	IoCloud,
+	IoColorFillOutline,
+	IoPricetagsOutline,
+} from "react-icons/io5";
 import { RxExit } from "react-icons/rx";
 
 type TagFormType = {
@@ -57,9 +62,10 @@ const TagForm = ({
 	}, [reset, resolveTag]);
 
 	return (
-		<div>
-			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
-				<Stack>
+		<form action="" onSubmit={onSubmit}>
+			<Stack p={2}>
+				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
+					<IoPricetagsOutline />
 					<FormControl isInvalid={!!errors.name}>
 						<FormLabel
 							htmlFor="spelling"
@@ -76,9 +82,9 @@ const TagForm = ({
 									color: "text.200",
 								},
 							}}
+							size="sm"
 							id="name"
 							bg="#FAFAF9"
-							borderWidth={2}
 							placeholder="Name"
 							{...register("name", {
 								required: "Please enter a name",
@@ -92,17 +98,17 @@ const TagForm = ({
 							{errors.name && errors.name.message}
 						</FormErrorMessage>
 					</FormControl>
-					<FormControl
-						isInvalid={!!errors.color}
-						p={2}
-						py={4}
-						display="flex"
-						justifyContent="center"
-						borderRadius="5px"
-						borderColor="text.100"
-						borderWidth="2px"
-						bg="#FAFAF9"
-					>
+				</Box>
+				<Box
+					display="flex"
+					gap={2}
+					justifyContent="flex-start"
+					alignItems="flex-start"
+				>
+					<Box pt={2}>
+						<IoColorFillOutline />
+					</Box>
+					<FormControl isInvalid={!!errors.color}>
 						<FormLabel
 							htmlFor="color"
 							color="text.400"
@@ -116,55 +122,67 @@ const TagForm = ({
 							control={control}
 							name="color"
 							rules={{
-								required: "Please enter at least one translation",
-								min: "Please enter at least one translation",
+								required: "Please pick a color",
+								min: "Please pick a color",
 							}}
 							render={({ field: { onChange, value, ref } }) => (
-								<CirclePicker
-									color={value}
-									onChange={(e) => onChange(e.hex)}
-									ref={ref}
-									circleSize={22}
-									width="100%"
-								/>
+								<Box
+									p={2}
+									borderRadius="3px"
+									borderColor="text.100"
+									borderWidth="1px"
+									bg="#FAFAF9"
+								>
+									<CirclePicker
+										color={value}
+										onChange={(e) => onChange(e.hex)}
+										ref={ref}
+										circleSize={22}
+										width="100%"
+									/>
+								</Box>
 							)}
 						/>
 						<FormErrorMessage>
 							{errors.color && errors.color.message}
 						</FormErrorMessage>
 					</FormControl>
-					<Box
-						sx={{
-							pt: 2,
-							w: "100%",
-						}}
-						display="flex"
-						justifyContent="space-between"
-					>
-						<IconButton
-							variant="ghost"
-							onClick={cancel}
-							aria-label="cancel"
-							icon={<RxExit />}
-						/>
-						<Button
-							bg="brand.500"
-							color="#FFFFFF"
-							variant="solid"
-							type="submit"
-							rightIcon={<IoSave />}
-							sx={{
-								"&:hover": {
-									bg: "brand.700",
-								},
-							}}
-						>
-							Create
-						</Button>
-					</Box>
-				</Stack>
-			</form>
-		</div>
+				</Box>
+			</Stack>
+			<Divider />
+			<Box
+				sx={{
+					pt: 2,
+					w: "100%",
+				}}
+				display="flex"
+				justifyContent="space-between"
+				p={2}
+			>
+				<IconButton
+					variant="outline"
+					size="sm"
+					onClick={cancel}
+					aria-label="cancel"
+					icon={<RxExit />}
+				/>
+				<Button
+					bg="brand.500"
+					size="sm"
+					color="#FFFFFF"
+					variant="solid"
+					type="submit"
+					leftIcon={<IoCloud />}
+					sx={{
+						"&:hover": {
+							bg: "brand.700",
+						},
+					}}
+				>
+					Create Tag
+				</Button>
+			</Box>
+		</form>
 	);
 };
 

@@ -19,6 +19,9 @@ const theme = extendTheme(
 			body: `'Inter', 'Noto Sans JP', 'Noto Sans SC', sans-serif`,
 			button: `'Inter', sans-serif`,
 		},
+		fontSizes: {
+			sm: "15px",
+		},
 		components: {
 			Menu: {
 				baseStyle: {

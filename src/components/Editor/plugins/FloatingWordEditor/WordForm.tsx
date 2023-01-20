@@ -24,13 +24,13 @@ import type { RefCallBack } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import {
 	IoAttachOutline,
+	IoCloud,
 	IoDocumentTextOutline,
 	IoGitBranchOutline,
 	IoLanguageOutline,
 	IoPricetagsOutline,
-	IoSave,
 } from "react-icons/io5";
-import { RxTrash } from "react-icons/rx";
+import { RiDeleteBin2Line } from "react-icons/ri";
 
 type WordSelectProps = {
 	value: Word | null;
@@ -89,7 +89,7 @@ export type WordFormType = {
 	word: string;
 	translations: Array<string>;
 	spelling?: string;
-	comment?: string;
+	notes?: string;
 	tags: Array<EditorTag>;
 	relatedTo: Word;
 };
@@ -118,7 +118,7 @@ const WordForm = ({
 			translations: [],
 			spelling: "",
 			tags: [],
-			comment: "",
+			notes: "",
 		},
 	});
 
@@ -246,6 +246,7 @@ const WordForm = ({
 											borderColor: "text.100",
 											bg: "#F5F5F5",
 											borderWidth: "1px",
+											fontSize: "0.9em",
 											"&::before": {
 												content: '""',
 												bg: state.data.color,
@@ -278,7 +279,7 @@ const WordForm = ({
 									getOptionValue={(o) => o.name}
 									getOptionLabel={(o) => o.name}
 									getNewOptionData={(input) => ({
-										name: `Create ${input} tag...`,
+										name: `Create ${input} tag`,
 										color: "",
 									})}
 									onCreateOption={async (newOpt) => {
@@ -292,14 +293,13 @@ const WordForm = ({
 										Option: ({ children, data, innerProps }) => (
 											<Box
 												as="div"
+												color="text.400"
+												display="flex"
+												alignItems="center"
+												cursor="pointer"
+												py={1}
+												w="100%"
 												sx={{
-													color: "text.400",
-													display: "flex",
-													alignItems: "center",
-													cursor: "pointer",
-													py: 1,
-													fontSize: "16px",
-													w: "100%",
 													"&:hover": {
 														bg: "#f4f4f4",
 													},
@@ -307,15 +307,13 @@ const WordForm = ({
 												{...innerProps}
 											>
 												<Box
-													sx={{
-														w: "12px",
-														h: "12px",
-														ml: 1,
-														mr: 2,
-														borderRadius: "4px",
-														border: `2px solid ${data.color}`,
-														bg: data.color,
-													}}
+													w="12px"
+													h="12px"
+													ml={1}
+													mr={2}
+													borderRadius="4px"
+													border={`2px solid ${data.color}`}
+													bg={data.color}
 												/>
 												{children}
 											</Box>
@@ -338,15 +336,15 @@ const WordForm = ({
 					<Box pt={2}>
 						<IoDocumentTextOutline />
 					</Box>
-					<FormControl isInvalid={!!errors.comment}>
+					<FormControl isInvalid={!!errors.notes}>
 						<FormLabel
 							display="none"
-							htmlFor="comment"
+							htmlFor="notes"
 							color="text.400"
 							fontSize="0.9em"
 							mb="0px"
 						>
-							Comment
+							Notes
 						</FormLabel>
 						<Textarea
 							sx={{
@@ -355,13 +353,14 @@ const WordForm = ({
 								},
 							}}
 							bg="#fafaf9"
-							id="comment"
+							id="notes"
 							size="sm"
-							placeholder="Comment"
-							{...register("comment")}
+							rows={2}
+							placeholder="Notes"
+							{...register("notes")}
 						/>
 						<FormErrorMessage>
-							{errors.comment && errors.comment.message}
+							{errors.notes && errors.notes.message}
 						</FormErrorMessage>
 					</FormControl>
 				</Box>
@@ -382,14 +381,14 @@ const WordForm = ({
 					type="submit"
 					leftIcon={<IoGitBranchOutline />}
 				>
-					Add related
+					Add Root
 				</Button>
 				<Stack direction="row">
 					<IconButton
 						aria-label="cancel"
 						variant="outline"
 						size="sm"
-						icon={<RxTrash />}
+						icon={<RiDeleteBin2Line />}
 						onClick={cancel}
 					/>
 					<Button
@@ -398,14 +397,14 @@ const WordForm = ({
 						color="#FFFFFF"
 						variant="solid"
 						type="submit"
-						rightIcon={<IoSave />}
+						leftIcon={<IoCloud />}
 						sx={{
 							"&:hover": {
 								bg: "brand.700",
 							},
 						}}
 					>
-						Submit
+						Save Word
 					</Button>
 				</Stack>
 			</Box>

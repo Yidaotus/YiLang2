@@ -51,6 +51,15 @@ const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 					...prev,
 					color: "text.200",
 				}),
+				multiValue: (prev, state) => ({
+					...prev,
+					justifyContent: "center",
+					alignItems: "center",
+					borderColor: "text.100",
+					bg: "#F5F5F5",
+					borderWidth: "1px",
+					fontSize: "0.9em",
+				}),
 			}}
 			ref={ref}
 			components={components}

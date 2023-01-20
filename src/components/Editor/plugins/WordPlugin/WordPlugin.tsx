@@ -36,6 +36,7 @@ export const INSERT_WORD = createCommand<{
 	translations: string[];
 	word: string;
 	databaseId: string | null;
+	targetNode?: string;
 }>("INSERT_WORD");
 
 const WordPlugin = () => {
@@ -182,21 +183,28 @@ const WordPlugin = () => {
 			editor.registerCommand(
 				INSERT_WORD,
 				(word) => {
-					const selection = $getSelection();
-					if (!selection || !$isRangeSelection(selection)) return false;
-
 					const initialWordNode = $createWordNode(
 						word.translations,
 						word.word,
 						word.databaseId,
 						false
 					);
-					const extractedNodes = selection.extract();
-					for (const [index, node] of extractedNodes.entries()) {
-						if (index === 0) {
-							node.replace(initialWordNode);
-						} else {
-							node.remove();
+					if (word.targetNode) {
+						const target = $getNodeByKey(word.targetNode);
+						if (!target) return false;
+
+						target.replace(initialWordNode);
+					} else {
+						const selection = $getSelection();
+						if (!selection || !$isRangeSelection(selection)) return false;
+
+						const extractedNodes = selection.extract();
+						for (const [index, node] of extractedNodes.entries()) {
+							if (index === 0) {
+								node.replace(initialWordNode);
+							} else {
+								node.remove();
+							}
 						}
 					}
 

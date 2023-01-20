@@ -77,6 +77,7 @@ import shallow from "zustand/shallow";
 import { SentenceToggleNode } from "./nodes/Sentence/SentenceToggleNode";
 import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
 import { SplitLayoutContainerNode } from "./nodes/SplitLayout/SplitLayoutContainer";
+import { WordAnchor } from "./nodes/WordAnchor/WordEditorAnchor";
 import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
 import GrammarPointPlugin from "./plugins/GrammarPointPlugin/GrammarPointPlugin";
@@ -111,6 +112,7 @@ const EditorNodes: Array<Klass<LexicalNode>> = [
 	ImageNode,
 	MarkNode,
 	WordNode,
+	WordAnchor,
 	RemarkContainerNode,
 	RemarkContentNode,
 	RemarkTitleNode,
@@ -405,6 +407,7 @@ export default React.memo(function Editor({
 								<CustomContentEditable
 									semiReadOnly={isSemiReadOnly}
 									autoFocus
+									id="editor-container"
 									style={{
 										minHeight: "100px",
 										transition:
