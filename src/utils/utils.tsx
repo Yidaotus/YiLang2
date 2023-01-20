@@ -33,7 +33,7 @@ export const highlightString = ({
 			const subIndex = match.index - processedLength;
 			const before = matchInput.substring(0, subIndex);
 			output.push(
-				<Box as="span" color={textColor}>
+				<Box as="span" color={textColor} key={`${subIndex}-0`}>
 					{before}
 				</Box>
 			);
@@ -46,7 +46,7 @@ export const highlightString = ({
 				subIndex + firstMatch.length
 			);
 			output.push(
-				<Box as="span" color={highlightColor}>
+				<Box as="span" color={highlightColor} key={`${subIndex}-1`}>
 					{foundSubstring}
 				</Box>
 			);
@@ -63,7 +63,7 @@ export const highlightString = ({
 
 	if (processedLength < input.length) {
 		output.push(
-			<Box as="span" color={textColor}>
+			<Box as="span" color={textColor} key="last">
 				{input.substring(processedLength, input.length)}
 			</Box>
 		);
