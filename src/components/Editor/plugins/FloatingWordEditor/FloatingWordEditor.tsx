@@ -239,24 +239,43 @@ const FloatingWordEditorPlugin = ({
 					...newWord,
 					targetNode: anchorNodeKey || undefined,
 				});
-				setPopupReference(null);
 			});
+			setPopupReference(null);
 		},
 		[anchorNodeKey, editor, selection]
 	);
+
+	const cancel = useCallback(() => {
+		if (anchorNodeKey) {
+			editor.update(() => {
+				const target = $getNodeByKey(anchorNodeKey);
+				if (!target) return;
+
+				target.replace($createTextNode(word));
+			});
+		}
+		setAnchorNodeKey(null);
+	}, [anchorNodeKey, editor, word]);
 
 	useEffect(() => {
 		return mergeRegister(
 			editor.registerCommand(
 				SHOW_FLOATING_WORD_EDITOR_COMMAND,
 				() => {
+					if (anchorNodeKey) {
+						const target = $getNodeByKey(anchorNodeKey);
+						if (target) {
+							target.replace($createTextNode(word));
+						}
+					}
+
 					const selection = $getSelection();
 					if (!$isRangeSelection(selection)) return true;
 
 					setSelection(selection);
-					const word = selection.getTextContent();
-					setWord(word);
-					const anchorNode = $createWordAnchorNode(word);
+					const selectionWord = selection.getTextContent();
+					setWord(selectionWord);
+					const anchorNode = $createWordAnchorNode(selectionWord);
 					setAnchorNodeKey(anchorNode.getKey());
 					$insertNodes([anchorNode]);
 					return true;
@@ -265,11 +284,12 @@ const FloatingWordEditorPlugin = ({
 			),
 			editor.registerMutationListener(WordAnchor, (updates) => {
 				for (const [nodeKey, update] of updates) {
-					if (update === "created") {
+					if (update === "created" || update === "updated") {
 						const element = editor.getElementByKey(nodeKey);
 						if (!element) return;
 
 						setPopupReference(element);
+						break;
 					}
 					if (update === "destroyed") {
 						setPopupReference(null);
@@ -277,28 +297,13 @@ const FloatingWordEditorPlugin = ({
 				}
 			})
 		);
-	}, [editor]);
-
-	const cancel = useCallback(() => {
-		// prevents flickering even though mutation listener would also remove the reference
-		setPopupReference(null);
-		if (anchorNodeKey) {
-			editor.update(() => {
-				const target = $getNodeByKey(anchorNodeKey);
-				if (!target) return;
-
-				target.replace($createTextNode(word));
-				setAnchorNodeKey(null);
-			});
-		}
-	}, [anchorNodeKey, editor, word]);
+	}, [anchorNodeKey, cancel, editor, word]);
 
 	return createPortal(
 		<FloatingContainer
 			popupReference={popupReference}
 			popupPlacement="bottom-start"
-			positionInline={false}
-			popupOffset={3}
+			popupOffset={0}
 			middlewares={[shiftOnRightOverflow]}
 		>
 			<WordEditorPopupMemo
@@ -334,7 +339,7 @@ const shiftOnRightOverflow: Middleware = {
 		) {
 			return {
 				reset: {
-					placement: "bottom-end",
+					placement: "bottom",
 				},
 			};
 		}

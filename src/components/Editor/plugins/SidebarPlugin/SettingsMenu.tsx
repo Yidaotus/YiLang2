@@ -64,7 +64,7 @@ const SettingsMenu = () => {
 					aria-label="Appereance"
 				/>
 			</PopoverTrigger>
-			<PopoverContent w="230px" mr={2}>
+			<PopoverContent w="250px" mr={2}>
 				<PopoverArrow />
 				<PopoverBody>
 					<Box

@@ -6,6 +6,8 @@ import {
 	Divider,
 	IconButton,
 	Input,
+	InputGroup,
+	InputRightAddon,
 	useToken,
 } from "@chakra-ui/react";
 import type { ImageAlignment } from "@components/Editor/nodes/ImageNode";
@@ -105,28 +107,40 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 	const iconSize = "18px";
 
 	return createPortal(
-		<>
+		<FloatingContainer
+			popupReference={popupReference}
+			popupPlacement="bottom"
+			popupOffset={0}
+		>
 			{sourceEditorVisible && (
-				<FloatingContainer
-					popupReference={popupReference}
-					popupPlacement="top"
-					popupOffset={-30}
-				>
-					<Box>
-						<Input
+				<InputGroup size="sm">
+					<Input
+						size="sm"
+						w="400px"
+						value={imageSourceInput}
+						onChange={(e) => setImageSourceInput(e.target.value)}
+					/>
+					<InputRightAddon p={1}>
+						<IconButton
+							borderRadius={0}
 							size="sm"
-							w="400px"
-							value={imageSourceInput}
-							onChange={(e) => setImageSourceInput(e.target.value)}
+							icon={
+								<RiSaveLine
+									color={text400}
+									style={{
+										height: iconSize,
+										width: iconSize,
+									}}
+								/>
+							}
+							aria-label="Save"
+							variant="link"
+							onClick={toggleSourceEditor}
 						/>
-					</Box>
-				</FloatingContainer>
+					</InputRightAddon>
+				</InputGroup>
 			)}
-			<FloatingContainer
-				popupReference={popupReference}
-				popupPlacement="top"
-				popupOffset={0}
-			>
+			{!sourceEditorVisible && (
 				<Box pos="relative" zIndex={50} display="flex">
 					<ButtonGroup
 						size="sm"
@@ -197,23 +211,13 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 							borderRadius={0}
 							bg={sourceEditorVisible ? text100 : "inherit"}
 							icon={
-								sourceEditorVisible ? (
-									<RiSaveLine
-										color={text400}
-										style={{
-											height: iconSize,
-											width: iconSize,
-										}}
-									/>
-								) : (
-									<RiEditLine
-										color={text400}
-										style={{
-											height: iconSize,
-											width: iconSize,
-										}}
-									/>
-								)
+								<RiEditLine
+									color={text400}
+									style={{
+										height: iconSize,
+										width: iconSize,
+									}}
+								/>
 							}
 							aria-label="Bold"
 							variant="ghost"
@@ -221,8 +225,8 @@ const ImageMenuPlugin = ({ anchorElem }: ImageMenuPluginProps) => {
 						/>
 					</ButtonGroup>
 				</Box>
-			</FloatingContainer>
-		</>,
+			)}
+		</FloatingContainer>,
 		anchorElem
 	);
 };

@@ -5,6 +5,8 @@ import {
 	ButtonGroup,
 	IconButton,
 	Input,
+	InputGroup,
+	InputRightAddon,
 	useToken,
 } from "@chakra-ui/react";
 import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
@@ -114,31 +116,43 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 
 	const iconSize = "18px";
 	return createPortal(
-		<>
+		<FloatingContainer
+			popupReference={popupReference}
+			popupPlacement="bottom"
+			positionInline={false}
+			popupOffset={2}
+		>
 			{sourceEditorVisible && (
-				<FloatingContainer
-					popupReference={popupReference}
-					popupPlacement="bottom"
-					popupOffset={2}
-				>
-					<Box>
-						<Input
-							size="md"
-							autoFocus
-							w="100%"
-							value={translationInput}
-							onChange={(e) => setTranslationInput(e.target.value)}
-							onKeyDown={handleKeyDown}
+				<InputGroup size="sm">
+					<Input
+						size="sm"
+						autoFocus
+						w="100%"
+						value={translationInput}
+						onChange={(e) => setTranslationInput(e.target.value)}
+						onKeyDown={handleKeyDown}
+					/>
+					<InputRightAddon p={1}>
+						<IconButton
+							borderRadius={0}
+							size="sm"
+							icon={
+								<RiSaveLine
+									color={text400}
+									style={{
+										height: iconSize,
+										width: iconSize,
+									}}
+								/>
+							}
+							aria-label="Bold"
+							variant="link"
+							onClick={toggleEditor}
 						/>
-					</Box>
-				</FloatingContainer>
+					</InputRightAddon>
+				</InputGroup>
 			)}
-			<FloatingContainer
-				popupReference={popupReference}
-				popupPlacement="top"
-				showArrow
-				popupOffset={10}
-			>
+			{!sourceEditorVisible && (
 				<Box pos="relative" zIndex={50} display="flex">
 					<ButtonGroup
 						size="sm"
@@ -179,23 +193,13 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 							borderRadius={0}
 							bg={sourceEditorVisible ? text100 : "inherit"}
 							icon={
-								sourceEditorVisible ? (
-									<RiSaveLine
-										color={text400}
-										style={{
-											height: iconSize,
-											width: iconSize,
-										}}
-									/>
-								) : (
-									<RiEditLine
-										color={text400}
-										style={{
-											height: iconSize,
-											width: iconSize,
-										}}
-									/>
-								)
+								<RiEditLine
+									color={text400}
+									style={{
+										height: iconSize,
+										width: iconSize,
+									}}
+								/>
 							}
 							aria-label="Bold"
 							variant="ghost"
@@ -203,8 +207,8 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 						/>
 					</ButtonGroup>
 				</Box>
-			</FloatingContainer>
-		</>,
+			)}
+		</FloatingContainer>,
 		anchorElem
 	);
 };

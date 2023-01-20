@@ -34,13 +34,13 @@ const Word = ({
 						{!!clickHandler ? (
 							<Link
 								onClick={() => clickHandler({ nodeKey, databaseId })}
-								fontSize="1.4em"
+								fontSize="1.2em"
 								color="text.500"
 							>
 								{dbWord.data.word}
 							</Link>
 						) : (
-							<Box fontSize="1.4em" color="text.500">
+							<Box fontSize="1.2em" color="text.500">
 								{dbWord.data.word}
 							</Box>
 						)}

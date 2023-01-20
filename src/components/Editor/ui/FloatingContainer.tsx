@@ -61,7 +61,6 @@ const FloatingContainer = ({
 	} = useFloating({
 		placement: popupPlacement,
 		middleware: [
-			...(middlewares || []),
 			offset(popupOffset),
 			positionInline ? inline() : undefined,
 			shift({
@@ -69,6 +68,7 @@ const FloatingContainer = ({
 			}),
 			flip(),
 			shiftOnHeader,
+			...(middlewares || []),
 			showArrow && arrow({ element: arrowRef, padding: 0 }),
 		],
 	});

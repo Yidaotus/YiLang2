@@ -20,7 +20,7 @@ const theme = extendTheme(
 			button: `'Inter', sans-serif`,
 		},
 		fontSizes: {
-			sm: "15px",
+			sm: "16px",
 		},
 		components: {
 			Menu: {
