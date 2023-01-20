@@ -3,7 +3,6 @@ import type { EditorTag } from "@components/Editor/nodes/WordNode";
 import {
 	Box,
 	Button,
-	Divider,
 	FormControl,
 	FormErrorMessage,
 	FormLabel,
@@ -22,14 +21,7 @@ import { CreatableSelect, Select } from "chakra-react-select";
 import React, { useCallback, useEffect, useState } from "react";
 import type { RefCallBack } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
-import {
-	IoAttachOutline,
-	IoDocumentTextOutline,
-	IoGitBranchOutline,
-	IoLanguageOutline,
-	IoPricetagsOutline,
-	IoSave,
-} from "react-icons/io5";
+import { IoSave } from "react-icons/io5";
 import { RxTrash } from "react-icons/rx";
 
 type WordSelectProps = {
@@ -147,11 +139,10 @@ const WordForm = ({
 	);
 
 	return (
-		<form action="" onSubmit={onSubmit}>
-			<Stack p={2}>
-				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
-					<IoLanguageOutline />
-					<FormControl isInvalid={!!errors.translations} size="sm">
+		<div>
+			<form action="" className="flex flex-col gap-2" onSubmit={onSubmit}>
+				<Stack>
+					<FormControl isInvalid={!!errors.translations}>
 						<FormLabel
 							display="none"
 							htmlFor="translations"
@@ -181,9 +172,6 @@ const WordForm = ({
 							{errors.translations && errors.translations.message}
 						</FormErrorMessage>
 					</FormControl>
-				</Box>
-				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
-					<IoAttachOutline height="100%" />
 					<FormControl isInvalid={!!errors.spelling}>
 						<FormLabel
 							display="none"
@@ -200,10 +188,10 @@ const WordForm = ({
 								"&::placeholder": {
 									color: "text.200",
 								},
+								bg: "#fafaf9",
 							}}
-							bg="#fafaf9"
 							id="spelling"
-							size="sm"
+							size="md"
 							placeholder="Spelling"
 							{...register("spelling")}
 						/>
@@ -211,9 +199,6 @@ const WordForm = ({
 							{errors.spelling && errors.spelling.message}
 						</FormErrorMessage>
 					</FormControl>
-				</Box>
-				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
-					<IoPricetagsOutline />
 					<FormControl isInvalid={!!errors.tags}>
 						<FormLabel
 							display="none"
@@ -230,7 +215,7 @@ const WordForm = ({
 							render={({ field: { onChange, value, ref } }) => (
 								<CreatableSelect
 									ref={ref}
-									size="sm"
+									size="md"
 									value={value}
 									onChange={(val) => onChange(val)}
 									chakraStyles={{
@@ -328,16 +313,6 @@ const WordForm = ({
 							{errors.spelling && errors.spelling.message}
 						</FormErrorMessage>
 					</FormControl>
-				</Box>
-				<Box
-					display="flex"
-					gap={2}
-					justifyContent="flex-start"
-					alignItems="flex-start"
-				>
-					<Box pt={2}>
-						<IoDocumentTextOutline />
-					</Box>
 					<FormControl isInvalid={!!errors.comment}>
 						<FormLabel
 							display="none"
@@ -353,10 +328,10 @@ const WordForm = ({
 								"&::placeholder": {
 									color: "text.200",
 								},
+								bg: "#fafaf9",
 							}}
-							bg="#fafaf9"
 							id="comment"
-							size="sm"
+							size="md"
 							placeholder="Comment"
 							{...register("comment")}
 						/>
@@ -364,52 +339,58 @@ const WordForm = ({
 							{errors.comment && errors.comment.message}
 						</FormErrorMessage>
 					</FormControl>
-				</Box>
-			</Stack>
-			<Divider />
-			<Box
-				sx={{
-					pt: 2,
-					w: "100%",
-				}}
-				display="flex"
-				justifyContent="space-between"
-				p={2}
-			>
-				<Button
-					size="sm"
-					variant="outline"
-					type="submit"
-					leftIcon={<IoGitBranchOutline />}
-				>
-					Add related
-				</Button>
-				<Stack direction="row">
-					<IconButton
-						aria-label="cancel"
-						variant="outline"
-						size="sm"
-						icon={<RxTrash />}
-						onClick={cancel}
-					/>
-					<Button
-						size="sm"
-						bg="brand.500"
-						color="#FFFFFF"
-						variant="solid"
-						type="submit"
-						rightIcon={<IoSave />}
+					<FormControl>
+						<FormLabel
+							display="none"
+							htmlFor="comment"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Related To
+						</FormLabel>
+						<Controller
+							control={control}
+							name="relatedTo"
+							render={({ field: { onChange, value, ref } }) => (
+								<WordSelect onChange={onChange} value={value} ref={ref} />
+							)}
+						/>
+						<FormErrorMessage>
+							{errors.comment && errors.comment.message}
+						</FormErrorMessage>
+					</FormControl>
+					<Box
 						sx={{
-							"&:hover": {
-								bg: "brand.700",
-							},
+							pt: 2,
+							w: "100%",
 						}}
+						display="flex"
+						justifyContent="space-between"
 					>
-						Submit
-					</Button>
+						<IconButton
+							aria-label="cancel"
+							icon={<RxTrash />}
+							onClick={cancel}
+						/>
+						<Button
+							bg="brand.500"
+							color="#FFFFFF"
+							variant="solid"
+							type="submit"
+							rightIcon={<IoSave />}
+							sx={{
+								"&:hover": {
+									bg: "brand.700",
+								},
+							}}
+						>
+							Submit
+						</Button>
+					</Box>
 				</Stack>
-			</Box>
-		</form>
+			</form>
+		</div>
 	);
 };
 

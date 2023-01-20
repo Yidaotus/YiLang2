@@ -243,7 +243,7 @@ const WordEditorPopup = React.forwardRef<
 		});
 
 		return (
-			<Box ref={ref} p={2} w="325px">
+			<Box ref={ref} w="450px">
 				{createWord.isLoading && (
 					<Box
 						w="100%"
@@ -374,7 +374,7 @@ const FloatingWordEditorPlugin = ({
 	return createPortal(
 		<FloatingContainer
 			popupReference={popupReference}
-			popupPlacement="bottom"
+			popupPlacement="bottom-start"
 			positionInline={false}
 		>
 			<WordEditorPopupMemo

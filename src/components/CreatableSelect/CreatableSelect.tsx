@@ -57,7 +57,7 @@ const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 			autoFocus={autoFocus}
 			inputValue={inputValue}
 			isClearable
-			size="md"
+			size="sm"
 			isMulti
 			options={[] as Array<string>}
 			menuIsOpen={false}
