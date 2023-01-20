@@ -1,8 +1,17 @@
 import { Box, Button, Divider, IconButton, useToken } from "@chakra-ui/react";
-import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
+import {
+	$createDialogueContainerNode,
+	$createDialogueSpeakerNode,
+	$createDialogueSpeechNode,
+} from "@components/Editor/nodes/Dialogue";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $findMatchingParent } from "@lexical/utils";
-import { $getSelection, $isRangeSelection } from "lexical";
+import {
+	$createTextNode,
+	$getSelection,
+	$insertNodes,
+	$isParagraphNode,
+	$isRangeSelection,
+} from "lexical";
 import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { IoSaveOutline } from "react-icons/io5";
@@ -27,18 +36,36 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 	const DEBUG = useCallback(() => {
 		editor.update(() => {
 			const selection = $getSelection();
-			if (
-				!selection ||
-				!$isRangeSelection(selection) ||
-				!selection.isCollapsed()
-			)
-				return;
+			if (!selection || !$isRangeSelection(selection)) return;
 
-			const node = selection.anchor.getNode();
-			const parent = $findMatchingParent(node, $isSentenceNode);
-			if (!$isSentenceNode(parent)) return;
+			const container = $createDialogueContainerNode();
+			for (const node of selection.getNodes()) {
+				if ($isParagraphNode(node)) {
+					const text = node.getTextContent();
+					const splits = text.split(":");
+					if (splits.length > 1) {
+						const [speaker, ...speech] = splits;
+						const speakerNode = $createDialogueSpeakerNode().append(
+							$createTextNode(speaker?.trim())
+						);
+						const speechNode = $createDialogueSpeechNode().append(
+							$createTextNode(speech.join("").trim())
+						);
 
-			parent.setShowTranslation(!parent.getShowTranslation());
+						container.append(speakerNode, speechNode);
+					}
+				}
+			}
+
+			if (container.getChildrenSize() < 1) {
+				const speaker = $createDialogueSpeakerNode().append(
+					$createTextNode(" ")
+				);
+				const speech = $createDialogueSpeechNode().append($createTextNode(" "));
+				container.append(speaker, speech);
+			}
+
+			$insertNodes([container]);
 		});
 	}, [editor]);
 

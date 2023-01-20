@@ -50,6 +50,10 @@ export class DialogueLineNode extends ElementNode {
 		return {};
 	}
 
+	canMergeWith(_node: ElementNode): boolean {
+		return false;
+	}
+
 	static importJSON(
 		_serializedNode: SerializedDialogueLineNode
 	): DialogueLineNode {

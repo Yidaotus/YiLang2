@@ -61,6 +61,10 @@ export class DialogueSpeakerNode extends ElementNode {
 	}
 
 	canBeEmpty(): boolean {
+		return true;
+	}
+
+	canMergeWith(_node: ElementNode): boolean {
 		return false;
 	}
 

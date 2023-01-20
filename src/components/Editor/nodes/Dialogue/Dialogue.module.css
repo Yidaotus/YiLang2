@@ -9,40 +9,37 @@
 	grid-template-columns: max-content 1fr;
 	grid-column-gap: 0px;
 	grid-row-gap: 0px;
-	justify-content: flex-start;
 	align-items: flex-start;
 }
 
 .Dialogue__Speaker::after {
 	content: ":";
 	height: 1px;
-	width: 24px;
 	position: absolute;
 	top: 0;
 	right: 0;
-	padding-left: 3em;
-	padding-right: 2em;
-	transform: translate(50%, 50%);
+	padding-left: 2px;
+	padding-right: 5px;
+	margin-right: 5px;
 }
 
 .Dialogue__Speaker {
-	display: flex;
-	align-items: center;
 	position: relative;
-	margin-right: 2em;
+	margin-right: 1em;
 	padding: 2px;
+	min-height: 1.8em;
 	width: 100%;
-	background-color: aqua;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	border-radius: 5px;
 }
 
 .Dialogue__Speech {
-	display: flex;
-	align-items: center;
-	border-radius: 3px;
-	margin-bottom: 0.5em;
-	padding-bottom: 2px;
+	position: relative;
+	margin-right: 1em;
+	padding: 2px;
+	min-height: 1.8em;
 	width: 100%;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
-	background-color: bisque;
+	border-radius: 5px;
 }

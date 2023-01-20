@@ -34,6 +34,7 @@ const blockTypeToBlockName = {
 	remark: "Remark",
 	grammarPoint: "Grammar Point",
 	table: "Table",
+	dialogue: "Dialogue",
 };
 
 export type SelectedBlockType = keyof typeof blockTypeToBlockName;

@@ -53,8 +53,12 @@ export class DialogueSpeechNode extends ElementNode {
 		return false;
 	}
 
-	canBeEmpty(): boolean {
+	canMergeWith(_node: ElementNode): boolean {
 		return false;
+	}
+
+	canBeEmpty(): boolean {
+		return true;
 	}
 
 	static importJSON(

@@ -1,8 +1,8 @@
 import { HIGHLIGHT_NODE_COMMAND } from "@components/Editor/Editor";
-import type { SentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
 import {
 	$createSentenceNode,
 	$isSentenceNode,
+	SentenceNode,
 } from "@components/Editor/nodes/Sentence/SentenceNode";
 import { $isSentenceToggleNode } from "@components/Editor/nodes/Sentence/SentenceToggleNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -10,6 +10,7 @@ import { $findMatchingParent, mergeRegister } from "@lexical/utils";
 import { $getAncestor } from "@utils/utils";
 import type { ElementNode, LexicalNode } from "lexical";
 import {
+	$addUpdateTag,
 	$createTextNode,
 	$getNodeByKey,
 	$getRoot,
@@ -77,7 +78,7 @@ const SentencePlugin = () => {
 	}, [markSentences]);
 
 	const insertSentence = useCallback(() => {
-		const translation = "This is just a simple test!";
+		const translation = "";
 		const selection = $getSelection();
 
 		if (!$isRangeSelection(selection)) {
@@ -160,7 +161,7 @@ const SentencePlugin = () => {
 		if (!sentenceNode) return false;
 		sentenceNode.select();
 		return true;
-	}, [editor]);
+	}, []);
 
 	const highlightSentence = useCallback(
 		(key: string) => {
@@ -298,8 +299,7 @@ const SentencePlugin = () => {
 				editor.getEditorState().read(() => {
 					markActiveSentence();
 				});
-			})
-			/*
+			}),
 			editor.registerMutationListener(SentenceNode, (updates) => {
 				editor.update(() => {
 					$addUpdateTag("history-merge");
@@ -307,13 +307,22 @@ const SentencePlugin = () => {
 						const node = $getNodeByKey(nodeKey);
 						if (!$isSentenceNode(node)) continue;
 
-						const firstChild = node.getFirstChild();
-						if (!firstChild || !$isDecoratorNode(firstChild)) return;
+						const parent = node.getParent();
+						if (!parent) continue;
 
-						firstChild.insertBefore($createTextNode(" "));
+						if (node.getTextContent().trim().length < 1) {
+							node.remove();
+							continue;
+						}
+
+						const parentSentence = $findMatchingParent(parent, $isSentenceNode);
+						if (parentSentence) {
+							parentSentence.insertAfter(node);
+						}
 					}
 				});
 			})
+			/*
 			editor.registerMutationListener(SentenceNode, (updates) => {
 				editor.update(() => {
 					$addUpdateTag("history-merge");

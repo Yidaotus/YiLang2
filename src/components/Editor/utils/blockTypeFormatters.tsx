@@ -1,4 +1,5 @@
 import type { LexicalEditor, LexicalNode } from "lexical";
+import { $createTextNode, $isParagraphNode } from "lexical";
 import type { SelectedBlockType } from "../plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 
 import {
@@ -11,6 +12,7 @@ import type { HeadingTagType } from "@lexical/rich-text";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
 import { $setBlocksType_experimental, $wrapNodes } from "@lexical/selection";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
+import { $findMatchingParent } from "@lexical/utils";
 import {
 	$createParagraphNode,
 	$getSelection,
@@ -31,6 +33,12 @@ import { $createRemarkContainerNode } from "../nodes/Remark/RemarkContainerNode"
 import { $createRemarkContentNode } from "../nodes/Remark/RemarkContentNode";
 import { $createRemarkTitleNode } from "../nodes/Remark/RemarkTitleNode";
 
+import { IoChatboxOutline } from "react-icons/io5";
+import {
+	$createDialogueContainerNode,
+	$createDialogueSpeakerNode,
+	$createDialogueSpeechNode,
+} from "../nodes/Dialogue";
 import { $createGrammarPointContainerNode } from "../nodes/GrammarPoint/GrammarPointContainerNode";
 import { $createGrammarPointContentNode } from "../nodes/GrammarPoint/GrammarPointContentNode";
 import { $createGrammarPointTitleNode } from "../nodes/GrammarPoint/GrammarPointTitleNode";
@@ -150,6 +158,63 @@ export const formatRemark = ({ editor, currentBlockType }: FormatterParams) => {
 
 				return true;
 			}
+		});
+	}
+};
+
+export const formatDialogue = ({
+	editor,
+	currentBlockType,
+}: FormatterParams) => {
+	if (currentBlockType !== "dialogue") {
+		editor.update(() => {
+			const selection = $getSelection();
+			if (!selection || !$isRangeSelection(selection)) return;
+
+			const container = $createDialogueContainerNode();
+			let lastTarget;
+			const tmpNode = $createParagraphNode();
+			let insertedTempNode = false;
+			for (const node of selection.getNodes()) {
+				if (!insertedTempNode) {
+					const tlp = node.getTopLevelElement();
+					if (tlp) {
+						tlp.insertBefore(tmpNode);
+						insertedTempNode = true;
+					} else {
+						return;
+					}
+				}
+				const target = $findMatchingParent(node, $isParagraphNode);
+				if (!target) continue;
+				if (target.__key === lastTarget) continue;
+				const text = target.getTextContent();
+				const splits = text.split(":");
+				if (splits.length > 1) {
+					const [speaker, ...speech] = splits;
+					const speakerNode = $createDialogueSpeakerNode().append(
+						$createTextNode(speaker?.trim())
+					);
+					const speechNode = $createDialogueSpeechNode().append(
+						$createTextNode(speech.join("").trim())
+					);
+
+					container.append(speakerNode, speechNode);
+					target.remove();
+				}
+				lastTarget = target.__key;
+			}
+
+			if (container.getChildrenSize() < 1) {
+				const speaker = $createDialogueSpeakerNode().append(
+					$createTextNode(" ")
+				);
+				const speech = $createDialogueSpeechNode().append($createTextNode(" "));
+				container.append(speaker, speech);
+			}
+
+			tmpNode.replace(container);
+			container.selectStart();
 		});
 	}
 };
@@ -295,5 +360,11 @@ export const blockTypes: Partial<Record<SelectedBlockType, Formatter>> = {
 		icon: <RiTabletLine size="100%" />,
 		formatter: ({ editor, currentBlockType }: FormatterParams) =>
 			formatTable({ editor, currentBlockType }),
+	},
+	dialogue: {
+		type: "Dialogue",
+		icon: <IoChatboxOutline size="100%" />,
+		formatter: ({ editor, currentBlockType }: FormatterParams) =>
+			formatDialogue({ editor, currentBlockType }),
 	},
 };

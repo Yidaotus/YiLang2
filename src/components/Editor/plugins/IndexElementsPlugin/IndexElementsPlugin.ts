@@ -14,13 +14,12 @@ import {
 	useOutlineActions,
 	useOutlineGrammarPoints,
 	useOutlineSentences,
-	useOutlineServerState,
 	useOutlineWords,
 } from "@store/outline";
 import useEditorStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { filterNullish } from "@utils/utils";
-import type { LexicalNode } from "lexical";
+import type { LexicalNode, NodeMutation } from "lexical";
 import {
 	$getNodeByKey,
 	$getSelection,
@@ -47,7 +46,7 @@ const checkForBlurredElement =
 	}: {
 		isBlur: boolean;
 		previousFoundNodeKey: string | null;
-		onBlur: (node: T) => void;
+		onBlur: (node: T, mutation: NodeMutation) => void;
 		findFn: (node: LexicalNode) => node is LexicalNode & T;
 	}) =>
 	() => {
@@ -85,7 +84,7 @@ const checkForBlurredElement =
 			const node = $getNodeByKey(previousFoundNodeKey);
 			if (!node || !findFn(node)) return false;
 
-			onBlur(node);
+			onBlur(node, "updated");
 		}
 
 		previousFoundNodeKey = foundElement?.getKey() || null;
@@ -111,7 +110,6 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 	const sentenceStore = useOutlineSentences();
 	const wordStore = useOutlineWords();
 	const grammarPointStore = useOutlineGrammarPoints();
-	const serverState = useOutlineServerState();
 	const selectedLanguage = useEditorStore((store) => store.selectedLanguage);
 
 	const trpcUtils = trpc.useContext();
@@ -135,7 +133,7 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 	const blurFoundSentenceKey = useRef<string | null>(null);
 
 	const generateSentenceMutation = useCallback(
-		(node: SentenceNode) => {
+		(node: SentenceNode, mutation: NodeMutation) => {
 			const nodeKey = node.getKey();
 			const textContent = node.getTextContent();
 			const translation = node.getTranslation();
@@ -152,34 +150,41 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 				databaseId,
 			};
 
-			const previousNode = sentenceStore[nodeKey];
-			const sameWords =
-				previousNode?.containingWords.length ===
-					newSentence.containingWords.length &&
-				previousNode.containingWords.every((value) => {
-					return newSentence.containingWords.indexOf(value) > -1;
-				});
-
-			if (
-				previousNode &&
-				!previousNode.isDeleted &&
-				newSentence.sentence === previousNode.sentence &&
-				newSentence.databaseId === previousNode.databaseId &&
-				newSentence.translation === previousNode.translation &&
-				sameWords
-			) {
+			if (mutation === "destroyed") {
+				removeSentence(nodeKey);
 				return;
+			}
+
+			if (mutation === "updated") {
+				const previousNode = sentenceStore[nodeKey];
+				const sameWords =
+					previousNode?.containingWords.length ===
+						newSentence.containingWords.length &&
+					previousNode.containingWords.every((value) => {
+						return newSentence.containingWords.indexOf(value) > -1;
+					});
+
+				if (
+					previousNode &&
+					!previousNode.isDeleted &&
+					newSentence.sentence === previousNode.sentence &&
+					newSentence.databaseId === previousNode.databaseId &&
+					newSentence.translation === previousNode.translation &&
+					sameWords
+				) {
+					return;
+				}
 			}
 			appendSentence({
 				key: nodeKey,
 				sentence: newSentence,
 			});
 		},
-		[appendSentence, sentenceStore]
+		[appendSentence, removeSentence, sentenceStore]
 	);
 
 	const generateGrammarPointMutation = useCallback(
-		(node: GrammarPointTitleNode) => {
+		(node: GrammarPointTitleNode, mutation: NodeMutation) => {
 			const container = node.getParent();
 			if (!$isGrammarPointContainerNode(container)) return;
 
@@ -187,9 +192,16 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 			const title = node.getTextContent();
 			const databaseId = container.getDatabaseId();
 
-			const previousNode = grammarPointStore[nodeKey];
-			if (previousNode && previousNode.title === title) {
+			if (mutation === "destroyed") {
+				removeWord(nodeKey);
 				return;
+			}
+
+			if (mutation === "updated") {
+				const previousNode = grammarPointStore[nodeKey];
+				if (previousNode && previousNode.title === title) {
+					return;
+				}
 			}
 			appendGrammarPoint({
 				key: nodeKey,
@@ -199,7 +211,7 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 				},
 			});
 		},
-		[appendGrammarPoint, grammarPointStore]
+		[appendGrammarPoint, grammarPointStore, removeWord]
 	);
 
 	const checkForSentenceBlur = useMemo(
@@ -382,35 +394,24 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 						});
 					}
 					if (mutation === "destroyed") {
-						removeWord(nodeKey);
 					}
 				}
 			}),
 			editor.registerMutationListener(GrammarPointTitleNode, (mutatedNodes) => {
-				for (const [nodeKey, mutation] of mutatedNodes) {
-					if (mutation === "created" || mutation === "updated") {
-						editor.getEditorState().read(() => {
-							const grammarPointTitleNode = $getNodeByKey(nodeKey);
-							if (!$isGrammarPointTitleNode(grammarPointTitleNode)) return;
-							generateGrammarPointMutation(grammarPointTitleNode);
-						});
+				editor.getEditorState().read(() => {
+					for (const [nodeKey, mutation] of mutatedNodes) {
+						const grammarPointTitleNode = $getNodeByKey(nodeKey);
+						if (!$isGrammarPointTitleNode(grammarPointTitleNode)) continue;
+						generateGrammarPointMutation(grammarPointTitleNode, mutation);
 					}
-					if (mutation === "destroyed") {
-						removeGrammarPoint(nodeKey);
-					}
-				}
+				});
 			}),
 			editor.registerMutationListener(SentenceNode, (mutatedNodes) => {
 				editor.getEditorState().read(() => {
 					for (const [nodeKey, mutation] of mutatedNodes) {
-						if (mutation === "created" || mutation === "updated") {
-							const sentenceNode = $getNodeByKey(nodeKey);
-							if (!$isSentenceNode(sentenceNode)) return;
-							generateSentenceMutation(sentenceNode);
-						}
-						if (mutation === "destroyed") {
-							removeSentence(nodeKey);
-						}
+						const sentenceNode = $getNodeByKey(nodeKey);
+						if (!$isSentenceNode(sentenceNode)) return;
+						generateSentenceMutation(sentenceNode, mutation);
 					}
 				});
 			})

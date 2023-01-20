@@ -12,7 +12,7 @@ import { ElementNode } from "lexical";
 
 type SerializedDialogueContainerNode = Spread<
 	{
-		type: "dialogue-cointainer";
+		type: "dialogue";
 		version: 1;
 	},
 	SerializedElementNode
@@ -24,7 +24,7 @@ export class DialogueContainerNode extends ElementNode {
 	}
 
 	static getType(): string {
-		return "dialogue-cointainer";
+		return "dialogue";
 	}
 
 	static clone(node: DialogueContainerNode): DialogueContainerNode {
@@ -60,9 +60,13 @@ export class DialogueContainerNode extends ElementNode {
 	exportJSON(): SerializedDialogueContainerNode {
 		return {
 			...super.exportJSON(),
-			type: "dialogue-cointainer",
+			type: "dialogue",
 			version: 1,
 		};
+	}
+
+	canMergeWith(node: ElementNode): boolean {
+		return $isDialogueContainerNode(node);
 	}
 
 	canBeEmpty(): boolean {
