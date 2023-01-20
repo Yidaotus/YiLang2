@@ -206,10 +206,8 @@ export const formatDialogue = ({
 			}
 
 			if (container.getChildrenSize() < 1) {
-				const speaker = $createDialogueSpeakerNode().append(
-					$createTextNode(" ")
-				);
-				const speech = $createDialogueSpeechNode().append($createTextNode(" "));
+				const speaker = $createDialogueSpeakerNode();
+				const speech = $createDialogueSpeechNode();
 				container.append(speaker, speech);
 			}
 

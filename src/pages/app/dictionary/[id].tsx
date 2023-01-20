@@ -299,6 +299,56 @@ const DictionaryEntryPage = () => {
 										}
 									/>
 								)}
+								<DataRow
+									alignTop
+									title={
+										<Box display="flex" gap={1} alignItems="center">
+											<IoAlbumsOutline />
+											Related To
+										</Box>
+									}
+									value={
+										<Stack>
+											{dbWord.data.relatedTo.map((word) => (
+												<Box key={word.id}>
+													<Box>
+														<Link
+															as={NextLink}
+															href={`/app/dictionary/${word.id}`}
+														>
+															{word.word}
+														</Link>
+													</Box>
+												</Box>
+											))}
+										</Stack>
+									}
+								/>
+								<DataRow
+									alignTop
+									title={
+										<Box display="flex" gap={1} alignItems="center">
+											<IoAlbumsOutline />
+											Related By
+										</Box>
+									}
+									value={
+										<Stack>
+											{dbWord.data.relatedBy.map((word) => (
+												<Box key={word.id}>
+													<Box>
+														<Link
+															as={NextLink}
+															href={`/app/dictionary/${word.id}`}
+														>
+															{word.word}
+														</Link>
+													</Box>
+												</Box>
+											))}
+										</Stack>
+									}
+								/>
 							</Box>
 						)}
 					</Box>

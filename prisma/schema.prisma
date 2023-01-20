@@ -166,6 +166,9 @@ model Word {
   languageId     String
   sentences      Sentence[]
 
+  relatedBy Word[] @relation("WordRelatedTo")
+  relatedTo Word[] @relation("WordRelatedTo")
+
   @@unique(fields: [userId, id], name: "userWordId")
 }
 

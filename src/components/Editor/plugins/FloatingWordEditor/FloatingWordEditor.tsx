@@ -226,6 +226,7 @@ const WordEditorPopup = React.forwardRef<
 						tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
 						comment: word.comment,
 						language: selectedLanguage.id,
+						relatedWords: word.relatedTo ? [word.relatedTo.id] : undefined,
 						documentId,
 					});
 					const { id, ...rest } = newWord;

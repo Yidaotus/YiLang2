@@ -12,6 +12,7 @@ import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import useEditorSettingsStore from "@store/store";
 import { $getNodeByKey } from "lexical";
+import type { KeyboardEventHandler } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { IoEye, IoEyeOff } from "react-icons/io5";
@@ -102,6 +103,15 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 		}
 	}, [editor, selectedSentenceKey]);
 
+	const handleKeyDown: KeyboardEventHandler = (event) => {
+		switch (event.key) {
+			case "Enter":
+				event.preventDefault();
+				setSourceEditorVisible((isVisible) => !isVisible);
+				updateTranslation();
+		}
+	};
+
 	const iconSize = "18px";
 	return createPortal(
 		<>
@@ -118,6 +128,7 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 							w="100%"
 							value={translationInput}
 							onChange={(e) => setTranslationInput(e.target.value)}
+							onKeyDown={handleKeyDown}
 						/>
 					</Box>
 				</FloatingContainer>

@@ -16,6 +16,7 @@ export const wordRouter = router({
 				translations: z.array(z.string()),
 				spelling: z.string().optional(),
 				comment: z.string().optional(),
+				relatedWords: z.array(z.string()).optional(),
 				tags: z.array(
 					z.union([
 						z.string(),
@@ -39,6 +40,7 @@ export const wordRouter = router({
 					documentId,
 					comment,
 					language,
+					relatedWords,
 				},
 			}) => {
 				const dbWord = await prisma.word.create({
@@ -57,6 +59,11 @@ export const wordRouter = router({
 									connect: { id: documentId },
 							  }
 							: undefined,
+						relatedTo: {
+							connect: relatedWords
+								? relatedWords.map((id) => ({ id }))
+								: undefined,
+						},
 						tags: {
 							create: tags.filter(isNotString).map((newTag) => ({
 								name: newTag.name,
@@ -111,6 +118,7 @@ export const wordRouter = router({
 				spelling: z.string().optional(),
 				comment: z.string().optional(),
 				language: z.string(),
+				relatedWords: z.array(z.string()).optional(),
 				tags: z
 					.array(
 						z.union([
@@ -127,7 +135,15 @@ export const wordRouter = router({
 		.mutation(
 			async ({
 				ctx: { prisma, session },
-				input: { id, comment, spelling, tags, translations, language },
+				input: {
+					id,
+					comment,
+					spelling,
+					tags,
+					translations,
+					language,
+					relatedWords,
+				},
 			}) => {
 				if (tags) {
 					await prisma.word.update({
@@ -141,12 +157,29 @@ export const wordRouter = router({
 						},
 					});
 				}
+				if (relatedWords) {
+					await prisma.word.update({
+						where: {
+							id,
+						},
+						data: {
+							relatedTo: {
+								set: [],
+							},
+						},
+					});
+				}
 				return await prisma.word.update({
 					where: { userWordId: { id, userId: session.user.id } },
 					data: {
 						comment: comment,
 						spelling: spelling,
 						translation: !!translations ? translations.join(";") : undefined,
+						relatedTo: {
+							connect: relatedWords
+								? relatedWords.map((id) => ({ id }))
+								: undefined,
+						},
 						tags: tags
 							? {
 									create: tags.filter(isNotString).map((newTag) => ({
@@ -232,6 +265,8 @@ export const wordRouter = router({
 			const dbResult = await prisma.word.findUnique({
 				where: { userWordId: { id, userId: session.user.id } },
 				include: {
+					relatedTo: true,
+					relatedBy: true,
 					sourceDocument: {
 						select: {
 							title: true,

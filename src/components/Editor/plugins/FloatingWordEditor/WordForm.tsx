@@ -12,11 +12,70 @@ import {
 	Textarea,
 } from "@chakra-ui/react";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
-import { CreatableSelect } from "chakra-react-select";
-import { useCallback, useEffect, useState } from "react";
+import useDebounce from "@components/Editor/hooks/useDebounce";
+import type { Word } from "@prisma/client";
+import useEditorSettingsStore from "@store/store";
+import { trpc } from "@utils/trpc";
+import type { ActionMeta, InputActionMeta } from "chakra-react-select";
+import { CreatableSelect, Select } from "chakra-react-select";
+import React, { useCallback, useEffect, useState } from "react";
+import type { RefCallBack } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { IoSave } from "react-icons/io5";
 import { RxTrash } from "react-icons/rx";
+
+type WordSelectProps = {
+	value: Word | null;
+	onChange: (newWord: Word | null) => void;
+	ref: RefCallBack;
+};
+const WordSelectComponent = ({ value, onChange, ref }: WordSelectProps) => {
+	const [searchInput, setSearchInput] = useState("");
+	const debouncedSearchInput = useDebounce(searchInput);
+	const activeLanguage = useEditorSettingsStore(
+		(store) => store.selectedLanguage
+	);
+	const searchEnabled = debouncedSearchInput.length > 0;
+	const { status: searchStatus, data: searchWordResult } =
+		trpc.dictionary.word.search.useQuery(
+			{
+				languageId: activeLanguage.id,
+				search: debouncedSearchInput,
+			},
+			{ enabled: searchEnabled }
+		);
+	// see https://github.com/TanStack/query/issues/3584
+	const wordSearchIsLoading = searchEnabled && searchStatus === "loading";
+
+	const handleInputChange = (inputText: string, _event: InputActionMeta) => {
+		// prevent outside click from resetting inputText to ""
+		// if (event.action !== "input-blur" && event.action !== "menu-close") {
+		// }
+		setSearchInput(inputText);
+	};
+
+	const handleChange = (
+		selectedItem: Word | null,
+		_event: ActionMeta<Word>
+	) => {
+		onChange(selectedItem);
+	};
+
+	return (
+		<Select
+			ref={ref}
+			value={value}
+			getOptionLabel={(word) => word.word}
+			options={searchWordResult}
+			inputValue={searchInput || ""}
+			onChange={handleChange}
+			isLoading={wordSearchIsLoading}
+			onInputChange={handleInputChange}
+		/>
+	);
+};
+
+const WordSelect = React.forwardRef(WordSelectComponent);
 
 export type WordFormType = {
 	word: string;
@@ -24,6 +83,7 @@ export type WordFormType = {
 	spelling?: string;
 	comment?: string;
 	tags: Array<EditorTag>;
+	relatedTo: Word;
 };
 
 const WordForm = ({
@@ -274,6 +334,27 @@ const WordForm = ({
 							size="md"
 							placeholder="Comment"
 							{...register("comment")}
+						/>
+						<FormErrorMessage>
+							{errors.comment && errors.comment.message}
+						</FormErrorMessage>
+					</FormControl>
+					<FormControl>
+						<FormLabel
+							display="none"
+							htmlFor="comment"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Related To
+						</FormLabel>
+						<Controller
+							control={control}
+							name="relatedTo"
+							render={({ field: { onChange, value, ref } }) => (
+								<WordSelect onChange={onChange} value={value} ref={ref} />
+							)}
 						/>
 						<FormErrorMessage>
 							{errors.comment && errors.comment.message}
