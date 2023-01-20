@@ -75,6 +75,11 @@ const useEditorSettingsStore = create<EditorStore>()(
 			}),
 			{
 				name: "editor-settings",
+				version: 1,
+				partialize: (state) =>
+					Object.fromEntries(
+						Object.entries(state).filter(([key]) => !["actions"].includes(key))
+					),
 			}
 		)
 	)
