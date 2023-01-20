@@ -240,6 +240,8 @@ export const wordRouter = router({
 					},
 				},
 				include: {
+					relatedBy: true,
+					relatedTo: true,
 					sourceDocument: {
 						select: {
 							title: true,
