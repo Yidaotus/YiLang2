@@ -12,7 +12,7 @@ export const filterNullish = <T,>(v: T | undefined | null): v is T => {
 export const highlightString = ({
 	input,
 	search,
-	highlightColor = "brand.100",
+	highlightColor = "#706fba",
 	textColor = "text.400",
 }: {
 	input: string;
@@ -46,7 +46,12 @@ export const highlightString = ({
 				subIndex + firstMatch.length
 			);
 			output.push(
-				<Box as="span" color={highlightColor} key={`${subIndex}-1`}>
+				<Box
+					as="span"
+					color={highlightColor}
+					key={`${subIndex}-1`}
+					fontWeight="500"
+				>
 					{foundSubstring}
 				</Box>
 			);

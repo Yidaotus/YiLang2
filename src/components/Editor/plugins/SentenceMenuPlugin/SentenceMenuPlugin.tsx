@@ -167,7 +167,7 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 					>
 						<IconButton
 							icon={
-								translationVisible ? (
+								!translationVisible ? (
 									<IoEye
 										color={text400}
 										style={{
