@@ -84,22 +84,26 @@ const UniversalSearchInput = ({
 			0;
 
 	return (
-		<>
+		<Box>
 			<Popover
 				returnFocusOnClose={false}
 				autoFocus={false}
 				isOpen={isOpen}
 				placement="bottom"
 				closeOnBlur
+				offset={[0, 0]}
 			>
 				<PopoverAnchor>
 					<InputGroup w={width}>
 						<Input
+							focusBorderColor="none"
 							value={searchInput}
 							placeholder="Search..."
 							onChange={(e) => setSearchInput(e.target.value)}
 							onFocus={() => setHasInputFocus(true)}
 							onBlur={() => setHasInputFocus(false)}
+							borderBottomRadius={isOpen ? "0px" : "5px"}
+							borderBottomColor={isOpen ? "#aaa7e6" : "text.100"}
 							{...rest}
 						/>
 						<InputRightElement>
@@ -115,6 +119,8 @@ const UniversalSearchInput = ({
 					onFocus={() => setHasBodyFocus(true)}
 					onBlur={() => setHasBodyFocus(false)}
 					w={width}
+					borderTopRadius="0px"
+					borderTopColor="#aaa7e6"
 				>
 					<PopoverBody>
 						<Stack
@@ -339,7 +345,7 @@ const UniversalSearchInput = ({
 					</PopoverBody>
 				</PopoverContent>
 			</Popover>
-		</>
+		</Box>
 	);
 };
 
