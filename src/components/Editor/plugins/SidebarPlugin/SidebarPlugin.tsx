@@ -15,7 +15,7 @@ import {
 import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { IoSaveOutline } from "react-icons/io5";
-import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
+import { RECONCILE_AND_SAVE_EDITOR } from "../IndexElementsPlugin/IndexElementsPlugin";
 import FormatterMenu from "./FormatterMenu";
 import LayoutMenu from "./LayoutMenu";
 import SentenceList from "./SentenceList";
@@ -30,7 +30,9 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 	const [editor] = useLexicalComposerContext();
 
 	const saveDocument = useCallback(async () => {
-		editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast: true });
+		editor.dispatchCommand(RECONCILE_AND_SAVE_EDITOR, {
+			shouldShowToast: true,
+		});
 	}, [editor]);
 
 	const DEBUG = useCallback(() => {

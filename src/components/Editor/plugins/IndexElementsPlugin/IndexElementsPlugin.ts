@@ -27,7 +27,9 @@ import {
 	$isRangeSelection,
 	BLUR_COMMAND,
 	CLEAR_EDITOR_COMMAND,
+	COMMAND_PRIORITY_CRITICAL,
 	COMMAND_PRIORITY_NORMAL,
+	createCommand,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -36,6 +38,10 @@ import {
 	$getAllNodesOfType,
 	SAVE_EDITOR,
 } from "../SaveToDBPlugin/SaveToDBPlugin";
+
+export const RECONCILE_AND_SAVE_EDITOR = createCommand<{
+	shouldShowToast: boolean;
+}>("RECONCILE_AND_SAVE_EDITOR");
 
 const checkForBlurredElement =
 	<T extends LexicalNode>({
@@ -284,87 +290,110 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 		[generateGrammarPointMutation]
 	);
 
-	const reconcileServerState = useCallback(async () => {
-		const grammarPointsToUpsert = Object.entries(grammarPointStore).filter(
-			([, grammarPoint]) => !grammarPoint.isDeleted && grammarPoint.isDirty
-		);
-		const grammarPointsToDelete = Object.entries(grammarPointStore).filter(
-			([, grammarPoint]) => grammarPoint.isDeleted
-		);
+	const reconcileServerState = useCallback(
+		async (shouldShowToast: boolean) => {
+			const allPromises: Array<Promise<any>> = [];
+			const grammarPointsToUpsert = Object.entries(grammarPointStore).filter(
+				([, grammarPoint]) => !grammarPoint.isDeleted && grammarPoint.isDirty
+			);
+			const grammarPointsToDelete = Object.entries(grammarPointStore).filter(
+				([, grammarPoint]) => grammarPoint.isDeleted
+			);
 
-		for (const [nodeKey, grammarPoint] of grammarPointsToUpsert) {
-			upsertGrammarPoint.mutate({
-				id: grammarPoint.databaseId,
-				title: grammarPoint.title,
-				sourceDocumentId: documentId,
-				nodeKey,
-			});
-		}
+			for (const [nodeKey, grammarPoint] of grammarPointsToUpsert) {
+				allPromises.push(
+					upsertGrammarPoint.mutateAsync({
+						id: grammarPoint.databaseId,
+						title: grammarPoint.title,
+						sourceDocumentId: documentId,
+						nodeKey,
+					})
+				);
+			}
 
-		const gpIdsToDelete = grammarPointsToDelete
-			.map(([, gp]) => gp.databaseId)
-			.filter(filterNullish);
-		const gpNodeKeysToDelete = grammarPointsToDelete
-			.map(([nodeKey]) => nodeKey)
-			.filter(filterNullish);
-		if (gpIdsToDelete && gpIdsToDelete.length > 0) {
-			deleteGrammarPoints.mutate({
-				ids: gpIdsToDelete,
-				nodeKeys: gpNodeKeysToDelete,
-			});
-		}
+			const gpIdsToDelete = grammarPointsToDelete
+				.map(([, gp]) => gp.databaseId)
+				.filter(filterNullish);
+			const gpNodeKeysToDelete = grammarPointsToDelete
+				.map(([nodeKey]) => nodeKey)
+				.filter(filterNullish);
+			if (gpIdsToDelete && gpIdsToDelete.length > 0) {
+				allPromises.push(
+					deleteGrammarPoints.mutateAsync({
+						ids: gpIdsToDelete,
+						nodeKeys: gpNodeKeysToDelete,
+					})
+				);
+			}
 
-		const sentencesToUpsert = Object.entries(sentenceStore).filter(
-			([, sentence]) => !sentence.isDeleted && sentence.isDirty
-		);
-		const sentencesToDelete = Object.entries(sentenceStore).filter(
-			([, sentence]) => sentence.isDeleted
-		);
+			const sentencesToUpsert = Object.entries(sentenceStore).filter(
+				([, sentence]) => !sentence.isDeleted && sentence.isDirty
+			);
+			const sentencesToDelete = Object.entries(sentenceStore).filter(
+				([, sentence]) => sentence.isDeleted
+			);
 
-		for (const [nodeKey, sentence] of sentencesToUpsert) {
-			upsertSentence.mutate({
-				id: sentence.databaseId,
-				sentence: sentence.sentence,
-				translation: sentence.translation,
-				containingWords: sentence.containingWords,
-				languageId: selectedLanguage.id,
-				sourceDocumentId: documentId,
-				nodeKey,
-			});
-		}
+			for (const [nodeKey, sentence] of sentencesToUpsert) {
+				allPromises.push(
+					upsertSentence.mutateAsync({
+						id: sentence.databaseId,
+						sentence: sentence.sentence,
+						translation: sentence.translation,
+						containingWords: sentence.containingWords,
+						languageId: selectedLanguage.id,
+						sourceDocumentId: documentId,
+						nodeKey,
+					})
+				);
+			}
 
-		const sentenceIdsToDelete = sentencesToDelete
-			.map(([, sentence]) => sentence.databaseId)
-			.filter(filterNullish);
-		const sentenceNodeKeysToDelete = sentencesToDelete
-			.map(([nodeKey]) => nodeKey)
-			.filter(filterNullish);
-		if (sentenceIdsToDelete && sentenceIdsToDelete.length > 0) {
-			deleteSentences.mutate({
-				ids: sentenceIdsToDelete,
-				nodeKeys: sentenceNodeKeysToDelete,
-			});
-		}
-	}, [
-		grammarPointStore,
-		sentenceStore,
-		upsertGrammarPoint,
-		documentId,
-		deleteGrammarPoints,
-		upsertSentence,
-		selectedLanguage.id,
-		deleteSentences,
-	]);
+			const sentenceIdsToDelete = sentencesToDelete
+				.map(([, sentence]) => sentence.databaseId)
+				.filter(filterNullish);
+			const sentenceNodeKeysToDelete = sentencesToDelete
+				.map(([nodeKey]) => nodeKey)
+				.filter(filterNullish);
+			if (sentenceIdsToDelete && sentenceIdsToDelete.length > 0) {
+				allPromises.push(
+					deleteSentences.mutateAsync(
+						{
+							ids: sentenceIdsToDelete,
+							nodeKeys: sentenceNodeKeysToDelete,
+						},
+
+						{
+							onSuccess() {
+								editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast });
+							},
+						}
+					)
+				);
+			}
+			await Promise.allSettled(allPromises);
+			editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast });
+		},
+		[
+			grammarPointStore,
+			sentenceStore,
+			upsertGrammarPoint,
+			documentId,
+			editor,
+			deleteGrammarPoints,
+			upsertSentence,
+			selectedLanguage.id,
+			deleteSentences,
+		]
+	);
 
 	useEffect(() => {
 		return mergeRegister(
 			editor.registerCommand(
-				SAVE_EDITOR,
-				() => {
-					reconcileServerState();
+				RECONCILE_AND_SAVE_EDITOR,
+				({ shouldShowToast }) => {
+					reconcileServerState(shouldShowToast);
 					return false;
 				},
-				COMMAND_PRIORITY_NORMAL
+				COMMAND_PRIORITY_CRITICAL
 			),
 			editor.registerCommand(
 				DOCUMENT_LOADED_COMMAND,

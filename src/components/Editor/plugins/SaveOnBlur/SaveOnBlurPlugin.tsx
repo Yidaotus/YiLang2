@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import useEditorSettingsStore from "@store/store";
 import { useCallback, useEffect } from "react";
-import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
+import { RECONCILE_AND_SAVE_EDITOR } from "../IndexElementsPlugin/IndexElementsPlugin";
 
 const SaveOnBlurPlugin = () => {
 	const [editor] = useLexicalComposerContext();
@@ -9,7 +9,9 @@ const SaveOnBlurPlugin = () => {
 
 	const saveOnBlurHandler = useCallback(() => {
 		if (saveOnBlur) {
-			editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast: false });
+			editor.dispatchCommand(RECONCILE_AND_SAVE_EDITOR, {
+				shouldShowToast: false,
+			});
 		}
 	}, [editor, saveOnBlur]);
 

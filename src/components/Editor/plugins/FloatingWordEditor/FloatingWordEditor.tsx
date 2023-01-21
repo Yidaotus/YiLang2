@@ -2,7 +2,12 @@ import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import { mergeRegister } from "@lexical/utils";
 import type { LexicalEditor, RangeSelection } from "lexical";
-import { $createTextNode, $getNodeByKey, $insertNodes } from "lexical";
+import {
+	$createNodeSelection,
+	$createTextNode,
+	$getNodeByKey,
+	$insertNodes,
+} from "lexical";
 import type { WordFormType } from "./WordForm";
 
 import { Box, Spinner } from "@chakra-ui/react";
@@ -278,6 +283,11 @@ const FloatingWordEditorPlugin = ({
 					const anchorNode = $createWordAnchorNode(selectionWord);
 					setAnchorNodeKey(anchorNode.getKey());
 					$insertNodes([anchorNode]);
+
+					const nodeSelection = $createNodeSelection();
+					nodeSelection.add(anchorNode.getKey());
+					$setSelection(nodeSelection);
+
 					return true;
 				},
 				COMMAND_PRIORITY_EDITOR
