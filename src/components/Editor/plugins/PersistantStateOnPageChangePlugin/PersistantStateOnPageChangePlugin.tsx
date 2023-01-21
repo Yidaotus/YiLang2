@@ -1,26 +1,41 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { COMMAND_PRIORITY_NORMAL, createCommand } from "lexical";
 import { useRouter } from "next/router";
 import { useCallback, useEffect } from "react";
-import { RECONCILE_AND_SAVE_EDITOR } from "../IndexElementsPlugin/IndexElementsPlugin";
+import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
+
+export const NAVIGATE_PAGE_COMMAND = createCommand<{ url: string }>(
+	"NAVIGATE_PAGE_COMMAND"
+);
 
 const PersistStateOnPageChangePlugion = () => {
 	const [editor] = useLexicalComposerContext();
 	const router = useRouter();
 
-	const handleRouteChange = useCallback(async () => {
-		const notifyWhenDone = new Promise<void>((resolve) => {
-			editor.dispatchCommand(RECONCILE_AND_SAVE_EDITOR, {
-				shouldShowToast: true,
+	const handleRouteChange = useCallback(
+		async (url: string) => {
+			const notifyWhenDone = new Promise<void>((resolve) => {
+				editor.dispatchCommand(SAVE_EDITOR, {
+					shouldShowToast: true,
+					notifyWhenDone: resolve,
+				});
 			});
-		});
-	}, [editor]);
+			await notifyWhenDone;
+			router.push(url);
+		},
+		[editor, router]
+	);
 
 	useEffect(() => {
-		router.events.on("routeChangeStart", handleRouteChange);
-		return () => {
-			router.events.off("routeChangeStart", handleRouteChange);
-		};
-	}, [handleRouteChange, router]);
+		return editor.registerCommand(
+			NAVIGATE_PAGE_COMMAND,
+			({ url }) => {
+				handleRouteChange(url);
+				return true;
+			},
+			COMMAND_PRIORITY_NORMAL
+		);
+	}, [editor, handleRouteChange, router]);
 
 	return null;
 };

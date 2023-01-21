@@ -27,21 +27,17 @@ import {
 	$isRangeSelection,
 	BLUR_COMMAND,
 	CLEAR_EDITOR_COMMAND,
-	COMMAND_PRIORITY_CRITICAL,
 	COMMAND_PRIORITY_NORMAL,
 	createCommand,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { DOCUMENT_LOADED_COMMAND } from "../FetchDocumentPlugin/FetchDocumentPlugin";
-import {
-	$getAllNodesOfType,
-	SAVE_EDITOR,
-} from "../SaveToDBPlugin/SaveToDBPlugin";
+import { $getAllNodesOfType } from "../SaveToDBPlugin/SaveToDBPlugin";
 
-export const RECONCILE_AND_SAVE_EDITOR = createCommand<{
-	shouldShowToast: boolean;
-}>("RECONCILE_AND_SAVE_EDITOR");
+export const RECONCILE_EDITOR_COMMAND = createCommand<{
+	notifyWhenDone?: () => void;
+}>("RECONCILE_EDITOR_COMMAND");
 
 const checkForBlurredElement =
 	<T extends LexicalNode>({
@@ -291,7 +287,7 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 	);
 
 	const reconcileServerState = useCallback(
-		async (shouldShowToast: boolean) => {
+		async ({ notifyWhenDone }: { notifyWhenDone?: () => void }) => {
 			const allPromises: Array<Promise<any>> = [];
 			const grammarPointsToUpsert = Object.entries(grammarPointStore).filter(
 				([, grammarPoint]) => !grammarPoint.isDeleted && grammarPoint.isDirty
@@ -355,29 +351,22 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 				.filter(filterNullish);
 			if (sentenceIdsToDelete && sentenceIdsToDelete.length > 0) {
 				allPromises.push(
-					deleteSentences.mutateAsync(
-						{
-							ids: sentenceIdsToDelete,
-							nodeKeys: sentenceNodeKeysToDelete,
-						},
-
-						{
-							onSuccess() {
-								editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast });
-							},
-						}
-					)
+					deleteSentences.mutateAsync({
+						ids: sentenceIdsToDelete,
+						nodeKeys: sentenceNodeKeysToDelete,
+					})
 				);
 			}
 			await Promise.allSettled(allPromises);
-			editor.dispatchCommand(SAVE_EDITOR, { shouldShowToast });
+			if (notifyWhenDone) {
+				notifyWhenDone();
+			}
 		},
 		[
 			grammarPointStore,
 			sentenceStore,
 			upsertGrammarPoint,
 			documentId,
-			editor,
 			deleteGrammarPoints,
 			upsertSentence,
 			selectedLanguage.id,
@@ -388,12 +377,12 @@ const IndexElementsPlugin = ({ documentId }: IndexElementsPluginProps) => {
 	useEffect(() => {
 		return mergeRegister(
 			editor.registerCommand(
-				RECONCILE_AND_SAVE_EDITOR,
-				({ shouldShowToast }) => {
-					reconcileServerState(shouldShowToast);
-					return false;
+				RECONCILE_EDITOR_COMMAND,
+				({ notifyWhenDone }) => {
+					reconcileServerState({ notifyWhenDone });
+					return true;
 				},
-				COMMAND_PRIORITY_CRITICAL
+				COMMAND_PRIORITY_NORMAL
 			),
 			editor.registerCommand(
 				DOCUMENT_LOADED_COMMAND,

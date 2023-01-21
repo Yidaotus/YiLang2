@@ -3,13 +3,13 @@ import type { LexicalNode } from "lexical";
 import { $isElementNode, $isLeafNode } from "lexical";
 
 import { useToast } from "@chakra-ui/react";
-import type SaveableNode from "@components/Editor/nodes/SaveableNode";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
 import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import { $getRoot, COMMAND_PRIORITY_LOW, createCommand } from "lexical";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
+import { RECONCILE_EDITOR_COMMAND } from "../IndexElementsPlugin/IndexElementsPlugin";
 
 export const $getAllNodesOfType = <T extends LexicalNode>(
 	root: LexicalNode,
@@ -32,94 +32,96 @@ export const $getAllNodesOfType = <T extends LexicalNode>(
 	return foundNodes;
 };
 
-export const SAVE_EDITOR = createCommand<{ shouldShowToast: boolean }>(
-	"SAVE_EDITOR"
-);
-const DELAY = 1000;
+export const SAVE_EDITOR = createCommand<{
+	shouldShowToast: boolean;
+	notifyWhenDone: () => void;
+}>("SAVE_EDITOR");
+// const DELAY = 1000;
 
-const previousSaveMap = new Map<string, SaveableNode>();
+// const previousSaveMap = new Map<string, SaveableNode>();
 
 const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	const [editor] = useLexicalComposerContext();
-	const showToast = useRef(false);
+	// const showToast = useRef(false);
 	const toast = useToast();
 	const trpcUtils = trpc.useContext();
 
-	const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
-	const upsertDocument = trpc.document.upsertDocument.useMutation({
-		onMutate() {
-			if (showToast.current) {
-				const id = toast({
-					title: "Saving",
-					description: "Saving document",
-					status: "loading",
-					isClosable: true,
-				});
-				toastState.current = { id, timestamp: Date.now() };
-			}
-		},
-		onError() {
-			if (toastState.current) {
-				toast.close(toastState.current.id);
-			}
-			if (showToast.current) {
-				toast({
-					title: "Saving",
-					description: "Error while saving document.",
-					status: "error",
-					isClosable: true,
-				});
-			}
-		},
-		onSuccess() {
-			if (toastState.current && showToast.current) {
-				const delta = Math.max(
-					0,
-					DELAY - (Date.now() - toastState.current.timestamp)
-				);
-				const toastId = toastState.current.id;
-				setTimeout(() => {
-					toast.close(toastId);
-					toast({
-						title: "Saving",
-						description: "Document saved.",
-						status: "success",
-						isClosable: true,
-					});
-				}, delta);
-			}
-		},
-	});
-
-	const saveAllNodes = useCallback(async (nodesToSave: Array<SaveableNode>) => {
-		const saveMap = new Map<string, SaveableNode>();
-		for (const nodeToSave of nodesToSave) {
-			nodeToSave.saveToDatabase();
-			/*
-			if (nodeToSave.hasChangesForDatabase) {
-				const databaseId = await nodeToSave.saveToDatabase();
-				saveMap.set(databaseId, nodeToSave);
-			}
-			*/
-		}
-
-		const deleteMap = new Map<string, SaveableNode>();
-		for (const [key, value] of previousSaveMap.entries()) {
-			if (!saveMap.get(key)) {
-				deleteMap.set(key, value);
-			}
-		}
-	}, []);
+	const upsertDocument = trpc.document.upsertDocument.useMutation();
+	// const toastState = useRef<{ id: ToastId; timestamp: number } | null>(null);
+	// const upsertDocument = trpc.document.upsertDocument.useMutation({
+	// 	onMutate() {
+	// 		if (showToast.current) {
+	// 			const id = toast({
+	// 				title: "Saving",
+	// 				description: "Saving document",
+	// 				status: "loading",
+	// 				isClosable: true,
+	// 			});
+	// 			toastState.current = { id, timestamp: Date.now() };
+	// 		}
+	// 	},
+	// 	onError() {
+	// 		if (toastState.current) {
+	// 			toast.close(toastState.current.id);
+	// 		}
+	// 		if (showToast.current) {
+	// 			toast({
+	// 				title: "Saving",
+	// 				description: "Error while saving document.",
+	// 				status: "error",
+	// 				isClosable: true,
+	// 			});
+	// 		}
+	// 	},
+	// 	onSuccess() {
+	// 		if (toastState.current && showToast.current) {
+	// 			const delta = Math.max(
+	// 				0,
+	// 				DELAY - (Date.now() - toastState.current.timestamp)
+	// 			);
+	// 			const toastId = toastState.current.id;
+	// 			setTimeout(() => {
+	// 				toast.close(toastId);
+	// 				toast({
+	// 					title: "Saving",
+	// 					description: "Document saved.",
+	// 					status: "success",
+	// 					isClosable: true,
+	// 				});
+	// 			}, delta);
+	// 		}
+	// 	},
+	// });
 
 	const selectedLanguage = useEditorSettingsStore(
 		(store) => store.selectedLanguage
 	);
 
-	useEffect(() => {
-		return editor.registerCommand(
-			SAVE_EDITOR,
-			({ shouldShowToast }) => {
-				showToast.current = shouldShowToast;
+	const reconcileAndSave = useCallback(
+		async ({
+			shouldShowToast,
+			notifyWhenDone,
+		}: {
+			shouldShowToast: boolean;
+			notifyWhenDone: () => void;
+		}) => {
+			let toastId: ToastId | null = null;
+			if (shouldShowToast) {
+				toastId = toast({
+					title: "Saving",
+					description: "Saving document",
+					status: "loading",
+					isClosable: true,
+				});
+			}
+
+			const waitForReconcile = new Promise<void>((resolve) => {
+				editor.dispatchCommand(RECONCILE_EDITOR_COMMAND, {
+					notifyWhenDone: resolve,
+				});
+			});
+			await waitForReconcile;
+			editor.getEditorState().read(async () => {
 				const serializedState = JSON.stringify(editor.getEditorState());
 				const root = $getRoot();
 				const rootElements = root.getChildren();
@@ -129,7 +131,7 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 						title = node.getTextContent();
 					}
 				}
-				upsertDocument
+				await upsertDocument
 					.mutateAsync({
 						id: documentId,
 						title,
@@ -139,7 +141,33 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 					.then(() => {
 						trpcUtils.document.search.invalidate();
 					});
+				notifyWhenDone();
+				if (toastId) {
+					toast.close(toastId);
+					toast({
+						title: "Saving",
+						description: "Document saved.",
+						status: "success",
+						isClosable: true,
+					});
+				}
+			});
+		},
+		[
+			documentId,
+			editor,
+			selectedLanguage.id,
+			toast,
+			trpcUtils.document.search,
+			upsertDocument,
+		]
+	);
 
+	useEffect(() => {
+		return editor.registerCommand(
+			SAVE_EDITOR,
+			({ shouldShowToast, notifyWhenDone }) => {
+				reconcileAndSave({ shouldShowToast, notifyWhenDone });
 				return true;
 			},
 			COMMAND_PRIORITY_LOW
@@ -147,6 +175,7 @@ const SaveToDBPlugin = ({ documentId }: { documentId: string }) => {
 	}, [
 		documentId,
 		editor,
+		reconcileAndSave,
 		selectedLanguage.id,
 		trpcUtils.document.search,
 		upsertDocument,
