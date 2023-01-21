@@ -284,12 +284,15 @@ const DictionaryEntryPage = () => {
 																	input: sentence.sentence,
 																	search: dbWord.data?.word || "",
 																	textColor: "text.400",
-																	highlightColor: "yellow.400",
 																})}
 															</Link>
 														</Box>
 														<Box>
-															<Text color="text.300" fontSize="0.9em">
+															<Text
+																color="text.300"
+																fontSize="0.9em"
+																fontStyle="italic"
+															>
 																{sentence.translation}
 															</Text>
 														</Box>
