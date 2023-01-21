@@ -10,6 +10,9 @@ import {
 	PopoverBody,
 	PopoverContent,
 	Spinner,
+	Stack,
+	Text,
+	useToken,
 } from "@chakra-ui/react";
 import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
@@ -34,6 +37,7 @@ const UniversalSearchInput = ({
 }: UniversalSearchInputProps) => {
 	const [hasInputFocus, setHasInputFocus] = useState(false);
 	const [hasBodyFocus, setHasBodyFocus] = useState(false);
+	const [iconColor, iconActive] = useToken("colors", ["text.300", "text.100"]);
 	const activeLanguage = useEditorSettingsStore(
 		(store) => store.selectedLanguage
 	);
@@ -112,137 +116,226 @@ const UniversalSearchInput = ({
 					onBlur={() => setHasBodyFocus(false)}
 					w={width}
 				>
-					<PopoverBody
-						display="flex"
-						flexDir="column"
-						gap={2}
-						sx={{
-							"& > div:not(:last-child)": {
-								borderBottomWidth: "1px",
-								borderBottomColor: "text.100",
-								pb: 2,
-							},
-						}}
-						overflow="hidden"
-						whiteSpace="nowrap"
-						textOverflow="ellipsis"
-					>
-						{foundDocuments.data?.map((doc) => (
-							<Box key={doc.id} display="flex" alignItems="center">
-								<Link
-									as={NextLink}
-									href={`/app/editor/${doc.id}`}
-									fontSize="0.9em"
-									w="200px"
-									textOverflow="ellipsis"
-									overflow="hidden"
-									whiteSpace="nowrap"
-								>
-									{highlightString({
-										input: doc.title,
-										search: searchString,
-									})}
-								</Link>
-								<Box ml="auto" pl={2}>
-									<IoDocumentOutline />
-								</Box>
-							</Box>
-						))}
-						{foundGrammarPoints.data?.map((gp) => (
-							<Box key={gp.id} display="flex" alignItems="center">
-								<Link
-									as={NextLink}
-									href={`/app/editor/${gp.sourceDocument.id}`}
-									fontSize="0.9em"
-									w="200px"
-									textOverflow="ellipsis"
-									overflow="hidden"
-									whiteSpace="nowrap"
-								>
-									{highlightString({
-										input: gp.title,
-										search: searchString,
-									})}
-								</Link>
-								<Box ml="auto" pl={2}>
-									<IoBookOutline />
-								</Box>
-							</Box>
-						))}
-						{foundWords.data?.map((word) => (
-							<Box key={word.id} display="flex" alignItems="center">
-								<Link
-									as={NextLink}
-									href={`/app/dictionary/${word.id}`}
-									fontSize="0.9em"
-								>
-									<Box
-										color="text.500"
-										w="200px"
-										textOverflow="ellipsis"
-										overflow="hidden"
-										whiteSpace="nowrap"
-									>
-										{highlightString({
-											input: word.word,
-											search: searchString,
-										})}
+					<PopoverBody>
+						<Stack
+							overflow="hidden"
+							whiteSpace="nowrap"
+							textOverflow="ellipsis"
+							spacing={3}
+						>
+							{foundDocuments.data && foundDocuments.data.length > 0 && (
+								<Box>
+									<Box>
+										<Text
+											textTransform="uppercase"
+											color="text.300"
+											fontSize="0.8rem"
+											pb={1}
+										>
+											Documents
+										</Text>
 									</Box>
-									<Box
-										color="text.400"
-										w="200px"
-										textOverflow="ellipsis"
-										overflow="hidden"
-										whiteSpace="nowrap"
-									>
-										{highlightString({
-											input: word.translation,
-											search: searchString,
-										})}
+									<Box as="ul" display="flex" gap={1} flexDir="column">
+										{foundDocuments.data.map((doc) => (
+											<Box
+												key={doc.id}
+												display="flex"
+												alignItems="center"
+												as="li"
+												pl={1}
+											>
+												<IoDocumentOutline color={iconColor} />
+												<Link
+													ml="auto"
+													pl={2}
+													as={NextLink}
+													href={`/app/editor/${doc.id}`}
+													fontSize="0.9em"
+													w="200px"
+													textOverflow="ellipsis"
+													overflow="hidden"
+													whiteSpace="nowrap"
+												>
+													{highlightString({
+														input: doc.title,
+														search: searchString,
+													})}
+												</Link>
+											</Box>
+										))}
 									</Box>
-								</Link>
-								<Box ml="auto" pl={2}>
-									<IoLanguageOutline />
 								</Box>
-							</Box>
-						))}
-						{foundSentences.data?.map((sentence) => (
-							<Box key={sentence.id} display="flex" alignItems="center">
-								<Link
-									as={NextLink}
-									href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
-									fontSize="0.9em"
-								>
-									<Box
-										color="text.500"
-										w="200px"
-										textOverflow="ellipsis"
-										overflow="hidden"
-										whiteSpace="nowrap"
-									>
-										{highlightString({
-											input: sentence.sentence,
-											search: searchString,
-										})}
+							)}
+							{foundGrammarPoints.data && foundGrammarPoints.data.length > 0 && (
+								<Box>
+									<Box>
+										<Text
+											textTransform="uppercase"
+											color="text.300"
+											fontSize="0.8rem"
+											pb={1}
+										>
+											Grammar Points
+										</Text>
 									</Box>
-									<Box
-										color="text.400"
-										w="200px"
-										textOverflow="ellipsis"
-										overflow="hidden"
-										whiteSpace="nowrap"
-									>
-										{highlightString({
-											input: sentence.translation,
-											search: searchString,
-										})}
+									<Box as="ul" display="flex" gap={1} flexDir="column">
+										{foundGrammarPoints.data.map((grammarPoint) => (
+											<Box
+												key={grammarPoint.id}
+												display="flex"
+												alignItems="center"
+												pl={1}
+												as="li"
+											>
+												<IoBookOutline color={iconColor} />
+												<Link
+													ml="auto"
+													pl={2}
+													as={NextLink}
+													href={`/app/editor/${grammarPoint.sourceDocument.id}`}
+													fontSize="0.9em"
+													w="200px"
+													textOverflow="ellipsis"
+													overflow="hidden"
+													whiteSpace="nowrap"
+												>
+													{highlightString({
+														input: grammarPoint.title,
+														search: searchString,
+													})}
+												</Link>
+											</Box>
+										))}
 									</Box>
-								</Link>
-								<Box ml="auto" pl={2}>
-									<IoAlbumsOutline />
 								</Box>
-							</Box>
-						))}
+							)}
+							{foundWords.data && foundWords.data.length > 0 && (
+								<Box>
+									<Box>
+										<Text
+											textTransform="uppercase"
+											color="text.300"
+											fontSize="0.8rem"
+											pb={1}
+										>
+											Words
+										</Text>
+									</Box>
+									<Box as="ul" display="flex" gap={1} flexDir="column">
+										{foundWords.data.map((word) => (
+											<Box
+												key={word.id}
+												display="flex"
+												alignItems="center"
+												as="li"
+												pl={1}
+											>
+												<IoLanguageOutline color={iconColor} />
+												<Link
+													ml="auto"
+													pl={2}
+													as={NextLink}
+													href={`/app/dictionary/${word.id}`}
+													fontSize="0.9em"
+													w="200px"
+													textOverflow="ellipsis"
+													overflow="hidden"
+													whiteSpace="nowrap"
+												>
+													<Box
+														color="text.500"
+														w="200px"
+														textOverflow="ellipsis"
+														overflow="hidden"
+														whiteSpace="nowrap"
+													>
+														{highlightString({
+															input: word.word,
+															search: searchString,
+														})}
+													</Box>
+													<Box
+														color="text.400"
+														w="200px"
+														textOverflow="ellipsis"
+														overflow="hidden"
+														whiteSpace="nowrap"
+													>
+														{highlightString({
+															input: word.translation,
+															search: searchString,
+														})}
+													</Box>
+												</Link>
+											</Box>
+										))}
+									</Box>
+								</Box>
+							)}
+							{foundSentences.data && foundSentences.data.length > 0 && (
+								<Box>
+									<Box>
+										<Text
+											textTransform="uppercase"
+											color="text.300"
+											fontSize="0.8rem"
+											pb={1}
+										>
+											Sentences
+										</Text>
+									</Box>
+									<Box as="ul" display="flex" gap={1} flexDir="column">
+										{foundSentences.data.map((sentence) => (
+											<Box
+												key={sentence.id}
+												display="flex"
+												alignItems="center"
+												as="li"
+												pl={1}
+											>
+												<IoAlbumsOutline color={iconColor} />
+												<Link
+													ml="auto"
+													pl={2}
+													as={NextLink}
+													href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
+													fontSize="0.9em"
+													w="200px"
+													textOverflow="ellipsis"
+													overflow="hidden"
+													whiteSpace="nowrap"
+												>
+													<Box
+														color="text.500"
+														w="200px"
+														textOverflow="ellipsis"
+														overflow="hidden"
+														whiteSpace="nowrap"
+													>
+														{highlightString({
+															input: sentence.sentence,
+															search: searchString,
+														})}
+													</Box>
+													<Box
+														color="text.400"
+														w="200px"
+														textOverflow="ellipsis"
+														overflow="hidden"
+														whiteSpace="nowrap"
+													>
+														{highlightString({
+															input: sentence.translation,
+															search: searchString,
+														})}
+													</Box>
+												</Link>
+											</Box>
+										))}
+									</Box>
+								</Box>
+							)}
+						</Stack>
 					</PopoverBody>
 				</PopoverContent>
 			</Popover>
