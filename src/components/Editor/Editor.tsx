@@ -12,7 +12,7 @@ import {
 	KEY_ENTER_COMMAND,
 } from "lexical";
 
-import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { Box, useBreakpointValue, useColorModeValue } from "@chakra-ui/react";
 import { ListItemNode, ListNode } from "@lexical/list";
 
 import React, { useLayoutEffect, useState } from "react";
@@ -51,6 +51,7 @@ import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordE
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
 import YiLangTheme from "./themes/YiLangEditorTheme";
+import YiLangThemeDark from "./themes/YiLangEditorThemeDark";
 import ErrorBoundary from "./ui/ErrorBoundary";
 
 import { RemarkContainerNode } from "./nodes/Remark/RemarkContainerNode";
@@ -339,6 +340,9 @@ export default React.memo(function Editor({
 	setDocumentTitle,
 }: EditorProps) {
 	const { setEditorSelectedBlock } = useEditorSettingsActions();
+	const fontColor = useColorModeValue("text.500", "white");
+	const bgColor = useColorModeValue("white", "#0d1117");
+	const editorTheme = useColorModeValue(YiLangTheme, YiLangThemeDark);
 
 	const { editorFontSize, editorLineHeight, editorShowSpelling } =
 		useEditorSettingsStore(
@@ -352,7 +356,7 @@ export default React.memo(function Editor({
 
 	const initialConfig = {
 		namespace: "MyEditor",
-		theme: YiLangTheme,
+		theme: editorTheme,
 		editorState: undefined,
 		onError,
 		nodes: [...EditorNodes],
@@ -399,6 +403,8 @@ export default React.memo(function Editor({
 										bg: "#b3d4fc",
 										borderRadius: "5px",
 									},
+									color: fontColor,
+									backgroundColor: bgColor,
 								}}
 								minH="200px"
 								ref={onFloatingRef}

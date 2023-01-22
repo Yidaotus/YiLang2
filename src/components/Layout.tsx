@@ -5,6 +5,7 @@ import {
 	IconButton,
 	Spinner,
 	Text,
+	useColorMode,
 	useToken,
 } from "@chakra-ui/react";
 import useEditorSettingsStore from "@store/store";
@@ -88,6 +89,7 @@ type LayoutProps = {
 };
 const Layout = ({ children }: LayoutProps) => {
 	const router = useRouter();
+	const { colorMode, toggleColorMode } = useColorMode();
 	const activeRoute = router.pathname.split("/").pop();
 	const [isLoading, setIsLoading] = useState(false);
 	const [iconInactive, iconActive] = useToken("colors", [
@@ -232,6 +234,9 @@ const Layout = ({ children }: LayoutProps) => {
 							sidebarOpen={sidebarOpen}
 						/>
 						<Box mt="auto" />
+						<Button onClick={toggleColorMode}>
+							Toggle {colorMode === "light" ? "Dark" : "Light"}
+						</Button>
 						<Box borderTopColor="text.100" borderTopWidth="1px" w="100%" pt={3}>
 							{!!session ? (
 								<Box

@@ -121,6 +121,21 @@ const UniversalSearchInput = ({
 					w={width}
 					borderTopRadius="0px"
 					borderTopColor="#aaa7e6"
+					overflowY="scroll"
+					maxH="70vh"
+					sx={{
+						/* WebKit and Chromiums */
+						"&::-webkit-scrollbar": {
+							width: "8px",
+							height: "8px",
+							backgroundColor: "white",
+						},
+
+						"&::-webkit-scrollbar-thumb": {
+							background: "text.100",
+							borderRadius: "3px",
+						},
+					}}
 				>
 					<PopoverBody>
 						<Stack
