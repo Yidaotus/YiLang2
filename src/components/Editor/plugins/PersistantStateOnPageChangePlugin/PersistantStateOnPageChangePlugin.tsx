@@ -32,10 +32,11 @@ const PersistStateOnPageChangePlugion = () => {
 		(url: string) => {
 			if (shouldInterruptRouteChange.current) {
 				handleRouteChange(url);
+				router.events.emit("routeChangeError");
 				throw Error("stop redirect since form is dirty");
 			}
 		},
-		[handleRouteChange]
+		[handleRouteChange, router.events]
 	);
 
 	const silentRouteError = useCallback(() => {

@@ -10,7 +10,8 @@ import {
 	IconButton,
 	Input,
 	Stack,
-	Textarea,
+	Switch,
+	Text,
 } from "@chakra-ui/react";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 import useDebounce from "@components/Editor/hooks/useDebounce";
@@ -25,7 +26,6 @@ import { Controller, useForm } from "react-hook-form";
 import {
 	IoAttachOutline,
 	IoCloud,
-	IoDocumentTextOutline,
 	IoGitBranchOutline,
 	IoLanguageOutline,
 	IoPricetagsOutline,
@@ -79,6 +79,57 @@ const WordSelectComponent = ({ value, onChange, ref }: WordSelectProps) => {
 			onChange={handleChange}
 			isLoading={wordSearchIsLoading}
 			onInputChange={handleInputChange}
+			components={{
+				Option: ({ children, data, innerProps }) => (
+					<Box
+						as="div"
+						color="text.400"
+						display="flex"
+						alignItems="center"
+						cursor="pointer"
+						py={1}
+						w="100%"
+						pl={2}
+						sx={{
+							"&:hover": {
+								bg: "#f4f4f4",
+							},
+						}}
+						{...innerProps}
+					>
+						{children}
+					</Box>
+				),
+			}}
+			chakraStyles={{
+				control: (prev) => ({
+					...prev,
+					borderRadius: "2px",
+				}),
+				container: (prev) => ({
+					...prev,
+					bg: "#fafaf9",
+					borderRadius: "2px",
+				}),
+				menuList: (prev) => ({
+					...prev,
+					borderRadius: "2px",
+				}),
+				indicatorSeparator: (prev) => ({
+					...prev,
+					borderLeft: "1px solid text.100",
+					height: "60%",
+				}),
+				dropdownIndicator: (prev) => ({
+					...prev,
+					w: "10px",
+					bg: "#FCFCFB",
+				}),
+				placeholder: (prev) => ({
+					...prev,
+					color: "text.200",
+				}),
+			}}
 		/>
 	);
 };
@@ -122,6 +173,8 @@ const WordForm = ({
 		},
 	});
 
+	const [isVariation, setIsVariation] = useState(true);
+
 	useEffect(() => {
 		setValue("word", word);
 	}, [setValue, word]);
@@ -149,6 +202,42 @@ const WordForm = ({
 	return (
 		<form action="" onSubmit={onSubmit}>
 			<Stack p={2}>
+				{isVariation && (
+					<Box
+						display="flex"
+						gap={2}
+						justifyContent="center"
+						alignItems="center"
+					>
+						<IoGitBranchOutline />
+						<FormControl isInvalid={!!errors.spelling}>
+							<FormLabel
+								display="none"
+								htmlFor="spelling"
+								color="text.400"
+								fontSize="0.9em"
+								mb="0px"
+							>
+								Root
+							</FormLabel>
+							<Controller
+								control={control}
+								name="relatedTo"
+								rules={{
+									required: "Please enter at least one translation",
+									min: "Please enter at least one translation",
+								}}
+								render={({ field: { onChange, value, ref } }) => (
+									<WordSelect onChange={onChange} value={value} ref={ref} />
+								)}
+							/>
+							<FormErrorMessage>
+								{errors.spelling && errors.spelling.message}
+							</FormErrorMessage>
+						</FormControl>
+					</Box>
+				)}
+
 				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
 					<IoLanguageOutline />
 					<FormControl isInvalid={!!errors.translations} size="sm">
@@ -327,43 +416,166 @@ const WordForm = ({
 						</FormErrorMessage>
 					</FormControl>
 				</Box>
-				<Box
-					display="flex"
-					gap={2}
-					justifyContent="flex-start"
-					alignItems="flex-start"
-				>
-					<Box pt={2}>
-						<IoDocumentTextOutline />
-					</Box>
-					<FormControl isInvalid={!!errors.notes}>
-						<FormLabel
-							display="none"
-							htmlFor="notes"
-							color="text.400"
-							fontSize="0.9em"
-							mb="0px"
+				{isVariation && (
+					<>
+						<Divider />
+						<Box
+							display="flex"
+							gap={2}
+							justifyContent="center"
+							alignItems="center"
 						>
-							Notes
-						</FormLabel>
-						<Textarea
-							sx={{
-								"&::placeholder": {
-									color: "text.200",
-								},
-							}}
-							bg="#fafaf9"
-							id="notes"
-							size="sm"
-							rows={2}
-							placeholder="Notes"
-							{...register("notes")}
-						/>
-						<FormErrorMessage>
-							{errors.notes && errors.notes.message}
-						</FormErrorMessage>
-					</FormControl>
-				</Box>
+							<IoAttachOutline height="100%" />
+							<FormControl isInvalid={!!errors.spelling}>
+								<FormLabel
+									display="none"
+									htmlFor="spelling"
+									color="text.400"
+									fontSize="0.9em"
+									mb="0px"
+								>
+									Spelling
+								</FormLabel>
+
+								<Input
+									sx={{
+										"&::placeholder": {
+											color: "text.200",
+										},
+									}}
+									bg="#fafaf9"
+									id="spelling"
+									size="sm"
+									placeholder="Spelling"
+									{...register("spelling")}
+								/>
+								<FormErrorMessage>
+									{errors.spelling && errors.spelling.message}
+								</FormErrorMessage>
+							</FormControl>
+						</Box>{" "}
+						<Box
+							display="flex"
+							gap={2}
+							justifyContent="center"
+							alignItems="center"
+						>
+							<IoPricetagsOutline />
+							<FormControl isInvalid={!!errors.tags}>
+								<FormLabel
+									display="none"
+									htmlFor="tags"
+									color="text.400"
+									fontSize="0.9em"
+									mb="0px"
+								>
+									Tags
+								</FormLabel>
+								<Controller
+									control={control}
+									name="tags"
+									render={({ field: { onChange, value, ref } }) => (
+										<CreatableSelect
+											ref={ref}
+											size="sm"
+											value={value}
+											onChange={(val) => onChange(val)}
+											chakraStyles={{
+												container: (prev) => ({
+													...prev,
+													borderRadius: "5px",
+													bg: "#fafaf9",
+												}),
+												multiValue: (prev, state) => ({
+													...prev,
+													justifyContent: "center",
+													alignItems: "center",
+													borderColor: "text.100",
+													bg: "#F5F5F5",
+													borderWidth: "1px",
+													fontSize: "0.9em",
+													"&::before": {
+														content: '""',
+														bg: state.data.color,
+														h: "10px",
+														w: "5px",
+														pr: 2,
+														mr: 2,
+														borderRadius: "1em",
+														border: `1px solid ${state.data.color}`,
+													},
+												}),
+												indicatorSeparator: (prev) => ({
+													...prev,
+													borderLeft: "1px solid text.100",
+													height: "60%",
+												}),
+												dropdownIndicator: (prev) => ({
+													...prev,
+													w: "10px",
+													bg: "#FCFCFB",
+												}),
+												placeholder: (prev) => ({
+													...prev,
+													color: "text.200",
+												}),
+											}}
+											placeholder="Tags"
+											isMulti
+											options={tagOptions}
+											getOptionValue={(o) => o.name}
+											getOptionLabel={(o) => o.name}
+											getNewOptionData={(input) => ({
+												name: `Create ${input} tag`,
+												color: "",
+											})}
+											onCreateOption={async (newOpt) => {
+												const newTag = await createNewTag(newOpt);
+												if (newTag) {
+													setTagOptions([...value, ...tagOptions, newTag]);
+													onChange([...value, newTag]);
+												}
+											}}
+											components={{
+												Option: ({ children, data, innerProps }) => (
+													<Box
+														as="div"
+														color="text.400"
+														display="flex"
+														alignItems="center"
+														cursor="pointer"
+														py={1}
+														w="100%"
+														sx={{
+															"&:hover": {
+																bg: "#f4f4f4",
+															},
+														}}
+														{...innerProps}
+													>
+														<Box
+															w="12px"
+															h="12px"
+															ml={1}
+															mr={2}
+															borderRadius="4px"
+															border={`2px solid ${data.color}`}
+															bg={data.color}
+														/>
+														{children}
+													</Box>
+												),
+											}}
+										/>
+									)}
+								/>
+								<FormErrorMessage>
+									{errors.spelling && errors.spelling.message}
+								</FormErrorMessage>
+							</FormControl>
+						</Box>
+					</>
+				)}
 			</Stack>
 			<Divider />
 			<Box
@@ -375,14 +587,39 @@ const WordForm = ({
 				justifyContent="space-between"
 				p={2}
 			>
-				<Button
-					size="sm"
-					variant="outline"
-					type="submit"
-					leftIcon={<IoGitBranchOutline />}
+				<Box
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+					borderWidth="1px"
+					borderColor="text.100"
+					borderRadius="3px"
+					px={2}
 				>
-					Add Root
-				</Button>
+					<FormControl
+						display="flex"
+						alignItems="center"
+						justifyContent="space-between"
+					>
+						<FormLabel
+							htmlFor="save-on-blu"
+							mb="0"
+							display="flex"
+							gap={2}
+							alignItems="center"
+						>
+							<Text fontWeight="500" color="text.300">
+								Is Variation
+							</Text>
+						</FormLabel>
+						<Switch
+							colorScheme="brand"
+							id="save-on-blu"
+							isChecked={isVariation}
+							onChange={(e) => setIsVariation(e.target.checked)}
+						/>
+					</FormControl>
+				</Box>
 				<Stack direction="row">
 					<IconButton
 						aria-label="cancel"

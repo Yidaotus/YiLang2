@@ -12,6 +12,7 @@ import {
 	COMMAND_PRIORITY_LOW,
 	SELECTION_CHANGE_COMMAND,
 } from "lexical";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { NAVIGATE_PAGE_COMMAND } from "../PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
@@ -23,6 +24,7 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 		translations: Array<string>;
 	} | null>(null);
 	const [editor] = useLexicalComposerContext();
+	const router = useRouter();
 
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
@@ -30,6 +32,12 @@ const WordPopupPlugin = ({ anchorElem }: { anchorElem: HTMLElement }) => {
 
 	const editWord = useCallback(
 		(id: string) => {
+			/* @TODO Infers with router change event hook
+			const currentQuery = router.query;
+			router.push({ query: { ...currentQuery, highlight: id } }, undefined, {
+				shallow: true,
+			});
+			*/
 			editor.dispatchCommand(NAVIGATE_PAGE_COMMAND, {
 				url: `/app/dictionary/${id}`,
 			});

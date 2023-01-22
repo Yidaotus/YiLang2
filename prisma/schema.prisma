@@ -49,9 +49,9 @@ model Session {
 }
 
 model User {
-  id            String         @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String?
-  email         String?        @unique
+  email         String?         @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -63,6 +63,7 @@ model User {
   lookupSources LookupSource[]
   sentences     Sentence[]
   GrammarPoint  GrammarPoint[]
+  WordVariation WordVariation[]
 }
 
 model VerificationToken {
@@ -88,34 +89,37 @@ model LookupSource {
 }
 
 model Language {
-  id            String         @default(cuid())
+  id            String          @default(cuid())
   name          String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   lookupSources LookupSource[]
   userId        String
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   words         Word[]
   documents     Document[]
   tags          Tag[]
   sentences     Sentence[]
+  WordVariation WordVariation[]
 
   @@id(fields: [userId, id], name: "userLanguageId")
 }
 
 model Tag {
-  id         String     @id @default(cuid())
-  color      String
-  name       String
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  userId     String
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  language   Language   @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
-  languageId String
-  sentences  Sentence[]
-  words      Word[]
-  documents  Document[]
+  id              String         @id @default(cuid())
+  color           String
+  name            String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language        Language       @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  languageId      String
+  sentences       Sentence[]
+  words           Word[]
+  documents       Document[]
+  WordVariation   WordVariation? @relation(fields: [wordVariationId], references: [id])
+  wordVariationId String?
 
   @@unique(fields: [userId, id], name: "userTagId")
 }
@@ -139,14 +143,36 @@ model Sentence {
 }
 
 model GrammarPoint {
-  id             String   @id @default(cuid())
-  title          String
-  sourceDocument Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  documentId     String
+  id              String         @id @default(cuid())
+  title           String
+  sourceDocument  Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId      String
+  WordVariation   WordVariation? @relation(fields: [wordVariationId], references: [id])
+  wordVariationId String?
 
   @@unique(fields: [userId, id], name: "userGrammarPointId")
+}
+
+model WordVariation {
+  id             String         @id @default(cuid())
+  wordVariation  String
+  translation    String?
+  spelling       String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  comment        String?
+  documentId     String?
+  sourceDocument Document?      @relation(fields: [documentId], references: [id])
+  tags           Tag[]
+  grammarPonints GrammarPoint[]
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language       Language       @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  languageId     String
+
+  @@unique(fields: [userId, id], name: "userWordId")
 }
 
 model Word {
@@ -173,19 +199,20 @@ model Word {
 }
 
 model Document {
-  id                 String         @id @default(cuid())
+  id                 String          @id @default(cuid())
   serializedDocument String?
   title              String
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   words              Word[]
   userId             String
-  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  language           Language       @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language           Language        @relation(fields: [userId, languageId], references: [userId, id], onDelete: Cascade)
   languageId         String
   tags               Tag[]
   sentences          Sentence[]
   GrammarPoint       GrammarPoint[]
+  WordVariation      WordVariation[]
 
   @@unique(fields: [userId, id], name: "userDocumentId")
 }
