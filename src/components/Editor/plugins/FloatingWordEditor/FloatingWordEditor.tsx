@@ -2,12 +2,7 @@ import type { EditorTag, EditorWord } from "@editor/nodes/WordNode";
 import type { Middleware, ReferenceType } from "@floating-ui/react";
 import { mergeRegister } from "@lexical/utils";
 import type { LexicalEditor, RangeSelection } from "lexical";
-import {
-	$createNodeSelection,
-	$createTextNode,
-	$getNodeByKey,
-	$insertNodes,
-} from "lexical";
+import { $createNodeSelection, $createTextNode, $getNodeByKey } from "lexical";
 import type { WordFormType } from "./WordForm";
 
 import { Box, Spinner } from "@chakra-ui/react";
@@ -314,7 +309,16 @@ const FloatingWordEditorPlugin = ({
 					setWord(selectionWord);
 					const anchorNode = $createWordAnchorNode(selectionWord);
 					setAnchorNodeKey(anchorNode.getKey());
-					$insertNodes([anchorNode]);
+					// $insertNodes([anchorNode]);
+
+					const extractedNodes = selection.extract();
+					for (const [index, node] of extractedNodes.entries()) {
+						if (index === 0) {
+							node.replace(anchorNode);
+						} else {
+							node.remove();
+						}
+					}
 
 					const nodeSelection = $createNodeSelection();
 					nodeSelection.add(anchorNode.getKey());
