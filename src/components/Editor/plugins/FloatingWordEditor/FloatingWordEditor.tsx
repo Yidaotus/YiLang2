@@ -128,30 +128,30 @@ const WordEditorPopup = React.forwardRef<
 		}, []);
 
 		const resolveWord = useCallback(
-			async (word: WordFormType | null) => {
-				if (word) {
-					if (word.root) {
+			async (formWord: WordFormType | null) => {
+				if (formWord) {
+					if (formWord.root) {
 						let rootId;
-						if (typeof word.root === "string") {
+						if (typeof formWord.root === "string") {
 							const newRoot = await createWord.mutateAsync({
-								word: word.root,
-								translations: word.translations,
-								spelling: word.spelling,
-								tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
-								comment: word.notes,
+								word: formWord.root,
+								translations: formWord.translations,
+								spelling: formWord.spelling,
+								tags: formWord.tags.map((tag) => (tag.id ? tag.id : tag)),
+								comment: formWord.notes,
 								language: selectedLanguage.id,
 								documentId,
 							});
 							rootId = newRoot.id;
 						} else {
-							rootId = word.root.id;
+							rootId = formWord.root.id;
 						}
 						const newWord = await createWord.mutateAsync({
-							word: word.word,
+							word: formWord.word,
 							translations: [],
-							spelling: word.variationSpelling,
-							tags: word.variationTags
-								? word.variationTags.map((tag) => (tag.id ? tag.id : tag))
+							spelling: formWord.variationSpelling,
+							tags: formWord.variationTags
+								? formWord.variationTags.map((tag) => (tag.id ? tag.id : tag))
 								: [],
 							comment: "",
 							language: selectedLanguage.id,
@@ -162,11 +162,11 @@ const WordEditorPopup = React.forwardRef<
 						submitWord({ databaseId: id, ...rest });
 					} else {
 						const newWord = await createWord.mutateAsync({
-							word: word.word,
-							translations: word.translations,
-							spelling: word.spelling,
-							tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
-							comment: word.notes,
+							word: formWord.word,
+							translations: formWord.translations,
+							spelling: formWord.spelling,
+							tags: formWord.tags.map((tag) => (tag.id ? tag.id : tag)),
+							comment: formWord.notes,
 							language: selectedLanguage.id,
 							documentId,
 						});
