@@ -1,4 +1,4 @@
-import { Box, Button, Divider, IconButton, useToken } from "@chakra-ui/react";
+import { Box, Divider, IconButton, useToken } from "@chakra-ui/react";
 import {
 	$createDialogueContainerNode,
 	$createDialogueSpeakerNode,
@@ -15,7 +15,7 @@ import {
 import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { IoSaveOutline } from "react-icons/io5";
-import { RECONCILE_EDITOR_COMMAND } from "../IndexElementsPlugin/IndexElementsPlugin";
+import { SAVE_EDITOR } from "../SaveToDBPlugin/SaveToDBPlugin";
 import FormatterMenu from "./FormatterMenu";
 import LayoutMenu from "./LayoutMenu";
 import SentenceList from "./SentenceList";
@@ -30,8 +30,11 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 	const [editor] = useLexicalComposerContext();
 
 	const saveDocument = useCallback(async () => {
-		editor.dispatchCommand(RECONCILE_EDITOR_COMMAND, {
+		editor.dispatchCommand(SAVE_EDITOR, {
 			shouldShowToast: true,
+			notifyWhenDone() {
+				console.debug("Saving document");
+			},
 		});
 	}, [editor]);
 
@@ -124,7 +127,7 @@ const SidebarPlugin = ({ sidebarPortal }: SidebarPluginProps) => {
 				gridColumn="span 2"
 			/>
 			<LayoutMenu />
-			<Button onClick={DEBUG}>Debug</Button>
+			{/* <Button onClick={DEBUG}>Debug</Button> */}
 		</Box>,
 		sidebarPortal
 	);
