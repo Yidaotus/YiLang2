@@ -1,7 +1,7 @@
 import type { Middleware } from "@floating-ui/dom";
 import type { ReferenceType } from "@floating-ui/react";
 
-import { Box, Button, Text, useToken } from "@chakra-ui/react";
+import { Box, Button, IconButton, Text, useToken } from "@chakra-ui/react";
 import { HIGHLIGHT_NODE_COMMAND } from "@components/Editor/Editor";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -38,8 +38,8 @@ const SentenceList = () => {
 
 	return (
 		<>
-			<Button
-				leftIcon={<IoAlbumsOutline size={20} color={text400} />}
+			<IconButton
+				icon={<IoAlbumsOutline size={20} color={text400} />}
 				gridColumn="span 2"
 				variant={!!popupReference ? "solid" : "ghost"}
 				aria-label="Appereance"
@@ -49,9 +49,7 @@ const SentenceList = () => {
 				onClick={() =>
 					setPopupReference(popupReference ? null : buttonRef.current)
 				}
-			>
-				Sentences
-			</Button>
+			/>
 			<div ref={floatingRef}>
 				<FloatingContainer
 					popupPlacement="left"

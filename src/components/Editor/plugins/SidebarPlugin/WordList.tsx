@@ -3,9 +3,9 @@ import type { ReferenceType } from "@floating-ui/react";
 
 import {
 	Box,
-	Button,
 	FormControl,
 	FormLabel,
+	IconButton,
 	Switch,
 	Text,
 	useToken,
@@ -58,8 +58,8 @@ const WordList = () => {
 
 	return (
 		<>
-			<Button
-				leftIcon={<IoLanguageOutline size={20} color={text400} />}
+			<IconButton
+				icon={<IoLanguageOutline size={20} color={text400} />}
 				gridColumn="span 2"
 				variant={!!popupReference ? "solid" : "ghost"}
 				aria-label="Appereance"
@@ -69,9 +69,7 @@ const WordList = () => {
 				onClick={() =>
 					setPopupReference(popupReference ? null : buttonRef.current)
 				}
-			>
-				Words
-			</Button>
+			/>
 			<div ref={floatingRef}>
 				<FloatingContainer
 					popupPlacement="left"

@@ -311,7 +311,11 @@ export const wordRouter = router({
 							{ translation: { contains: search, mode: "insensitive" } },
 						],
 					},
-					include: { sourceDocument: { select: { title: true } }, tags: true },
+					include: {
+						sourceDocument: { select: { title: true } },
+						tags: true,
+						root: true,
+					},
 				});
 				return foundWords;
 			}
