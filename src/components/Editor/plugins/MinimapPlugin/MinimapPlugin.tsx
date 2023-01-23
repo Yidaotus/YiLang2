@@ -24,6 +24,7 @@ import { $isRemarkContainerNode } from "../../nodes/Remark/RemarkContainerNode";
 import { $isRemarkContentNode } from "../../nodes/Remark/RemarkContentNode";
 import { $isRemarkTitleNode } from "../../nodes/Remark/RemarkTitleNode";
 
+import { $isDialogueContainerNode } from "@components/Editor/nodes/Dialogue";
 import { $isGrammarPointContainerNode } from "../../nodes/GrammarPoint/GrammarPointContainerNode";
 import { $isGrammarPointContentNode } from "../../nodes/GrammarPoint/GrammarPointContentNode";
 import { $isGrammarPointTitleNode } from "../../nodes/GrammarPoint/GrammarPointTitleNode";
@@ -170,6 +171,27 @@ const outlineNodes = (
 			);
 
 			y += LINE_HEIGHT * 2 + LINE_PADDING + 2;
+		} else if ($isDialogueContainerNode(node)) {
+			const lines = Math.ceil(node.getChildrenSize() / 2);
+
+			for (let i = 0; i < lines; i++) {
+				const listPaddingLeft = 10;
+				ctx.fillStyle = "#5e6169";
+				ctx.fillRect(
+					x + listPaddingLeft,
+					y + i * LINE_HEIGHT + i * LINE_PADDING,
+					4,
+					LINE_HEIGHT
+				);
+				ctx.fillStyle = "#a9afc0";
+				ctx.fillRect(
+					x + listPaddingLeft + 6,
+					y + LINE_HEIGHT * i + LINE_PADDING * i,
+					canvasWidth - 35,
+					LINE_HEIGHT
+				);
+			}
+			y += LINE_HEIGHT * lines + LINE_PADDING * Math.max(lines - 1, 0) + 2;
 		} else if ($isSplitLayoutContainerNode(node)) {
 			const childNodes = node.getChildren();
 			const leftNodes = childNodes[0];
