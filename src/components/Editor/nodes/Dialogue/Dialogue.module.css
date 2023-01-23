@@ -33,9 +33,12 @@
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	border-radius: 5px;
+	color: #696f80;
+	font-weight: 600;
 }
 
 .Dialogue__Speech {
+	color: #40454f;
 	position: relative;
 	margin-right: 1em;
 	padding: 2px;
