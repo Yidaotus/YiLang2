@@ -15,11 +15,11 @@ import {
 } from "@chakra-ui/react";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 import useDebounce from "@components/Editor/hooks/useDebounce";
-import type { Word } from "@prisma/client";
+import type { Tag, Word } from "@prisma/client";
 import useEditorSettingsStore from "@store/store";
 import { trpc } from "@utils/trpc";
 import type { ActionMeta, InputActionMeta } from "chakra-react-select";
-import { CreatableSelect, Select } from "chakra-react-select";
+import { CreatableSelect } from "chakra-react-select";
 import React, { useCallback, useEffect, useState } from "react";
 import type { RefCallBack } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
@@ -32,9 +32,21 @@ import {
 } from "react-icons/io5";
 import { RiDeleteBin2Line } from "react-icons/ri";
 
+type WordWithTags = Word & { tags: Array<Tag> };
+
+const isWordWithTags = <T,>(input: WordWithTags | T): input is WordWithTags => {
+	return (input as WordWithTags).word !== undefined;
+};
+
+export interface WordOption {
+	readonly value: string;
+	readonly label: string;
+	readonly word: WordWithTags | null;
+}
+
 type WordSelectProps = {
-	value: Word | null;
-	onChange: (newWord: Word | null) => void;
+	value: WordWithTags | string | null;
+	onChange: (newWord: WordWithTags | string | null) => void;
 	ref: RefCallBack;
 };
 const WordSelectComponent = ({ value, onChange, ref }: WordSelectProps) => {
@@ -54,6 +66,12 @@ const WordSelectComponent = ({ value, onChange, ref }: WordSelectProps) => {
 		);
 	// see https://github.com/TanStack/query/issues/3584
 	const wordSearchIsLoading = searchEnabled && searchStatus === "loading";
+	const selectValue =
+		value === null
+			? value
+			: typeof value === "string"
+			? { label: value, value: "new", word: null }
+			: { label: value.word, value: value.id, word: value };
 
 	const handleInputChange = (inputText: string, _event: InputActionMeta) => {
 		// prevent outside click from resetting inputText to ""
@@ -63,24 +81,40 @@ const WordSelectComponent = ({ value, onChange, ref }: WordSelectProps) => {
 	};
 
 	const handleChange = (
-		selectedItem: Word | null,
-		_event: ActionMeta<Word>
+		selectedItem: WordOption | null,
+		_event: ActionMeta<WordOption | null>
 	) => {
-		onChange(selectedItem);
+		console.debug({ selectedItem });
+		if (!selectedItem) {
+			onChange(selectedItem);
+			return;
+		}
+
+		if (selectedItem.word) {
+			onChange(selectedItem.word);
+		} else {
+			onChange(selectedItem.label);
+		}
 	};
 
 	return (
-		<Select
+		<CreatableSelect<WordOption, false>
 			ref={ref}
-			value={value}
-			getOptionLabel={(word) => word.word}
-			options={searchWordResult}
-			inputValue={searchInput || ""}
+			value={selectValue}
+			options={searchWordResult?.map((word) => ({
+				label: word.word,
+				value: word.id,
+				word,
+			}))}
+			inputValue={searchInput}
 			onChange={handleChange}
 			isLoading={wordSearchIsLoading}
 			onInputChange={handleInputChange}
+			onCreateOption={(input) => {
+				onChange(input);
+			}}
 			components={{
-				Option: ({ children, data, innerProps }) => (
+				Option: ({ children, innerProps }) => (
 					<Box
 						as="div"
 						color="text.400"
@@ -137,12 +171,15 @@ const WordSelectComponent = ({ value, onChange, ref }: WordSelectProps) => {
 const WordSelect = React.forwardRef(WordSelectComponent);
 
 export type WordFormType = {
+	root: WordWithTags | string | null;
 	word: string;
 	translations: Array<string>;
 	spelling?: string;
 	notes?: string;
 	tags: Array<EditorTag>;
 	relatedTo: Word;
+	variationTags?: Array<EditorTag>;
+	variationSpelling?: string;
 };
 
 const WordForm = ({
@@ -162,9 +199,13 @@ const WordForm = ({
 		register,
 		reset,
 		setValue,
+		watch,
 		formState: { errors },
 	} = useForm<WordFormType>({
 		defaultValues: {
+			root: null,
+			variationSpelling: "",
+			variationTags: [],
 			word,
 			translations: [],
 			spelling: "",
@@ -173,7 +214,27 @@ const WordForm = ({
 		},
 	});
 
-	const [isVariation, setIsVariation] = useState(true);
+	const selectedRoot = watch("root");
+
+	useEffect(() => {
+		if (selectedRoot && typeof selectedRoot === "object") {
+			setValue("spelling", selectedRoot.spelling || undefined);
+			setValue("tags", selectedRoot.tags);
+			setValue("translations", selectedRoot.translation?.split(";"));
+		}
+	}, [selectedRoot, setValue]);
+
+	const [isVariation, setIsVariation] = useState(false);
+
+	const switchIsVariation = useCallback(() => {
+		setIsVariation(!isVariation);
+		setValue("root", null);
+		setValue("spelling", "");
+		setValue("tags", []);
+		setValue("translations", []);
+	}, [isVariation, setValue]);
+
+	const hasSelectedRoot = isVariation && typeof selectedRoot === "object";
 
 	useEffect(() => {
 		setValue("word", word);
@@ -210,10 +271,10 @@ const WordForm = ({
 						alignItems="center"
 					>
 						<IoGitBranchOutline />
-						<FormControl isInvalid={!!errors.spelling}>
+						<FormControl isInvalid={!!errors.root}>
 							<FormLabel
 								display="none"
-								htmlFor="spelling"
+								htmlFor="root"
 								color="text.400"
 								fontSize="0.9em"
 								mb="0px"
@@ -222,7 +283,7 @@ const WordForm = ({
 							</FormLabel>
 							<Controller
 								control={control}
-								name="relatedTo"
+								name="root"
 								rules={{
 									required: "Please enter at least one translation",
 									min: "Please enter at least one translation",
@@ -232,12 +293,42 @@ const WordForm = ({
 								)}
 							/>
 							<FormErrorMessage>
-								{errors.spelling && errors.spelling.message}
+								{errors.root && errors.root.message}
 							</FormErrorMessage>
 						</FormControl>
 					</Box>
 				)}
+				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
+					<IoAttachOutline height="100%" />
+					<FormControl isInvalid={!!errors.spelling}>
+						<FormLabel
+							display="none"
+							htmlFor="spelling"
+							color="text.400"
+							fontSize="0.9em"
+							mb="0px"
+						>
+							Spelling
+						</FormLabel>
 
+						<Input
+							disabled={hasSelectedRoot}
+							sx={{
+								"&::placeholder": {
+									color: "text.200",
+								},
+							}}
+							bg="#fafaf9"
+							id="spelling"
+							size="sm"
+							placeholder="Spelling"
+							{...register("spelling")}
+						/>
+						<FormErrorMessage>
+							{errors.spelling && errors.spelling.message}
+						</FormErrorMessage>
+					</FormControl>
+				</Box>
 				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
 					<IoLanguageOutline />
 					<FormControl isInvalid={!!errors.translations} size="sm">
@@ -259,6 +350,7 @@ const WordForm = ({
 							}}
 							render={({ field: { onChange, value, ref } }) => (
 								<YiSimpleCreatableSelect
+									disabled={hasSelectedRoot}
 									ref={ref}
 									value={value}
 									onChange={(val) => onChange(val)}
@@ -268,36 +360,6 @@ const WordForm = ({
 						/>
 						<FormErrorMessage>
 							{errors.translations && errors.translations.message}
-						</FormErrorMessage>
-					</FormControl>
-				</Box>
-				<Box display="flex" gap={2} justifyContent="center" alignItems="center">
-					<IoAttachOutline height="100%" />
-					<FormControl isInvalid={!!errors.spelling}>
-						<FormLabel
-							display="none"
-							htmlFor="spelling"
-							color="text.400"
-							fontSize="0.9em"
-							mb="0px"
-						>
-							Spelling
-						</FormLabel>
-
-						<Input
-							sx={{
-								"&::placeholder": {
-									color: "text.200",
-								},
-							}}
-							bg="#fafaf9"
-							id="spelling"
-							size="sm"
-							placeholder="Spelling"
-							{...register("spelling")}
-						/>
-						<FormErrorMessage>
-							{errors.spelling && errors.spelling.message}
 						</FormErrorMessage>
 					</FormControl>
 				</Box>
@@ -318,6 +380,7 @@ const WordForm = ({
 							name="tags"
 							render={({ field: { onChange, value, ref } }) => (
 								<CreatableSelect
+									isDisabled={hasSelectedRoot}
 									ref={ref}
 									size="sm"
 									value={value}
@@ -426,7 +489,7 @@ const WordForm = ({
 							alignItems="center"
 						>
 							<IoAttachOutline height="100%" />
-							<FormControl isInvalid={!!errors.spelling}>
+							<FormControl isInvalid={!!errors.variationSpelling}>
 								<FormLabel
 									display="none"
 									htmlFor="spelling"
@@ -447,10 +510,10 @@ const WordForm = ({
 									id="spelling"
 									size="sm"
 									placeholder="Spelling"
-									{...register("spelling")}
+									{...register("variationSpelling")}
 								/>
 								<FormErrorMessage>
-									{errors.spelling && errors.spelling.message}
+									{errors.variationSpelling && errors.variationSpelling.message}
 								</FormErrorMessage>
 							</FormControl>
 						</Box>{" "}
@@ -461,10 +524,10 @@ const WordForm = ({
 							alignItems="center"
 						>
 							<IoPricetagsOutline />
-							<FormControl isInvalid={!!errors.tags}>
+							<FormControl isInvalid={!!errors.variationTags}>
 								<FormLabel
 									display="none"
-									htmlFor="tags"
+									htmlFor="variationTags"
 									color="text.400"
 									fontSize="0.9em"
 									mb="0px"
@@ -473,7 +536,7 @@ const WordForm = ({
 								</FormLabel>
 								<Controller
 									control={control}
-									name="tags"
+									name="variationTags"
 									render={({ field: { onChange, value, ref } }) => (
 										<CreatableSelect
 											ref={ref}
@@ -532,8 +595,12 @@ const WordForm = ({
 											onCreateOption={async (newOpt) => {
 												const newTag = await createNewTag(newOpt);
 												if (newTag) {
-													setTagOptions([...value, ...tagOptions, newTag]);
-													onChange([...value, newTag]);
+													setTagOptions([
+														...(value ? value : []),
+														...tagOptions,
+														newTag,
+													]);
+													onChange([...(value ? value : []), newTag]);
 												}
 											}}
 											components={{
@@ -570,7 +637,7 @@ const WordForm = ({
 									)}
 								/>
 								<FormErrorMessage>
-									{errors.spelling && errors.spelling.message}
+									{errors.variationTags && errors.variationTags.message}
 								</FormErrorMessage>
 							</FormControl>
 						</Box>
@@ -587,15 +654,7 @@ const WordForm = ({
 				justifyContent="space-between"
 				p={2}
 			>
-				<Box
-					display="flex"
-					alignItems="center"
-					justifyContent="center"
-					borderWidth="1px"
-					borderColor="text.100"
-					borderRadius="3px"
-					px={2}
-				>
+				<Box display="flex" alignItems="center" justifyContent="center" px={2}>
 					<FormControl
 						display="flex"
 						alignItems="center"
@@ -616,7 +675,7 @@ const WordForm = ({
 							colorScheme="brand"
 							id="save-on-blu"
 							isChecked={isVariation}
-							onChange={(e) => setIsVariation(e.target.checked)}
+							onChange={switchIsVariation}
 						/>
 					</FormControl>
 				</Box>

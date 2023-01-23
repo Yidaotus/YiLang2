@@ -135,18 +135,49 @@ const WordEditorPopup = React.forwardRef<
 		const resolveWord = useCallback(
 			async (word: WordFormType | null) => {
 				if (word) {
-					const newWord = await createWord.mutateAsync({
-						word: word.word,
-						translations: word.translations,
-						spelling: word.spelling,
-						tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
-						comment: word.notes,
-						language: selectedLanguage.id,
-						relatedWords: word.relatedTo ? [word.relatedTo.id] : undefined,
-						documentId,
-					});
-					const { id, ...rest } = newWord;
-					submitWord({ databaseId: id, ...rest });
+					if (word.root) {
+						let rootId;
+						if (typeof word.root === "string") {
+							const newRoot = await createWord.mutateAsync({
+								word: word.root,
+								translations: word.translations,
+								spelling: word.spelling,
+								tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
+								comment: word.notes,
+								language: selectedLanguage.id,
+								documentId,
+							});
+							rootId = newRoot.id;
+						} else {
+							rootId = word.root.id;
+						}
+						const newWord = await createWord.mutateAsync({
+							word: word.word,
+							translations: [],
+							spelling: word.variationSpelling,
+							tags: word.variationTags
+								? word.variationTags.map((tag) => (tag.id ? tag.id : tag))
+								: [],
+							comment: "",
+							language: selectedLanguage.id,
+							root: rootId,
+							documentId,
+						});
+						const { id, ...rest } = newWord;
+						submitWord({ databaseId: id, ...rest });
+					} else {
+						const newWord = await createWord.mutateAsync({
+							word: word.word,
+							translations: word.translations,
+							spelling: word.spelling,
+							tags: word.tags.map((tag) => (tag.id ? tag.id : tag)),
+							comment: word.notes,
+							language: selectedLanguage.id,
+							documentId,
+						});
+						const { id, ...rest } = newWord;
+						submitWord({ databaseId: id, ...rest });
+					}
 				} else {
 					cancel();
 				}
@@ -267,6 +298,7 @@ const FloatingWordEditorPlugin = ({
 			editor.registerCommand(
 				SHOW_FLOATING_WORD_EDITOR_COMMAND,
 				() => {
+					// Are we displaying anywhere else already?
 					if (anchorNodeKey) {
 						const target = $getNodeByKey(anchorNodeKey);
 						if (target) {

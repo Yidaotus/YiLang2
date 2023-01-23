@@ -17,6 +17,7 @@ export const wordRouter = router({
 				spelling: z.string().optional(),
 				comment: z.string().optional(),
 				relatedWords: z.array(z.string()).optional(),
+				root: z.string().optional(),
 				tags: z.array(
 					z.union([
 						z.string(),
@@ -33,6 +34,7 @@ export const wordRouter = router({
 			async ({
 				ctx: { prisma, session },
 				input: {
+					root,
 					translations,
 					spelling,
 					word,
@@ -59,6 +61,7 @@ export const wordRouter = router({
 									connect: { id: documentId },
 							  }
 							: undefined,
+						root: root ? { connect: { id: root } } : undefined,
 						relatedTo: {
 							connect: relatedWords
 								? relatedWords.map((id) => ({ id }))
@@ -176,9 +179,7 @@ export const wordRouter = router({
 						spelling: spelling,
 						translation: !!translations ? translations.join(";") : undefined,
 						relatedTo: {
-							connect: relatedWords
-								? relatedWords.map((id) => ({ id }))
-								: undefined,
+							connect: relatedWords ? relatedWords.map((id) => ({ id })) : [],
 						},
 						tags: tags
 							? {
@@ -269,6 +270,11 @@ export const wordRouter = router({
 				include: {
 					relatedTo: true,
 					relatedBy: true,
+					variations: {
+						include: {
+							tags: true,
+						},
+					},
 					sourceDocument: {
 						select: {
 							title: true,
@@ -305,7 +311,7 @@ export const wordRouter = router({
 							{ translation: { contains: search, mode: "insensitive" } },
 						],
 					},
-					include: { sourceDocument: { select: { title: true } } },
+					include: { sourceDocument: { select: { title: true } }, tags: true },
 				});
 				return foundWords;
 			}

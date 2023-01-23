@@ -1,4 +1,4 @@
-import { Box, Link } from "@chakra-ui/react";
+import { Box, Link, Stack, Text } from "@chakra-ui/react";
 import { trpc } from "@utils/trpc";
 import { IoChatboxEllipses } from "react-icons/io5";
 
@@ -21,6 +21,12 @@ const Word = ({
 	clickHandler,
 }: WordProps) => {
 	const dbWord = trpc.dictionary.word.get.useQuery({ id: databaseId });
+	const rootWord = trpc.dictionary.word.get.useQuery(
+		{ id: dbWord.data?.rootId || "" },
+		{ enabled: !!dbWord.data?.rootId }
+	);
+
+	const displayWord = (dbWord.data?.rootId && rootWord.data) || dbWord.data;
 
 	const borderStyle = border
 		? { borderColor: "text.100", borderWidth: "1px", borderRadius: "5px" }
@@ -28,43 +34,72 @@ const Word = ({
 
 	return (
 		<Box sx={{ ...borderStyle }}>
-			{dbWord.data && (
+			{displayWord && (
 				<>
 					<Box sx={{ display: "flex", flexDir: "column" }} p={2}>
-						{!!clickHandler ? (
-							<Link
-								onClick={() => clickHandler({ nodeKey, databaseId })}
-								fontSize="1.2em"
-								color="text.500"
-							>
-								{dbWord.data.word}
-							</Link>
-						) : (
-							<Box fontSize="1.2em" color="text.500">
-								{dbWord.data.word}
+						<Box display="flex" justifyContent="space-between">
+							{!!clickHandler ? (
+								<Link
+									onClick={() =>
+										clickHandler({ nodeKey, databaseId: displayWord.id })
+									}
+									fontSize="1.2em"
+									color="text.500"
+								>
+									{displayWord.word}
+								</Link>
+							) : (
+								<Box fontSize="1.2em" color="text.500">
+									{displayWord.word}
+								</Box>
+							)}
+							<Box display="flex" pl={6} gap={1} alignItems="center">
+								{displayWord.tags.map((t) => (
+									<Box key={t.id} bg={t.color} borderRadius="2px" px={1}>
+										<Text fontSize="0.8rem" color="white">
+											{t.name}
+										</Text>
+									</Box>
+								))}
 							</Box>
-						)}
-						{dbWord.data.spelling && (
-							<Box fontSize="0.8em" color="text.300" flexGrow="1">
-								{dbWord.data.spelling}
+						</Box>
+						{displayWord.spelling && (
+							<Box fontSize="0.8rem" color="text.300" flexGrow="1">
+								{displayWord.spelling}
 							</Box>
 						)}
 						<Box display="flex" alignItems="center">
 							<Box fontSize="1em" color="text.400" flexGrow="1">
-								{dbWord.data.translations.join(", ")}
-							</Box>
-							<Box display="flex" pl={6} gap={1}>
-								{dbWord.data.tags.map((t) => (
-									<Box
-										key={t.id}
-										borderRadius="100%"
-										border={`5px solid ${t.color}`}
-									/>
-								))}
+								{displayWord.translations.join(", ")}
 							</Box>
 						</Box>
 					</Box>
-					{dbWord.data.comment && (
+					{displayWord.variations && displayWord.variations.length > 0 && (
+						<Stack px={2} pb={2}>
+							{displayWord.variations.map((variation) => (
+								<Box
+									display="flex"
+									flexDirection="row"
+									key={variation.id}
+									justifyContent="space-between"
+								>
+									<Text color="text.300" fontSize="0.9em">
+										{variation.word}
+									</Text>
+									<Box display="flex" pl={6} gap={1} alignItems="center">
+										{variation.tags.map((t) => (
+											<Box key={t.id} bg={t.color} borderRadius="2px" px={1}>
+												<Text fontSize="0.8rem" color="white">
+													{t.name}
+												</Text>
+											</Box>
+										))}
+									</Box>
+								</Box>
+							))}
+						</Stack>
+					)}
+					{displayWord.comment && (
 						<Box
 							bg="text.100"
 							color="text.400"
@@ -82,7 +117,7 @@ const Word = ({
 							zIndex={30}
 						>
 							<IoChatboxEllipses color="text.400" size="18" />
-							{dbWord.data.comment}
+							{displayWord.comment}
 						</Box>
 					)}
 				</>

@@ -19,6 +19,7 @@ import TranslationsDataRow from "@components/Dictionary/TranslationsDataRow";
 import Layout from "@components/Layout";
 import useEditorSettingsStore from "@store/store";
 import protectPage from "@utils/protectPage";
+import type { RouterTypes } from "@utils/trpc";
 import { trpc } from "@utils/trpc";
 import { filterUndefined, highlightString } from "@utils/utils";
 import NextLink from "next/link";
@@ -28,6 +29,7 @@ import {
 	IoAlbumsOutline,
 	IoChatbubbleEllipses,
 	IoDocumentOutline,
+	IoSwapVertical,
 } from "react-icons/io5";
 import { RiTranslate } from "react-icons/ri";
 import { RxCalendar } from "react-icons/rx";
@@ -47,6 +49,7 @@ const DictionaryEntryPage = () => {
 			enabled: !!dbWord.data?.id,
 		}
 	);
+
 	const updateWord = trpc.dictionary.word.update.useMutation({
 		onSuccess() {
 			trpcUtils.dictionary.word.get.invalidate({ id });
@@ -156,6 +159,32 @@ const DictionaryEntryPage = () => {
 		[dbWord, selectedLanguage.id, updateWord]
 	);
 
+	const highlightWordInSentence = useCallback(
+		({
+			sentence,
+			words,
+		}: {
+			sentence: Exclude<
+				RouterTypes["dictionary"]["sentence"]["getForWord"]["output"],
+				null
+			>[number];
+			words: Array<{ id: string; word: string }>;
+		}) => {
+			//which word fits the sentecen
+			const targetWord = words.find((word) =>
+				sentence.words.map((w) => w.id).includes(word.id)
+			);
+
+			return highlightString({
+				input: sentence.sentence,
+				search: targetWord?.word || "",
+				textColor: "text.400",
+				highlightColor: "#8785e0",
+			});
+		},
+		[]
+	);
+
 	return (
 		<Box
 			px={[6, 8, 25]}
@@ -182,179 +211,235 @@ const DictionaryEntryPage = () => {
 					</Box>
 				</CardHeader>
 				<CardBody>
-					<Box
-						display="flex"
-						justifyContent="center"
-						alignItems="center"
-						w="100%"
-						pt={4}
-					>
-						{dbWord.data && (
-							<Box display="flex" gap={[6, null, 3]} flexDir="column" w="100%">
-								<DataRow
-									title={<Box />}
-									value={
-										<Box fontSize="2.0em" color="brand.500">
-											{dbWord.data?.word}
-										</Box>
-									}
-								/>
-								<SpellingDataRow
-									spelling={dbWord.data.spelling}
-									updateSpelling={updateSpelling}
-								/>
-								<TranslationsDataRow
-									translations={dbWord.data.translations}
-									addTranslation={addTranslation}
-									removeTranslation={removeTranslation}
-								/>
-								<TagDataRow
-									languageId={selectedLanguage.id}
-									tags={dbWord.data.tags}
-									linkNewTag={linkNewTag}
-									removeTag={removeTag}
-								/>
-								<DataRow
-									title={
-										<Box display="flex" gap={1} alignItems="center">
-											<RxCalendar />
-											Created at
-										</Box>
-									}
-									value={
-										<Box color="text.400">
-											{dbWord.data.createdAt.toLocaleDateString()}
-										</Box>
-									}
-								/>
-								<DataRow
-									title={
-										<Box display="flex" gap={1} alignItems="center">
-											<IoDocumentOutline />
-											Source Document
-										</Box>
-									}
-									value={
-										<Link
-											as={NextLink}
-											href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
-										>
-											<Text textDecoration="underline" color="text.400">
-												{dbWord.data.sourceDocument?.title}
-											</Text>
-										</Link>
-									}
-								/>
-								<DataRow
-									title={
-										<Box display="flex" gap={1} alignItems="center">
-											<IoChatbubbleEllipses />
-											Comment
-										</Box>
-									}
-									value={
-										<Textarea
-											color="text.400"
-											maxW="500px"
-											readOnly
-											zIndex={-1}
-											value={dbWord.data.comment || ""}
+					{dbWord.data && (
+						<Box
+							display="flex"
+							justifyContent="center"
+							alignItems="center"
+							w="100%"
+							pt={4}
+						>
+							{dbWord.data && (
+								<Box
+									display="flex"
+									gap={[6, null, 3]}
+									flexDir="column"
+									w="100%"
+								>
+									<DataRow
+										title={<Box />}
+										value={
+											<Box fontSize="2.0em" color="brand.500">
+												{dbWord.data.word}
+											</Box>
+										}
+									/>
+									<SpellingDataRow
+										spelling={dbWord.data.spelling}
+										updateSpelling={updateSpelling}
+									/>
+									<TranslationsDataRow
+										translations={dbWord.data.translations}
+										addTranslation={addTranslation}
+										removeTranslation={removeTranslation}
+									/>
+									<TagDataRow
+										languageId={selectedLanguage.id}
+										tags={dbWord.data.tags}
+										linkNewTag={linkNewTag}
+										removeTag={removeTag}
+									/>
+									<DataRow
+										title={
+											<Box display="flex" gap={1} alignItems="center">
+												<RxCalendar />
+												Created at
+											</Box>
+										}
+										value={
+											<Box color="text.400">
+												{dbWord.data.createdAt.toLocaleDateString()}
+											</Box>
+										}
+									/>
+									<DataRow
+										title={
+											<Box display="flex" gap={1} alignItems="center">
+												<IoDocumentOutline />
+												Source Document
+											</Box>
+										}
+										value={
+											<Link
+												as={NextLink}
+												href={`/app/editor/${dbWord.data?.sourceDocument?.id}?highlight=${dbWord.data?.id}`}
+											>
+												<Text textDecoration="underline" color="text.400">
+													{dbWord.data.sourceDocument?.title}
+												</Text>
+											</Link>
+										}
+									/>
+									<DataRow
+										title={
+											<Box display="flex" gap={1} alignItems="center">
+												<IoChatbubbleEllipses />
+												Comment
+											</Box>
+										}
+										value={
+											<Textarea
+												color="text.400"
+												maxW="500px"
+												readOnly
+												zIndex={-1}
+												value={dbWord.data.comment || ""}
+											/>
+										}
+									/>
+									{relatedSentences.data && (
+										<DataRow
+											alignTop
+											title={
+												<Box display="flex" gap={1} alignItems="center">
+													<IoAlbumsOutline />
+													Sentences
+												</Box>
+											}
+											value={
+												<Stack>
+													{relatedSentences.data.map((sentence) => (
+														<Box key={sentence.id}>
+															<Box>
+																<Link
+																	as={NextLink}
+																	href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
+																>
+																	{dbWord.data
+																		? highlightWordInSentence({
+																				sentence,
+																				words: [
+																					dbWord.data,
+																					...(dbWord.data?.variations || []),
+																				],
+																		  })
+																		: sentence.sentence}
+																</Link>
+															</Box>
+															<Box>
+																<Text
+																	color="text.300"
+																	fontSize="0.9em"
+																	fontStyle="italic"
+																>
+																	{sentence.translation}
+																</Text>
+															</Box>
+														</Box>
+													))}
+												</Stack>
+											}
 										/>
-									}
-								/>
-								{relatedSentences.data && (
+									)}
 									<DataRow
 										alignTop
 										title={
 											<Box display="flex" gap={1} alignItems="center">
-												<IoAlbumsOutline />
-												Sentences
+												<IoSwapVertical />
+												Variations
 											</Box>
 										}
 										value={
-											<Stack>
-												{relatedSentences.data?.map((sentence) => (
-													<Box key={sentence.id}>
-														<Box>
-															<Link
-																as={NextLink}
-																href={`/app/editor/${sentence.documentId}?highlight=${sentence.id}`}
-															>
-																{highlightString({
-																	input: sentence.sentence,
-																	search: dbWord.data?.word || "",
-																	textColor: "text.400",
-																})}
-															</Link>
-														</Box>
-														<Box>
-															<Text
-																color="text.300"
-																fontSize="0.9em"
-																fontStyle="italic"
-															>
-																{sentence.translation}
-															</Text>
+											<Stack px={2} pb={2}>
+												{dbWord.data?.variations.map((variation) => (
+													<Box
+														display="flex"
+														flexDirection="row"
+														key={variation.id}
+														justifyContent="space-between"
+													>
+														<Text color="text.400" fontSize="1.2em">
+															{variation.word}
+														</Text>
+														<Box
+															display="flex"
+															pl={6}
+															gap={1}
+															alignItems="center"
+														>
+															{variation.tags.map((t) => (
+																<Box
+																	key={t.id}
+																	bg={t.color}
+																	borderRadius="2px"
+																	px={1}
+																>
+																	<Text fontSize="0.8rem" color="white">
+																		{t.name}
+																	</Text>
+																</Box>
+															))}
 														</Box>
 													</Box>
 												))}
 											</Stack>
 										}
 									/>
-								)}
-								<DataRow
-									alignTop
-									title={
-										<Box display="flex" gap={1} alignItems="center">
-											<IoAlbumsOutline />
-											Related To
-										</Box>
-									}
-									value={
-										<Stack>
-											{dbWord.data.relatedTo.map((word) => (
-												<Box key={word.id}>
-													<Box>
-														<Link
-															as={NextLink}
-															href={`/app/dictionary/${word.id}`}
-														>
-															{word.word}
-														</Link>
+									<DataRow
+										alignTop
+										title={
+											<Box display="flex" gap={1} alignItems="center">
+												<IoAlbumsOutline />
+												Related To
+											</Box>
+										}
+										value={
+											<Stack>
+												{dbWord.data.relatedTo.map((word) => (
+													<Box key={word.id}>
+														<Box>
+															<Link
+																as={NextLink}
+																href={`/app/dictionary/${word.id}`}
+															>
+																{word.word}
+															</Link>
+														</Box>
 													</Box>
-												</Box>
-											))}
-										</Stack>
-									}
-								/>
-								<DataRow
-									alignTop
-									title={
-										<Box display="flex" gap={1} alignItems="center">
-											<IoAlbumsOutline />
-											Related By
-										</Box>
-									}
-									value={
-										<Stack>
-											{dbWord.data.relatedBy.map((word) => (
-												<Box key={word.id}>
-													<Box>
-														<Link
-															as={NextLink}
-															href={`/app/dictionary/${word.id}`}
-														>
-															{word.word}
-														</Link>
+												))}
+											</Stack>
+										}
+									/>
+									<DataRow
+										alignTop
+										title={
+											<Box display="flex" gap={1} alignItems="center">
+												<IoAlbumsOutline />
+												Related By
+											</Box>
+										}
+										value={
+											<Stack>
+												{dbWord.data.relatedBy.map((word) => (
+													<Box key={word.id}>
+														<Box>
+															<Link
+																as={NextLink}
+																href={`/app/dictionary/${word.id}`}
+															>
+																{word.word}
+															</Link>
+														</Box>
 													</Box>
-												</Box>
-											))}
-										</Stack>
-									}
-								/>
-							</Box>
-						)}
-					</Box>
+												))}
+											</Stack>
+										}
+									/>
+								</Box>
+							)}
+						</Box>
+					)}
+					{!dbWord.data && <Box>No Word Found!</Box>}
 				</CardBody>
 			</Card>
 		</Box>

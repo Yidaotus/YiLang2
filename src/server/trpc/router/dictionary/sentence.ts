@@ -5,7 +5,26 @@ import { protectedProcedure, router } from "../../trpc";
 export const sentenceRouter = router({
 	getForWord: protectedProcedure
 		.input(z.object({ wordId: z.string() }))
-		.query(({ ctx: { prisma, session }, input: { wordId } }) => {
+		.query(async ({ ctx: { prisma, session }, input: { wordId } }) => {
+			const targetWord = await prisma.word.findUnique({
+				where: {
+					userWordId: {
+						userId: session.user.id,
+						id: wordId,
+					},
+				},
+				include: {
+					variations: {
+						select: {
+							id: true,
+						},
+					},
+				},
+			});
+			if (!targetWord) return null;
+
+			const variationIds = targetWord.variations.map(({ id }) => id);
+			const searchWordIds = [targetWord.id, ...variationIds];
 			return prisma.sentence.findMany({
 				where: {
 					user: {
@@ -13,7 +32,16 @@ export const sentenceRouter = router({
 					},
 					words: {
 						some: {
-							id: wordId,
+							id: {
+								in: searchWordIds,
+							},
+						},
+					},
+				},
+				include: {
+					words: {
+						select: {
+							id: true,
 						},
 					},
 				},

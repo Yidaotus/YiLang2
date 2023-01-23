@@ -236,10 +236,10 @@ const WordPlugin = () => {
 								}
 							}
 						}
-						const initialSelection = $createNodeSelection();
-						initialSelection.add(initialWordNode.getKey());
-						$setSelection(initialSelection);
 					}
+					const initialSelection = $createNodeSelection();
+					initialSelection.add(initialWordNode.getKey());
+					$setSelection(initialSelection);
 					return true;
 				},
 				COMMAND_PRIORITY_LOW

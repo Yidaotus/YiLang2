@@ -14,12 +14,13 @@ type YiSimpleCreatableSelectProps = {
 	placeholder: string;
 	ref: RefCallBack;
 	autoFocus?: boolean;
+	disabled?: boolean;
 };
 
 const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 	any,
 	YiSimpleCreatableSelectProps
-> = ({ value, onChange, placeholder, autoFocus }, ref) => {
+> = ({ value, onChange, placeholder, autoFocus, disabled = false }, ref) => {
 	const [inputValue, setInputValue] = useState("");
 
 	const handleKeyDown: KeyboardEventHandler = (event) => {
@@ -41,6 +42,7 @@ const YiSimpleCreatableSelect: ForwardRefRenderFunction<
 
 	return (
 		<CreatableSelect
+			isDisabled={disabled}
 			chakraStyles={{
 				container: (prev) => ({
 					...prev,
