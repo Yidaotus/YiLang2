@@ -350,7 +350,7 @@ const DictionaryEntryPage = () => {
 											</Box>
 										}
 										value={
-											<Stack px={2} pb={2}>
+											<Stack w="100%">
 												{dbWord.data?.variations.map((variation) => (
 													<Box
 														display="flex"
