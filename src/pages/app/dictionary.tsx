@@ -61,7 +61,7 @@ const DictionaryPage: NextPageWithLayout = () => {
 		},
 	});
 	const [searchTerm, setSearchTerm] = useState("");
-	const [pageSize, setPageSize] = useState(20);
+	const [pageSize, setPageSize] = useState(10);
 	const [page, setPage] = useState(0);
 	const [sortByColumn, setSortByColumn] = useState<{
 		column: keyof Exclude<typeof allWords.data, undefined>[number];
@@ -174,7 +174,7 @@ const DictionaryPage: NextPageWithLayout = () => {
 			pos="relative"
 			display="flex"
 			w="100%"
-			justifyContent="center"
+			justifyContent="flex-start"
 			alignItems="center"
 			flexDir="column"
 		>

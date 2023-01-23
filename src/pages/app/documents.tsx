@@ -211,7 +211,7 @@ const DocumentsPage: NextPageWithLayout = () => {
 			pos="relative"
 			display="flex"
 			w="100%"
-			justifyContent="center"
+			justifyContent="flex-start"
 			alignItems="center"
 			flexDir="column"
 		>
