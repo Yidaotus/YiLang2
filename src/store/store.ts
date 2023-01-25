@@ -48,6 +48,7 @@ const useEditorSettingsStore = create<EditorStore>()(
 					type: "paragraph",
 					key: "",
 					layoutMode: "full",
+					word: null,
 					sentenceKey: null,
 				},
 				editorSaveOnBlur: true,

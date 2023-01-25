@@ -1,5 +1,6 @@
 import { $isSentenceNode } from "@components/Editor/nodes/Sentence/SentenceNode";
 import { $isSplitLayoutContainerNode } from "@components/Editor/nodes/SplitLayout/SplitLayoutContainer";
+import { $isWordNode } from "@components/Editor/nodes/WordNode";
 import { $isListNode, ListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $isHeadingNode } from "@lexical/rich-text";
@@ -35,6 +36,7 @@ const blockTypeToBlockName = {
 	grammarPoint: "Grammar Point",
 	table: "Table",
 	dialogue: "Dialogue",
+	word: "Word",
 };
 
 export type SelectedBlockType = keyof typeof blockTypeToBlockName;
@@ -43,6 +45,7 @@ export type SelectedBlock = {
 	type: SelectedBlockType;
 	key: string;
 	layoutMode: "split" | "full";
+	word: { key: string; id: string } | null;
 	sentenceKey: string | null;
 };
 
@@ -69,6 +72,7 @@ const SelectedBlockTypePlugin = ({
 		const topLevelElement = anchorNode.getTopLevelElement();
 		if (topLevelElement === null) return;
 
+		const anchorKey = anchorNode.getKey();
 		const elementKey = topLevelElement.getKey();
 		const elementDOM = editor.getElementByKey(elementKey);
 
@@ -88,6 +92,11 @@ const SelectedBlockTypePlugin = ({
 			}
 		}
 
+		let wordId: null | string = null;
+		if ($isWordNode(anchorNode)) {
+			wordId = anchorNode.getDatabaseId();
+		}
+
 		if (elementDOM !== null) {
 			if ($isListNode(topLevelElement)) {
 				const parentList = $getNearestNodeOfType<ListNode>(
@@ -100,27 +109,16 @@ const SelectedBlockTypePlugin = ({
 				setSelectedBlockType({
 					type: type as SelectedBlockType,
 					key: elementKey,
+					word: wordId
+						? {
+								id: wordId,
+								key: anchorKey,
+						  }
+						: null,
 					layoutMode,
 					sentenceKey,
 				});
 			} else {
-				/*
-					const container = $findMatchingParent(
-						selection.anchor.getNode(),
-						$isRemarkContainerNode
-					);
-
-					if (container !== null) {
-						setSelectedBlockType({
-							type: "remark",
-							key: elementKey,
-							layoutMode,
-						});
-
-						return;
-					}
-					*/
-
 				const type = $isHeadingNode(topLevelElement)
 					? topLevelElement.getTag()
 					: topLevelElement.getType();
@@ -128,6 +126,12 @@ const SelectedBlockTypePlugin = ({
 					setSelectedBlockType({
 						type: type as SelectedBlockType,
 						key: elementKey,
+						word: wordId
+							? {
+									id: wordId,
+									key: anchorKey,
+							  }
+							: null,
 						layoutMode,
 						sentenceKey,
 					});

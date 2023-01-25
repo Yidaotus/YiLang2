@@ -385,7 +385,7 @@ const DictionaryEntryPage = () => {
 											</Stack>
 										}
 									/>
-									<DataRow
+									{/* <DataRow
 										alignTop
 										title={
 											<Box display="flex" gap={1} alignItems="center">
@@ -434,7 +434,7 @@ const DictionaryEntryPage = () => {
 												))}
 											</Stack>
 										}
-									/>
+									/> */}
 								</Box>
 							)}
 						</Box>

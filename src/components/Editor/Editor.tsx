@@ -91,7 +91,6 @@ import SentenceMenuPlugin from "./plugins/SentenceMenuPlugin/SentenceMenuPlugin"
 import SentencePlugin from "./plugins/SentencePlugin/SentencePlugin";
 import SentencePopupPlugin from "./plugins/SentencePopupPlugin/SentencePopupPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
-import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
@@ -485,7 +484,7 @@ export default React.memo(function Editor({
 							</>
 						)}
 					</>
-					<TreeViewPlugin />
+					{/* <TreeViewPlugin /> */}
 				</LexicalComposer>
 			</Box>
 		</Box>

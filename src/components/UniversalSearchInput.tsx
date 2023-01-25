@@ -121,6 +121,7 @@ const UniversalSearchInput = ({
 					w={width}
 					borderTopRadius="0px"
 					borderTopColor="#aaa7e6"
+					borderBottomRadius="5px"
 					overflowY="scroll"
 					maxH="70vh"
 					sx={{

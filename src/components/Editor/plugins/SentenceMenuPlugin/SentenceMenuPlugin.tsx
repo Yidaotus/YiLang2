@@ -34,6 +34,9 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 	);
 	const [text400, text100] = useToken("colors", ["text.400", "text.100"]);
 
+	const selectedWord = useEditorSettingsStore(
+		(state) => state.editorSelectedBlock.word
+	);
 	const selectedSentenceKey = useEditorSettingsStore(
 		(state) => state.editorSelectedBlock.sentenceKey
 	);
@@ -92,8 +95,9 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 					setSourceEditorVisible(false);
 				}
 
+				const isWordNode = selectedWord !== null;
 				const element = editor.getElementByKey(selectedSentenceKey);
-				if (element) {
+				if (element && !isWordNode) {
 					setPopupReference(element);
 				} else {
 					setPopupReference(null);
@@ -103,7 +107,7 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 			setPopupReference(null);
 			setSourceEditorVisible(false);
 		}
-	}, [editor, selectedSentenceKey]);
+	}, [editor, selectedSentenceKey, selectedWord]);
 
 	const handleKeyDown: KeyboardEventHandler = (event) => {
 		switch (event.key) {
