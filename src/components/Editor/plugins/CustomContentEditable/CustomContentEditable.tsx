@@ -60,6 +60,7 @@ export function CustomContentEditable({
 	return (
 		<Box
 			px={[8, 16]}
+			pb={12}
 			as="div"
 			aria-activedescendant={!isEditable ? undefined : ariaActiveDescendant}
 			aria-autocomplete={!isEditable ? "none" : ariaAutoComplete}

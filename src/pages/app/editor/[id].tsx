@@ -65,7 +65,7 @@ const EditorPage = () => {
 				minH="100vh"
 				display="flex"
 				maxH="100vh"
-				overflowY="scroll"
+				w="100%"
 				flexDir="column"
 				pos="relative"
 				ref={onRootRef}
@@ -94,24 +94,26 @@ const EditorPage = () => {
 							: "none"
 					}
 				>
-					{showScrollTopElement && (
-						<Box display="flex" gap="12px" alignItems="center" h="22px" pl={12}>
-							<Box w="18px" h="18px" display={["none", "block"]}>
-								<IoDocumentOutline color="#696F80" />
-							</Box>
-							<Box
-								fontSize="0.9em"
-								fontWeight="semibold"
-								as="span"
-								color="text.500"
-								textOverflow="ellipsis"
-								whiteSpace="nowrap"
-								overflow="hidden"
-							>
-								{documentTitle}
-							</Box>
-						</Box>
-					)}
+					<Box display="flex" gap="12px" alignItems="center" h="22px" pl={12}>
+						{showScrollTopElement && (
+							<>
+								<Box w="18px" h="18px" display={["none", "block"]}>
+									<IoDocumentOutline color="#696F80" />
+								</Box>
+								<Box
+									fontSize="0.9em"
+									fontWeight="semibold"
+									as="span"
+									color="text.500"
+									textOverflow="ellipsis"
+									whiteSpace="nowrap"
+									overflow="hidden"
+								>
+									{documentTitle}
+								</Box>
+							</>
+						)}
+					</Box>
 				</Box>
 				<Box
 					display="grid"
@@ -144,9 +146,9 @@ const EditorPage = () => {
 						display={["none", null, null, "flex"]}
 					>
 						<Box
+							pos="fixed"
 							w="100px"
 							h="100px"
-							pos="fixed"
 							mt="200px"
 							mr={{
 								base: "0rem",

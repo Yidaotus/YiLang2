@@ -48,7 +48,7 @@ const Layout = ({ children }: LayoutProps) => {
 			<Box as="main" display="flex" overflow="hidden" pos="relative">
 				{isMobile && <MobileSideBar />}
 				{!isMobile && <DesktopSideBar />}
-				<Box w="100%" h="100vh" overflow="scroll" maxH="100vh">
+				<Box w="100%" h="100vh" overflow="auto" maxH="100vh">
 					{isLoading && (
 						<Box
 							w="100%"
