@@ -46,8 +46,6 @@ import { ImageNode } from "./nodes/ImageNode";
 import { SentenceNode } from "./nodes/Sentence/SentenceNode";
 import { WordNode } from "./nodes/WordNode";
 import FetchDocumentPlugin from "./plugins/FetchDocumentPlugin/FetchDocumentPlugin";
-import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/FloatingToolbarPlugin";
-import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import ImagesPlugin from "./plugins/ImagePlugin/ImagePlugin";
 import PersistStateOnPageChangePlugion from "./plugins/PersistantStateOnPageChangePlugin/PersistantStateOnPageChangePlugin";
 import YiLangTheme from "./themes/YiLangEditorTheme";
@@ -70,7 +68,6 @@ import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocument
 import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
 import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
-import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import shallow from "zustand/shallow";
@@ -78,8 +75,9 @@ import { SentenceToggleNode } from "./nodes/Sentence/SentenceToggleNode";
 import { SplitLayoutColumnNode } from "./nodes/SplitLayout/SplitLayoutColumn";
 import { SplitLayoutContainerNode } from "./nodes/SplitLayout/SplitLayoutContainer";
 import { WordAnchor } from "./nodes/WordAnchor/WordEditorAnchor";
-import BlockSelectPopupPlugin from "./plugins/BlockSelectPopup/BlockSelectPopupPlugin";
 import { CustomContentEditable } from "./plugins/CustomContentEditable/CustomContentEditable";
+import FloatingTextFormatToolbarPlugin from "./plugins/FloatingToolbarPlugin/FloatingToolbarPlugin";
+import FloatingWordEditorPlugin from "./plugins/FloatingWordEditor/FloatingWordEditor";
 import GrammarPointPlugin from "./plugins/GrammarPointPlugin/GrammarPointPlugin";
 import ImageMenuPlugin from "./plugins/ImageMenuPlugin/ImageMenuPlugin";
 import IndexElementsPlugin from "./plugins/IndexElementsPlugin/IndexElementsPlugin";
@@ -92,6 +90,7 @@ import SentencePlugin from "./plugins/SentencePlugin/SentencePlugin";
 import SentencePopupPlugin from "./plugins/SentencePopupPlugin/SentencePopupPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
+import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
 const EditorNodes: Array<Klass<LexicalNode>> = [
 	HeadingNode,
@@ -382,111 +381,107 @@ export default React.memo(function Editor({
 	);
 
 	return (
-		<Box>
-			<Box
-				display="flex"
-				justifyContent="center"
-				pos="relative"
-				flexDir="column"
-			>
-				<LexicalComposer initialConfig={initialConfig}>
-					<RichTextPlugin
-						contentEditable={
-							<Box
-								sx={{
-									"*::selection": {
-										bg: "#b3d4fc",
-										borderRadius: "5px",
-									},
+		<Box display="flex" justifyContent="center" pos="relative" flexDir="column">
+			<LexicalComposer initialConfig={initialConfig}>
+				<RichTextPlugin
+					contentEditable={
+						<Box
+							sx={{
+								"*::selection": {
+									bg: "#b3d4fc",
+									borderRadius: "5px",
+								},
+							}}
+							minH="200px"
+							ref={onFloatingRef}
+							contentEditable={false}
+						>
+							<CustomContentEditable
+								semiReadOnly={isSemiReadOnly}
+								autoFocus
+								id="editor-container"
+								style={{
+									minHeight: "100px",
+									transition:
+										"100ms font-size ease-out, 300ms line-height ease-out",
+									outline: "none",
+									fontSize: `${fontSize}px`,
+									lineHeight: `${lineHeight}em`,
 								}}
-								minH="200px"
-								ref={onFloatingRef}
-								contentEditable={false}
-							>
-								<CustomContentEditable
-									semiReadOnly={isSemiReadOnly}
-									autoFocus
-									id="editor-container"
-									style={{
-										minHeight: "100px",
-										transition:
-											"100ms font-size ease-out, 300ms line-height ease-out",
-										outline: "none",
-										fontSize: `${fontSize}px`,
-										lineHeight: `${lineHeight}em`,
-									}}
-								/>
-							</Box>
-						}
-						placeholder={
-							<Box
-								fontSize="2xl"
-								as="span"
-								pos="absolute"
-								left="0"
-								top="6px"
-								color="text.300"
-								pointerEvents="none"
-								userSelect="none"
-							>
-								Enter your document here
-							</Box>
-						}
-						ErrorBoundary={ErrorBoundary}
-					/>
-					<RemarkPlugin />
-					<GrammarPointPlugin />
-					<HistoryPlugin />
-					<PersistStateOnPageChangePlugion />
-					<FetchDocumentPlugin documentId={documentId} />
-					<SplitLayoutPlugin />
-					<TabIndentationPlugin />
-					<ListMaxIndentLevelPlugin maxDepth={4} />
-					<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
-					<ListPlugin />
-					<WordPlugin />
-					<ImagesPlugin />
-					<SaveToDBPlugin documentId={documentId} />
-					<SentencePlugin />
-					<SaveOnBlurPlugin />
-					<IndexElementsPlugin documentId={documentId} />
-					<SaveImagesPlugin />
-					<PasteImageFromClipboardPlugin />
-					<SelectedBlockTypePlugin
-						setSelectedBlockType={setEditorSelectedBlock}
-					/>
-					<DebugPlugin />
-					<>
-						{scrollAnchor && sidebarPortal && (
-							<>
-								<MinimapPlugin
-									anchorElem={scrollAnchor}
-									sidebarPortal={sidebarPortal}
-								/>
-								<SidebarPlugin sidebarPortal={sidebarPortal} />
-							</>
-						)}
-						{floatingAnchorElem && (
-							<>
-								<BlockSelectPopupPlugin anchorElem={floatingAnchorElem} />
-								<ImageMenuPlugin anchorElem={floatingAnchorElem} />
-								<SentenceMenuPlugin anchorElem={floatingAnchorElem} />
-								<FloatingTextFormatToolbarPlugin
-									anchorElem={floatingAnchorElem}
-									documentId={documentId}
-								/>
-								<FloatingWordEditorPlugin
-									documentId={documentId}
-									anchorElem={floatingAnchorElem}
-								/>
-								<WordPopupPlugin anchorElem={floatingAnchorElem} />
-								<SentencePopupPlugin anchorElem={floatingAnchorElem} />
-							</>
-						)}
-					</>
-					{/* <TreeViewPlugin /> */}
-				</LexicalComposer>
-			</Box>
+							/>
+						</Box>
+					}
+					placeholder={
+						<Box
+							fontSize="2xl"
+							as="span"
+							pos="absolute"
+							left="0"
+							top="6px"
+							color="text.300"
+							pointerEvents="none"
+							userSelect="none"
+						>
+							Enter your document here
+						</Box>
+					}
+					ErrorBoundary={ErrorBoundary}
+				/>
+				<RemarkPlugin />
+				<GrammarPointPlugin />
+				<HistoryPlugin />
+				<PersistStateOnPageChangePlugion />
+				<FetchDocumentPlugin documentId={documentId} />
+				<SplitLayoutPlugin />
+				<TabIndentationPlugin />
+				<ListMaxIndentLevelPlugin maxDepth={4} />
+				<GetDocumentTitlePlugin setDocumentTitle={setDocumentTitle} />
+				<ListPlugin />
+				<WordPlugin />
+				<ImagesPlugin />
+				<SaveToDBPlugin documentId={documentId} />
+				<SentencePlugin />
+				<SaveOnBlurPlugin />
+				<IndexElementsPlugin documentId={documentId} />
+				<SaveImagesPlugin />
+				<PasteImageFromClipboardPlugin />
+				<SelectedBlockTypePlugin
+					setSelectedBlockType={setEditorSelectedBlock}
+				/>
+				<DebugPlugin />
+				<>
+					{scrollAnchor && sidebarPortal && (
+						<>
+							<MinimapPlugin
+								anchorElem={scrollAnchor}
+								sidebarPortal={sidebarPortal}
+							/>
+							<SidebarPlugin sidebarPortal={sidebarPortal} />
+						</>
+					)}
+					{!isSemiReadOnly && floatingAnchorElem && (
+						<>
+							<FloatingTextFormatToolbarPlugin
+								anchorElem={floatingAnchorElem}
+								documentId={documentId}
+							/>
+							<FloatingWordEditorPlugin
+								documentId={documentId}
+								anchorElem={floatingAnchorElem}
+							/>
+						</>
+					)}
+					{floatingAnchorElem && (
+						<>
+							<ImageMenuPlugin anchorElem={floatingAnchorElem} />
+							<SentenceMenuPlugin anchorElem={floatingAnchorElem} />
+							<WordPopupPlugin anchorElem={floatingAnchorElem} />
+							<SentencePopupPlugin anchorElem={floatingAnchorElem} />
+						</>
+					)}
+				</>
+				{/* <TreeViewPlugin /> */}
+			</LexicalComposer>
 		</Box>
 	);
 });

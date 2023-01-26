@@ -60,14 +60,13 @@ const EditorPage = () => {
 	return (
 		<Box display="flex">
 			<Box
-				w="100%"
 				bgSize="20px 20px"
 				bgImage={`linear-gradient(to right, rgba(52, 73, 102, ${bgOpacity}) 1px, transparent 1px), linear-gradient(to bottom, rgba(52, 73, 102, ${bgOpacity}) 1px, transparent 1px); `}
 				minH="100vh"
 				display="flex"
-				flexDir="column"
 				maxH="100vh"
-				overflow="auto"
+				overflowY="scroll"
+				flexDir="column"
 				pos="relative"
 				ref={onRootRef}
 				onScroll={handleScroll}
@@ -86,7 +85,6 @@ const EditorPage = () => {
 				<Box
 					bg="rgba(255, 255, 255, 0.9)"
 					py={4}
-					px={[4, 16]}
 					top="0"
 					zIndex="20"
 					pos="sticky"
@@ -96,46 +94,38 @@ const EditorPage = () => {
 							: "none"
 					}
 				>
-					<Box display="flex" gap="12px" alignItems="center" h="22px">
-						{showScrollTopElement && (
-							<>
-								<Box w="18px" h="18px" display={["none", "block"]}>
-									<IoDocumentOutline color="#696F80" />
-								</Box>
-								<Box
-									pl={[12, 0]}
-									fontSize="0.9em"
-									fontWeight="semibold"
-									as="span"
-									color="text.500"
-									textOverflow="ellipsis"
-									whiteSpace="nowrap"
-									overflow="hidden"
-								>
-									{documentTitle}
-								</Box>
-							</>
-						)}
-					</Box>
+					{showScrollTopElement && (
+						<Box display="flex" gap="12px" alignItems="center" h="22px" pl={12}>
+							<Box w="18px" h="18px" display={["none", "block"]}>
+								<IoDocumentOutline color="#696F80" />
+							</Box>
+							<Box
+								fontSize="0.9em"
+								fontWeight="semibold"
+								as="span"
+								color="text.500"
+								textOverflow="ellipsis"
+								whiteSpace="nowrap"
+								overflow="hidden"
+							>
+								{documentTitle}
+							</Box>
+						</Box>
+					)}
 				</Box>
 				<Box
 					display="grid"
 					alignItems="start"
 					justifyContent="center"
 					gridTemplateColumns={[
-						"1fr minmax(400px, 800px) 1fr",
+						"0px minmax(400px, 800px) 0px",
 						null,
 						null,
 						"1fr minmax(400px, 800px) minmax(200px, 1fr)",
 					]}
-					px={6}
 				>
 					<div />
-					<Box
-						px={[4, 4, 0]}
-						pb="4rem"
-						fontFamily="'Source Sans 3', 'Noto Sans SC', 'Noto Sans JP'"
-					>
+					<Box fontFamily="'Source Sans 3', 'Noto Sans SC', 'Noto Sans JP'">
 						{id && (
 							<Editor
 								scrollAnchor={rootAnchorElem || undefined}

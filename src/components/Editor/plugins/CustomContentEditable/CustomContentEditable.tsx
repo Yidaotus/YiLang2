@@ -1,3 +1,4 @@
+import { Box } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import * as React from "react";
 import { useCallback, useLayoutEffect, useState } from "react";
@@ -57,7 +58,9 @@ export function CustomContentEditable({
 	}, [editor]);
 
 	return (
-		<div
+		<Box
+			px={[8, 16]}
+			as="div"
 			aria-activedescendant={!isEditable ? undefined : ariaActiveDescendant}
 			aria-autocomplete={!isEditable ? "none" : ariaAutoComplete}
 			aria-controls={!isEditable ? undefined : ariaControls}
