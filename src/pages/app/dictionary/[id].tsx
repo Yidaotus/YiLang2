@@ -217,7 +217,6 @@ const DictionaryEntryPage = () => {
 							justifyContent="center"
 							alignItems="center"
 							w="100%"
-							pt={4}
 						>
 							{dbWord.data && (
 								<Box

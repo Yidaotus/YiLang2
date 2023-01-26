@@ -60,12 +60,12 @@ const WordPlugin = () => {
 				}
 			}
 			if (nodeElem) {
-				nodeElem.scrollIntoView({
-					block: "center",
-					inline: "nearest",
-				});
 				const node = $getNodeByKey(nodeKey);
 				if ($isWordNode(node)) {
+					nodeElem.scrollIntoView({
+						block: "center",
+						inline: "nearest",
+					});
 					const nodeSelection = $createNodeSelection();
 					nodeSelection.add(nodeKey);
 					$setSelection(nodeSelection);

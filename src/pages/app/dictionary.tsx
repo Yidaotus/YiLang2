@@ -189,6 +189,7 @@ const DictionaryPage: NextPageWithLayout = () => {
 						top="0"
 						bg="white"
 						pt={4}
+						flexWrap="wrap"
 					>
 						<Box display="flex" gap={4} alignItems="center" zIndex={50}>
 							<RiTranslate size="2em" color={brand500} />
@@ -196,7 +197,7 @@ const DictionaryPage: NextPageWithLayout = () => {
 								Dictionary
 							</Text>
 						</Box>
-						<InputGroup>
+						<InputGroup flexGrow="1" w="200px">
 							<InputLeftElement pointerEvents="none">
 								<IoSearch />
 							</InputLeftElement>
@@ -216,27 +217,29 @@ const DictionaryPage: NextPageWithLayout = () => {
 								/>
 							</InputRightElement>
 						</InputGroup>
-						<ButtonGroup variant="outline" isAttached>
-							<IconButton icon={<IoFilter />} aria-label="Filter" />
-							<IconButton
-								icon={<IoArrowBack />}
-								isDisabled={page <= 0}
-								onClick={() => setPage(page - 1)}
-								aria-label="Backward"
-							/>
-							<IconButton
-								isDisabled={page + 1 >= pageCount}
-								onClick={() => setPage(page + 1)}
-								icon={<IoArrowForward />}
-								aria-label="Forward"
-							/>
-						</ButtonGroup>
-						<Box>
-							<CircularProgress
-								value={((page + 1) / pageCount) * 100}
-								size="35px"
-								color="brand.500"
-							/>
+						<Box display="flex" gap={2} alignItems="center">
+							<ButtonGroup variant="outline" isAttached>
+								<IconButton icon={<IoFilter />} aria-label="Filter" />
+								<IconButton
+									icon={<IoArrowBack />}
+									isDisabled={page <= 0}
+									onClick={() => setPage(page - 1)}
+									aria-label="Backward"
+								/>
+								<IconButton
+									isDisabled={page + 1 >= pageCount}
+									onClick={() => setPage(page + 1)}
+									icon={<IoArrowForward />}
+									aria-label="Forward"
+								/>
+							</ButtonGroup>
+							<Box>
+								<CircularProgress
+									value={((page + 1) / pageCount) * 100}
+									size="35px"
+									color="brand.500"
+								/>
+							</Box>
 						</Box>
 					</Box>
 				</CardHeader>

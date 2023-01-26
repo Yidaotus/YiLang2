@@ -12,6 +12,7 @@ import {
 	Stack,
 	Switch,
 	Text,
+	useToken,
 } from "@chakra-ui/react";
 import YiSimpleCreatableSelect from "@components/CreatableSelect/CreatableSelect";
 import useDebounce from "@components/Editor/hooks/useDebounce";
@@ -193,6 +194,8 @@ const WordForm = ({
 	resolveWord: (newWord: WordFormType | null) => void;
 	dbTags: Array<EditorTag>;
 }) => {
+	const [iconColor] = useToken("colors", ["text.300"]);
+
 	const {
 		handleSubmit,
 		control,
@@ -684,7 +687,7 @@ const WordForm = ({
 						aria-label="cancel"
 						variant="outline"
 						size="sm"
-						icon={<RiDeleteBin2Line />}
+						icon={<RiDeleteBin2Line color={iconColor} />}
 						onClick={cancel}
 					/>
 					<Button

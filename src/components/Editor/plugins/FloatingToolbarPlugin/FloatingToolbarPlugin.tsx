@@ -16,7 +16,6 @@ import { blockTypes } from "@components/Editor/utils/blockTypeFormatters";
 import type { ReferenceType } from "@floating-ui/react";
 import { $isCodeHighlightNode } from "@lexical/code";
 import { $isLinkNode } from "@lexical/link";
-import { $wrapSelectionInMarkNode } from "@lexical/mark";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import useEditorSettingsStore from "@store/store";
@@ -50,7 +49,6 @@ import {
 	RiAlignRight,
 	RiBold,
 	RiItalic,
-	RiMarkPenLine,
 	RiParagraph,
 	RiUnderline,
 } from "react-icons/ri";
@@ -406,28 +404,6 @@ function TextFormatFloatingToolbar({
 					bg="text.200"
 				/>
 
-				<IconButton
-					icon={
-						<RiMarkPenLine
-							color={text400}
-							style={{
-								height: iconSize,
-								width: iconSize,
-							}}
-						/>
-					}
-					aria-label="Bold"
-					variant="ghost"
-					onClick={() =>
-						editor.update(() => {
-							const selection = $getSelection();
-							if ($isRangeSelection(selection)) {
-								const isBackward = selection.isBackward();
-								$wrapSelectionInMarkNode(selection, isBackward, "test");
-							}
-						})
-					}
-				/>
 				<IconButton
 					icon={
 						<IoLanguage

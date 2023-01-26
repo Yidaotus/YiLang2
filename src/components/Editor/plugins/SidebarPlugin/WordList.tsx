@@ -86,6 +86,18 @@ const WordList = () => {
 						maxH="70vh"
 						overflow="auto"
 						marginBottom="60px"
+						sx={{
+							"&::-webkit-scrollbar": {
+								width: "8px",
+								height: "8px",
+								backgroundColor: "white",
+							},
+
+							"&::-webkit-scrollbar-thumb": {
+								background: "text.100",
+								borderRadius: "3px",
+							},
+						}}
 					>
 						{Object.entries(words)
 							.filter(([_, word]) => !(hideAutoFillWords && word.isAutoFill))

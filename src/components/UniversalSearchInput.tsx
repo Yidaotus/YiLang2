@@ -24,9 +24,9 @@ import {
 	IoBookOutline,
 	IoDocumentOutline,
 	IoLanguageOutline,
-	IoSearch,
 } from "react-icons/io5";
 import useDebounce from "./Editor/hooks/useDebounce";
+import SearchIcon from "./icons/search";
 
 type UniversalSearchInputProps = {
 	width: string;
@@ -98,6 +98,7 @@ const UniversalSearchInput = ({
 						<Input
 							focusBorderColor="none"
 							value={searchInput}
+							_placeholder={{ opacity: 1, color: "text.200" }}
 							placeholder="Search..."
 							onChange={(e) => setSearchInput(e.target.value)}
 							onFocus={() => setHasInputFocus(true)}
@@ -110,7 +111,14 @@ const UniversalSearchInput = ({
 							{isLoading ? (
 								<Spinner size="sm" color="brand.500" />
 							) : (
-								<IoSearch />
+								<SearchIcon
+									style={{
+										left: "1rem",
+										fill: "#9e9ea7",
+										width: "1rem",
+										height: "1rem",
+									}}
+								/>
 							)}
 						</InputRightElement>
 					</InputGroup>
@@ -125,7 +133,6 @@ const UniversalSearchInput = ({
 					overflowY="scroll"
 					maxH="70vh"
 					sx={{
-						/* WebKit and Chromiums */
 						"&::-webkit-scrollbar": {
 							width: "8px",
 							height: "8px",

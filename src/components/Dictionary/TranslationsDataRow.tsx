@@ -6,6 +6,7 @@ import {
 	InputGroup,
 	InputRightElement,
 	Text,
+	useToken,
 } from "@chakra-ui/react";
 import FloatingContainer from "@components/Editor/ui/FloatingContainer";
 import type { ReferenceType } from "@floating-ui/react";
@@ -36,6 +37,7 @@ const TranslationsDataRow = ({
 	const floatingRef = useRef(null);
 	const inputGroupRef = useRef<HTMLDivElement | null>(null);
 	const inputRef = useRef<HTMLInputElement | null>(null);
+	const [iconColor] = useToken("colors", ["text.400"]);
 
 	useOnClickOutside(inputGroupRef, () => {
 		setPopupReference(null);
@@ -93,7 +95,7 @@ const TranslationsDataRow = ({
 								h="2.1rem"
 								size="md"
 								aria-label="Add Translation"
-								icon={<IoSaveOutline />}
+								icon={<IoSaveOutline color={iconColor} />}
 								onClick={addTranslationFromInput}
 							/>
 							<IconButton
@@ -102,7 +104,7 @@ const TranslationsDataRow = ({
 								h="2.1rem"
 								size="md"
 								aria-label="Add Translation"
-								icon={<RiCloseLine />}
+								icon={<RiCloseLine color={iconColor} />}
 								onClick={() => setPopupReference(null)}
 							/>
 						</ButtonGroup>
@@ -121,16 +123,17 @@ const TranslationsDataRow = ({
 						{translations.map((translation) => (
 							<Box
 								key={translation}
-								bg="text.100"
 								borderRadius="4px"
-								color="text.500"
+								borderWidth="1px"
+								borderColor="text.100"
+								color="text.400"
 								display="flex"
 								flexWrap="nowrap"
 								alignItems="center"
 								gap={1}
 								pl={2}
 							>
-								<Text>{translation}</Text>
+								<Text fontSize="0.95em">{translation}</Text>
 								<Box
 									as="button"
 									h="100%"

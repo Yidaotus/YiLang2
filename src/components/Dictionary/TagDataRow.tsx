@@ -79,9 +79,18 @@ const TagDataRow = ({
 							}
 						}}
 						chakraStyles={{
+							control: (prev) => ({
+								...prev,
+								border: "0px",
+								borderRadius: "5px",
+								bg: "white",
+							}),
+							input: (prev) => ({
+								...prev,
+								borderBottom: "0px",
+							}),
 							container: (prev) => ({
 								...prev,
-								borderRadius: "5px",
 								bg: "#fafaf9",
 								w: "250px",
 								_focus: {

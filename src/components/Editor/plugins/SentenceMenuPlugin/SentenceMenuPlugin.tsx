@@ -29,6 +29,7 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 	const [sourceEditorVisible, setSourceEditorVisible] = useState(false);
 	const [translationVisible, setTranslationVisible] = useState(false);
 	const [translationInput, setTranslationInput] = useState("");
+	const [popupWidth, setPopupWidth] = useState("");
 	const [popupReference, setPopupReference] = useState<ReferenceType | null>(
 		null
 	);
@@ -99,6 +100,8 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 				const element = editor.getElementByKey(selectedSentenceKey);
 				if (element && !isWordNode) {
 					setPopupReference(element);
+					const elementBB = element.getBoundingClientRect();
+					setPopupWidth(`${elementBB.width - 40}px`);
 				} else {
 					setPopupReference(null);
 				}
@@ -131,10 +134,12 @@ const SentenceMenuPlugin = ({ anchorElem }: SentenceMenuPluginProps) => {
 					<Input
 						size="sm"
 						autoFocus
-						w="100%"
+						minW="200px"
+						w={popupWidth}
 						value={translationInput}
 						onChange={(e) => setTranslationInput(e.target.value)}
 						onKeyDown={handleKeyDown}
+						focusBorderColor="text.100"
 					/>
 					<InputRightAddon p={1}>
 						<IconButton

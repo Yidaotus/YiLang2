@@ -99,9 +99,10 @@ const DashboardPage: NextPageWithLayout = () => {
 					<CardBody>
 						<Box
 							display="flex"
-							gap={[4, null, 12]}
+							gap={[4, null, null, 12]}
 							alignItems="flex-start"
-							flexDir={["column", null, "row"]}
+							flexDir="row"
+							flexWrap="wrap"
 						>
 							<Box display="flex" gap="4">
 								<Avatar

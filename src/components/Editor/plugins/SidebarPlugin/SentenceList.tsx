@@ -65,6 +65,18 @@ const SentenceList = () => {
 						p={2}
 						maxH="70vh"
 						overflow="auto"
+						sx={{
+							"&::-webkit-scrollbar": {
+								width: "8px",
+								height: "8px",
+								backgroundColor: "white",
+							},
+
+							"&::-webkit-scrollbar-thumb": {
+								background: "text.100",
+								borderRadius: "3px",
+							},
+						}}
 					>
 						{Object.entries(sentences).map(([nodeKey, node]) => (
 							<Box

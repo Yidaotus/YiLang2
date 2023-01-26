@@ -7,6 +7,7 @@ import {
 	Input,
 	InputGroup,
 	InputRightElement,
+	useToken,
 } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
 import { IoSaveOutline } from "react-icons/io5";
@@ -26,6 +27,7 @@ const SpellingDataRow = ({
 }: SpellingDataRowProps) => {
 	const [isEditingSpelling, setIsEditingSpelling] = useState(false);
 	const [spellingInput, setSpellingInput] = useState(spelling || "");
+	const [iconActive] = useToken("colors", ["text.400"]);
 
 	const saveSpelling = useCallback(() => {
 		setIsEditingSpelling(false);
@@ -47,6 +49,7 @@ const SpellingDataRow = ({
 				isEditingSpelling ? (
 					<InputGroup size="md" width={["90%", null, "400px"]}>
 						<Input
+							focusBorderColor="none"
 							pr="4.5rem"
 							size="md"
 							value={spellingInput}
@@ -63,7 +66,7 @@ const SpellingDataRow = ({
 									size="md"
 									onClick={saveSpelling}
 									aria-label="Add Translation"
-									icon={<IoSaveOutline />}
+									icon={<IoSaveOutline color={iconActive} />}
 								/>
 								<IconButton
 									variant="ghost"
@@ -72,7 +75,7 @@ const SpellingDataRow = ({
 									size="md"
 									onClick={() => setIsEditingSpelling(false)}
 									aria-label="Add Translation"
-									icon={<RiCloseLine />}
+									icon={<RiCloseLine color={iconActive} />}
 								/>
 							</ButtonGroup>
 						</InputRightElement>
