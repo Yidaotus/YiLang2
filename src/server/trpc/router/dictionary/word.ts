@@ -243,6 +243,11 @@ export const wordRouter = router({
 				include: {
 					relatedBy: true,
 					relatedTo: true,
+					variations: {
+						include: {
+							tags: true,
+						},
+					},
 					sourceDocument: {
 						select: {
 							title: true,
