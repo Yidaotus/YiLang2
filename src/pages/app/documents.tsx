@@ -204,10 +204,7 @@ const DocumentsPage: NextPageWithLayout = () => {
 	return (
 		<Box
 			px={[6, 8, 25]}
-			pt="12"
-			pb={2}
-			maxH="100vh"
-			overflow="auto"
+			py={12}
 			pos="relative"
 			display="flex"
 			w="100%"

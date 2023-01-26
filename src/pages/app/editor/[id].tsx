@@ -99,11 +99,11 @@ const EditorPage = () => {
 					<Box display="flex" gap="12px" alignItems="center" h="22px">
 						{showScrollTopElement && (
 							<>
-								<IoDocumentOutline
-									color="#696F80"
-									style={{ minWidth: "18px", height: "18px" }}
-								/>
+								<Box w="18px" h="18px" display={["none", "block"]}>
+									<IoDocumentOutline color="#696F80" />
+								</Box>
 								<Box
+									pl={[12, 0]}
 									fontSize="0.9em"
 									fontWeight="semibold"
 									as="span"

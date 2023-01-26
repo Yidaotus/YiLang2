@@ -25,8 +25,13 @@ import SideBarButton from "./SideBarButton";
 type SideBarProps = {
 	sideBarOpen: boolean;
 	setSideBarOpen: (open: boolean) => void;
+	closeOnRouteChange?: boolean;
 };
-const SideBar = ({ sideBarOpen, setSideBarOpen }: SideBarProps) => {
+const SideBar = ({
+	sideBarOpen,
+	setSideBarOpen,
+	closeOnRouteChange = false,
+}: SideBarProps) => {
 	const { data: session } = useSession();
 	const router = useRouter();
 	const activeRoute = router.pathname.split("/").pop();
@@ -40,24 +45,38 @@ const SideBar = ({ sideBarOpen, setSideBarOpen }: SideBarProps) => {
 	);
 	const apiCreateDocument = trpc.document.upsertDocument.useMutation();
 
-	const openHome = useCallback(() => {
-		router.push("/app");
-	}, [router]);
+	const navigateToRoute = useCallback(
+		(url: string) => {
+			router.push(url);
+			if (closeOnRouteChange) {
+				setSideBarOpen(false);
+			}
+		},
+		[closeOnRouteChange, router, setSideBarOpen]
+	);
+
 	const createNewDocument = useCallback(async () => {
 		const newDocumentId = await apiCreateDocument.mutateAsync({
 			language: selectedLanguage.id,
 		});
-		router.push(`/app/editor/${newDocumentId.id}`);
-	}, [apiCreateDocument, router, selectedLanguage]);
-	const openLibrary = useCallback(() => {
-		router.push("/app/documents/");
-	}, [router]);
-	const openDictionary = useCallback(() => {
-		router.push("/app/dictionary/");
-	}, [router]);
+		navigateToRoute(`/app/editor/${newDocumentId.id}`);
+	}, [apiCreateDocument, navigateToRoute, selectedLanguage.id]);
+
+	const openHome = useCallback(() => {
+		navigateToRoute("/app");
+	}, [navigateToRoute]);
+
 	const openSettings = useCallback(() => {
-		router.push("/app/settings/");
-	}, [router]);
+		navigateToRoute("/app/settings/");
+	}, [navigateToRoute]);
+
+	const openLibrary = useCallback(() => {
+		navigateToRoute("/app/documents/");
+	}, [navigateToRoute]);
+
+	const openDictionary = useCallback(() => {
+		navigateToRoute("/app/dictionary/");
+	}, [navigateToRoute]);
 
 	return (
 		<Box display="flex" flexDir="column" alignItems="center" h="100%">

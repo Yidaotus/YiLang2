@@ -7,6 +7,7 @@ import {
 	CardBody,
 	CardHeader,
 	Link,
+	Spinner,
 	Stack,
 	Text,
 	Textarea,
@@ -188,13 +189,9 @@ const DictionaryEntryPage = () => {
 	return (
 		<Box
 			px={[6, 8, 25]}
-			pt="12"
-			pb={2}
-			maxH="100vh"
-			overflow="auto"
+			py={12}
 			pos="relative"
 			display="flex"
-			w="100%"
 			justifyContent="center"
 			alignItems="center"
 			flexDir="column"
@@ -211,6 +208,16 @@ const DictionaryEntryPage = () => {
 					</Box>
 				</CardHeader>
 				<CardBody>
+					{dbWord.isLoading && (
+						<Box
+							display="flex"
+							w="100%"
+							alignItems="center"
+							justifyContent="center"
+						>
+							<Spinner size="xl" colorScheme="brand" />
+						</Box>
+					)}
 					{dbWord.data && (
 						<Box
 							display="flex"
@@ -438,7 +445,7 @@ const DictionaryEntryPage = () => {
 							)}
 						</Box>
 					)}
-					{!dbWord.data && <Box>No Word Found!</Box>}
+					{!dbWord.isLoading && !dbWord.data && <Box>No Word Found!</Box>}
 				</CardBody>
 			</Card>
 		</Box>

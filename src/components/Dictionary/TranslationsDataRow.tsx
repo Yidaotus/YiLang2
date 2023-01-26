@@ -119,7 +119,7 @@ const TranslationsDataRow = ({
 					</Box>
 				}
 				value={
-					<Box display="flex" gap={2}>
+					<Box display="flex" gap={2} flexWrap="wrap">
 						{translations.map((translation) => (
 							<Box
 								key={translation}

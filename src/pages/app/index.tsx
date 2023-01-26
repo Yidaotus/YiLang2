@@ -103,17 +103,18 @@ const DashboardPage: NextPageWithLayout = () => {
 							alignItems="flex-start"
 							flexDir="row"
 							flexWrap="wrap"
+							overflowX="hidden"
 						>
-							<Box display="flex" gap="4">
+							<Box display="flex" gap="4" alignItems="center">
 								<Avatar
 									referrerPolicy="no-referrer"
 									bg="text.100"
 									name={session?.user?.name || "unkown"}
 									src={session?.user?.image || undefined}
-									size="xl"
+									size={["md", "lg", "xl"]}
 								/>
 								<Box>
-									<Text color="text.500" fontSize="2rem">
+									<Text color="text.500" fontSize={["1.6rem", null, "2rem"]}>
 										{session?.user?.name}
 									</Text>
 									<Box display="flex" gap="1" alignItems="center">
@@ -129,7 +130,7 @@ const DashboardPage: NextPageWithLayout = () => {
 								w={["100%", null, "initial"]}
 								gap="4"
 							>
-								<StatGroup w={["100%", null, "300px"]}>
+								<StatGroup w={["100%", null, "300px"]} gap={4}>
 									<Stat>
 										<StatLabel>Collected Words</StatLabel>
 										<StatNumber

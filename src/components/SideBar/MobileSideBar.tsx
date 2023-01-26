@@ -25,7 +25,7 @@ const MobileSideBar = () => {
 				variant="ghost"
 				onClick={() => setSideBarOpen(true)}
 				position="fixed"
-				top="5px"
+				top="6px"
 				left="5px"
 				zIndex={50}
 			/>
@@ -42,6 +42,7 @@ const MobileSideBar = () => {
 						<SideBar
 							sideBarOpen={sideBarOpen}
 							setSideBarOpen={setSideBarOpen}
+							closeOnRouteChange
 						/>
 					</DrawerBody>
 				</DrawerContent>
