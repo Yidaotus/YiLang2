@@ -65,7 +65,6 @@ import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin/ListMax
 
 import useEditorSettingsStore, { useEditorSettingsActions } from "@store/store";
 import GetDocumentTitlePlugin from "./plugins/GetDocumentTitlePlugin/GetDocumentTitlePlugin";
-import MinimapPlugin from "./plugins/MinimapPlugin/MinimapPlugin";
 import SelectedBlockTypePlugin from "./plugins/SelectedBlockTypePlugin/SelectedBlockTypePlugin";
 import SidebarPlugin from "./plugins/SidebarPlugin/SidebarPlugin";
 
@@ -89,6 +88,8 @@ import SentenceMenuPlugin from "./plugins/SentenceMenuPlugin/SentenceMenuPlugin"
 import SentencePlugin from "./plugins/SentencePlugin/SentencePlugin";
 import SentencePopupPlugin from "./plugins/SentencePopupPlugin/SentencePopupPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
+import TableOfContentsPlugin from "./plugins/TableOfContentsPlugin";
+import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
@@ -452,7 +453,11 @@ export default React.memo(function Editor({
 				<>
 					{scrollAnchor && sidebarPortal && (
 						<>
-							<MinimapPlugin
+							{/* <MinimapPlugin
+								anchorElem={scrollAnchor}
+								sidebarPortal={sidebarPortal}
+							/> */}
+							<TableOfContentsPlugin
 								anchorElem={scrollAnchor}
 								sidebarPortal={sidebarPortal}
 							/>
@@ -480,7 +485,7 @@ export default React.memo(function Editor({
 						</>
 					)}
 				</>
-				{/* <TreeViewPlugin /> */}
+				<TreeViewPlugin />
 			</LexicalComposer>
 		</Box>
 	);

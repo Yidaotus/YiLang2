@@ -104,7 +104,7 @@ const SideBar = ({
 			</Button>
 			<Box h="24px" />
 			{sideBarOpen ? (
-				<UniversalSearchInput width="250px" bg="white" autoFocus />
+				<UniversalSearchInput width="250px" bg="white" />
 			) : (
 				<IconButton
 					aria-label="open search"
