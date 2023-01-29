@@ -89,7 +89,6 @@ import SentencePlugin from "./plugins/SentencePlugin/SentencePlugin";
 import SentencePopupPlugin from "./plugins/SentencePopupPlugin/SentencePopupPlugin";
 import SplitLayoutPlugin from "./plugins/SplitLayoutPlugin/SplitLayoutPlugin";
 import TableOfContentsPlugin from "./plugins/TableOfContentsPlugin";
-import TreeViewPlugin from "./plugins/TreeViewPlugin/TreeViewPlugin";
 import WordPlugin from "./plugins/WordPlugin/WordPlugin";
 import WordPopupPlugin from "./plugins/WordPopupPlugin/WordPopupPlugin";
 
@@ -485,7 +484,7 @@ export default React.memo(function Editor({
 						</>
 					)}
 				</>
-				<TreeViewPlugin />
+				{/* <TreeViewPlugin /> */}
 			</LexicalComposer>
 		</Box>
 	);

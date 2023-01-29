@@ -8,9 +8,9 @@
 import type { HeadingTagType } from "@lexical/rich-text";
 import type { NodeKey } from "lexical";
 
-import { Box, List, ListItem } from "@chakra-ui/react";
+import { Box, List, ListItem, Text } from "@chakra-ui/react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { TableOfContentsEntry } from "./TableOfContentsProvider";
 import TableOfContentsProvider from "./TableOfContentsProvider";
@@ -64,11 +64,14 @@ function TableOfContentsList({
 	const [selectedKey, setSelectedKey] = useState("");
 	const selectedIndex = useRef(0);
 	const [editor] = useLexicalComposerContext();
+	const preventScroll = useRef(false);
+	const listRef = useRef(null);
 
 	function scrollToNode(key: NodeKey, currIndex: number) {
 		editor.getEditorState().read(() => {
 			const domElement = editor.getElementByKey(key);
 			if (domElement !== null) {
+				preventScroll.current = true;
 				domElement.scrollIntoView({ inline: "center", block: "center" });
 				setSelectedKey(key);
 				selectedIndex.current = currIndex;
@@ -76,84 +79,47 @@ function TableOfContentsList({
 		});
 	}
 
-	// useEffect(() => {
-	// 	function scrollCallback() {
-	// 		if (
-	// 			tableOfContents.length !== 0 &&
-	// 			selectedIndex.current < tableOfContents.length - 1
-	// 		) {
-	// 			const currentKey = tableOfContents[selectedIndex.current]?.[0];
-	// 			if (!currentKey) return;
-	// 			let currentHeading = editor.getElementByKey(currentKey);
+	useEffect(() => {
+		const synchronizeScroll = () => {
+			if (preventScroll.current) {
+				preventScroll.current = false;
+				return;
+			}
+			editor.getEditorState().read(() => {
+				const [_, ...rest] = tableOfContents;
+				for (const head of rest) {
+					const element = editor.getElementByKey(head.key);
+					if (!element) return;
 
-	// 			if (currentHeading !== null) {
-	// 				if (isHeadingBelowTheTopOfThePage(currentHeading)) {
-	// 					//On natural scroll, user is scrolling up
-	// 					while (
-	// 						currentHeading !== null &&
-	// 						isHeadingBelowTheTopOfThePage(currentHeading) &&
-	// 						selectedIndex.current > 0
-	// 					) {
-	// 						const prevHeadingKey =
-	// 							tableOfContents[selectedIndex.current - 1]?.[0];
-	// 						if (!prevHeadingKey) break;
+					const elementTop = element.getBoundingClientRect().top;
+					const anchorTop = anchorElem.getBoundingClientRect().top;
 
-	// 						const prevHeading = editor.getElementByKey(prevHeadingKey);
-	// 						if (
-	// 							prevHeading !== null &&
-	// 							(isHeadingAboveViewport(prevHeading) ||
-	// 								isHeadingBelowTheTopOfThePage(prevHeading))
-	// 						) {
-	// 							selectedIndex.current--;
-	// 						}
-	// 						currentHeading = prevHeading;
-	// 					}
-	// 					const prevHeadingKey = tableOfContents[selectedIndex.current]?.[0];
-	// 					if (!prevHeadingKey) return;
-	// 					setSelectedKey(prevHeadingKey);
-	// 				} else if (isHeadingAboveViewport(currentHeading)) {
-	// 					//On natural scroll, user is scrolling down
-	// 					while (
-	// 						currentHeading !== null &&
-	// 						isHeadingAboveViewport(currentHeading) &&
-	// 						selectedIndex.current < tableOfContents.length - 1
-	// 					) {
-	// 						const nextHeading = editor.getElementByKey(
-	// 							tableOfContents[selectedIndex.current + 1][0]
-	// 						);
-	// 						if (
-	// 							nextHeading !== null &&
-	// 							(isHeadingAtTheTopOfThePage(nextHeading) ||
-	// 								isHeadingAboveViewport(nextHeading))
-	// 						) {
-	// 							selectedIndex.current++;
-	// 						}
-	// 						currentHeading = nextHeading;
-	// 					}
-	// 					const nextHeadingKey = tableOfContents[selectedIndex.current][0];
-	// 					setSelectedKey(nextHeadingKey);
-	// 				}
-	// 			}
-	// 		} else {
-	// 			selectedIndex.current = 0;
-	// 		}
-	// 	}
-	// 	let timerId: ReturnType<typeof setTimeout>;
+					const relativeTop = elementTop - anchorTop;
+					if (relativeTop > 0) {
+						const tocItem = document.getElementById(`toc_${head.key}`);
+						if (tocItem) {
+							tocItem.scrollIntoView();
+						}
+						return;
+					}
+				}
+			});
+		};
+		let timerId: ReturnType<typeof setTimeout>;
+		function debounceFunction(func: () => void, delay: number) {
+			clearTimeout(timerId);
+			timerId = setTimeout(func, delay);
+		}
 
-	// 	function debounceFunction(func: () => void, delay: number) {
-	// 		clearTimeout(timerId);
-	// 		timerId = setTimeout(func, delay);
-	// 	}
+		function onScroll(): void {
+			debounceFunction(synchronizeScroll, 10);
+		}
 
-	// 	function onScroll(): void {
-	// 		debounceFunction(scrollCallback, 10);
-	// 	}
+		anchorElem.addEventListener("scroll", onScroll);
+		return () => anchorElem.removeEventListener("scroll", onScroll);
+	}, [tableOfContents, editor, anchorElem]);
 
-	// 	document.addEventListener("scroll", onScroll);
-	// 	return () => document.removeEventListener("scroll", onScroll);
-	// }, [tableOfContents, editor]);
 	const [firstHeading, ...headingList] = tableOfContents;
-
 	return createPortal(
 		<Box
 			color="#65676b"
@@ -161,32 +127,46 @@ function TableOfContentsList({
 			padding="10px"
 			width="250px"
 			display="flex"
-			flex-direction="row"
-			justify-content="flex-start"
+			flexDirection="column"
 			zIndex="1"
 			transform="translateX(-25%)"
+			gap={3}
 		>
+			{firstHeading && (
+				<Box
+					key={firstHeading.key}
+					onClick={() => scrollToNode(firstHeading.key, 0)}
+					role="button"
+					tabIndex={0}
+					color="black"
+					fontWeight="semibold"
+					cursor="pointer"
+				>
+					<Text>{firstHeading.text}</Text>
+				</Box>
+			)}
 			<List
 				listStyleType="none"
 				marginTop="0"
 				paddingLeft="3px"
 				marginLeft="10px"
 				width="200px"
-				maxH="400px"
+				maxH="300px"
 				overflowY="scroll"
+				ref={listRef}
 				sx={{
 					scrollbarWidth: "none",
 					"&::-webkit-scrollbar": {
 						display: "none",
 					},
-					"&::before": {
+					"&::after": {
 						content: '" "',
 						position: "absolute",
 						display: "inline-block",
-						left: "25px",
-						top: "10px",
+						left: "30px",
+						top: "38px",
 						zIndex: "100",
-						height: "calc(100% - 20px)",
+						height: "calc(100% - 60px)",
 						width: "4px",
 						marginTop: "5px",
 						backgroundColor: "#ccd0d5",
@@ -195,21 +175,6 @@ function TableOfContentsList({
 					},
 				}}
 			>
-				{firstHeading && (
-					<ListItem
-						paddingLeft="20px"
-						pos="relative"
-						key={firstHeading.key}
-						onClick={() => scrollToNode(firstHeading.key, 0)}
-						role="button"
-						tabIndex={0}
-						color="black"
-						fontWeight="semibold"
-						cursor="pointer"
-					>
-						{firstHeading.text}
-					</ListItem>
-				)}
 				{headingList.map(({ key, text, tag }, index) => (
 					<ListItem
 						key={key}
@@ -225,7 +190,7 @@ function TableOfContentsList({
 											content: '" "',
 											position: "absolute",
 											display: "inline-block",
-											left: `-${headingTagIndentations[tag] + 2}px`,
+											left: `-${headingTagIndentations[tag] - 3}px`,
 											top: "4px",
 											zIndex: "120",
 											height: "12px",
@@ -241,6 +206,7 @@ function TableOfContentsList({
 						}}
 						onClick={() => scrollToNode(key, index + 1)}
 						role="button"
+						id={`toc_${key}`}
 						tabIndex={0}
 						// className={indent(tag)}
 						// className={`normal-heading ${

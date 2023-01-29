@@ -71,14 +71,25 @@ const EditorPage = () => {
 				ref={onRootRef}
 				onScroll={handleScroll}
 				sx={{
-					msOverflowStyle: "none",
-					scrollbarWidth: {
-						base: "default",
-						md: "none",
-					},
+					// msOverflowStyle: "none",
+					// scrollbarWidth: {
+					// 	base: "default",
+					// 	md: "none",
+					// },
 					overflowY: "scroll",
+					// "&::-webkit-scrollbar": {
+					// 	display: { base: "default", md: "none" },
+					// },
+
 					"&::-webkit-scrollbar": {
-						display: { base: "default", md: "none" },
+						width: "8px",
+						height: "8px",
+						backgroundColor: "white",
+					},
+
+					"&::-webkit-scrollbar-thumb": {
+						background: "text.100",
+						borderRadius: "3px",
 					},
 				}}
 			>
