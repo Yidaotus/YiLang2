@@ -34,7 +34,7 @@ After creating a new Document by clicking on the + Button on the sidebar, select
 
 ![word image](about/vocab.png)
 
-YiLang will insert the word and you will be able to see all relevant informations by clicking on the word node.
+YiLang will insert the word, and you will be able to see all relevant information by clicking on the word node.
 
 ![word popup](about/popup.png)
 
@@ -49,7 +49,7 @@ Select the root, or create a new one, and add the tags and spelling of the varia
 
 ## Adding Sentences
 
-Select the sentence you want to add and mark it as a sentence. Afterward, you get the option to show/hide and edit the translation. The Sentence is automatically added as an example for every containing vocabulary. You can also add additional vocabulary inside the sentence as explained above.
+Select the sentence you want to add and mark it as a sentence. Afterward, you get the option to show/hide and edit the translation. The Sentence is automatically added as an example for every containing vocabulary. You can also add additional vocabulary inside the sentence, as explained above.
 
 ![word image](about/sentences.png)
 
@@ -70,9 +70,9 @@ You can adjust font size and line height in the settings menu, toggle spelling a
 Additionally, you have a few block level elements to structure your data better.
 
 - Dialogue
-  - Use this for any dialogue you might encounter. You can also enter your dialogue in the form of speaker : speech seperated by new lines. YiLang will parse this automatically to a dialogue block.
+  - Use this for any dialogue you might encounter. You can also enter your dialogue in the form of speaker : speech separated by new lines. YiLang will parse this automatically to a dialogue block.
 - Grammarpoint
-  - Use this block to summarize some important grammar. YiLang will index all grammarpoints and make them available in the search.
+  - Use this block to summarize some important grammar. YiLang will index all grammar points and make them available in the search.
 - Remark
   - This can be used for example for cultural insights or any other important highlight.
 - Two column layout
